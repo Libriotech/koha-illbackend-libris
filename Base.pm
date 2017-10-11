@@ -24,7 +24,7 @@ use Koha::Patrons;
 
 =head1 NAME
 
-Koha::Illbackends::Libris::Base - Koha ILL Backend for Libris ILL (used i Sweden)
+Koha::Illbackends::Libris::Base - Koha ILL Backend for Libris ILL (used in Sweden)
 
 =head1 SYNOPSIS
 

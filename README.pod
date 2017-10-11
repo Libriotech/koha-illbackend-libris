@@ -2,7 +2,7 @@
 
 =head1 koha-illbackend-libris
 
-Koha ILL Backend for Libris ILL (used i Sweden).
+Koha ILL Backend for Libris ILL (used in Sweden).
 
 =head1 AUTHOR
 
