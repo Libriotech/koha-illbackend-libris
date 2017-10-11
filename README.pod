@@ -1,0 +1,11 @@
+=pod
+
+=head1 koha-illbackend-libris
+
+Koha ILL Backend for Libris ILL (used i Sweden).
+
+=head1 AUTHOR
+
+Magnus Enger <magnus@libriotech.no>
+
+=cut
