@@ -23,6 +23,9 @@ use Pod::Usage;
 use Modern::Perl;
 binmode STDOUT, ":utf8";
 
+use Koha::Illrequests;
+use Koha::Illrequest::Config;
+
 # Get options
 my ( $limit, $verbose, $debug ) = get_options();
 
@@ -35,6 +38,8 @@ say "Found $data->{'count'} requests" if $verbose;
 
 foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
+    # Output details about the request
+    say "-----------------------------------------------------------------";
     say "* $req->{'request_id'} / $req->{'lf_number'}:  $req->{'title'} ($req->{'year'})";
     say "\tAuthor:       $req->{'author'} / $req->{'imprint'} / $req->{'place_of_publication'}";
     say "\tISBN/ISSN:    $req->{'isbn_issn'}";
@@ -60,6 +65,70 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
         print "\n";
     }
 
+    # Save or update the request in Koha
+    my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'request_id'} });
+    if ( $old_illrequest ) {
+        say "Found an existing request with illrequest_id = " . $old_illrequest->illrequest_id if $verbose;
+        # Update the request
+        $old_illrequest->status( $req->{'status'} );
+        $old_illrequest->store;
+        # Update the attributes
+        $old_illrequest->illrequestattributes->find({ 'type' => 'title' })->update({ 'value' => $req->{'title'} });
+        $old_illrequest->illrequestattributes->find({ 'type' => 'author' })->update({ 'value' => $req->{'author'} });
+        $old_illrequest->illrequestattributes->find({ 'type' => 'isbn_issn' })->update({ 'value' => $req->{'isbn_issn'} });
+    } else {
+        say "Going to create a new request" if $verbose;
+        my $illrequest = Koha::Illrequest->new;
+        $illrequest->load_backend( 'Libris' );
+        my $backend_result = $illrequest->backend_create({
+            'orderid'        => $req->{'request_id'},
+            'borrowernumber' => '',
+            'biblio_id'      => '',
+            'branchcode'     => '',
+            'status'         => $req->{'status'},  # FIXME Why does the status not show? Must be defined in status graph? 
+            'placed'         => '',
+            'replied'        => '',
+            'completed'      => '',
+            'medium'         => '',
+            'accessurl'      => '',
+            'cost'           => '',
+            'notesopac'      => '',
+            'notesstaff'     => '',
+            'backend'        => 'Libris',
+            'stage'          => 'commit',
+            'attr'           => {
+                'lf_number' => $req->{'lf_number'},
+                'title'     => $req->{'title'},
+                'author'    => $req->{'author'},
+                'isbn_issn' => $req->{'isbn_issn'}
+            },
+        });
+        say Dumper $backend_result; # FIXME Check for no errors
+        say "Created new request with illrequest_id = " . $illrequest->illrequest_id if $verbose;
+    }
+
+#        'borrowernumber' => $borrower->{borrowernumber},
+#        'biblionumber'   => $biblionumber,
+#        'branchcode'     => 'ILL',
+#        'status'         => 'H_ITEMREQUESTED',
+#        'medium'         => $bibdata->{MediumType},
+#        'backend'        => 'Libris',
+#        'attr'           => {
+#            'title'        => $bibdata->{Title},
+#            'author'       => $bibdata->{Author},
+#            'ordered_from' => $ordered_from,
+#            'ordered_from_borrowernumber' => $ordered_from_patron->{borrowernumber},
+#            # 'id'           => 1,
+#            'PlaceOfPublication'  => $bibdata->{PlaceOfPublication},
+#            'Publisher'           => $bibdata->{Publisher},
+#            'PublicationDate'     => $bibdata->{PublicationDate},
+#            'Language'            => $bibdata->{Language},
+#            'ItemIdentifierType'  => $request->{$message}->{ItemId}->{ItemIdentifierType},
+#            'ItemIdentifierValue' => $request->{$message}->{ItemId}->{ItemIdentifierValue},
+#            'RequestType'         => $request->{$message}->{RequestType},
+#            'RequestScopeType'    => $request->{$message}->{RequestScopeType},
+#         },
+
 }
 
 # SUBROUTINES
@@ -81,8 +150,8 @@ sub get_data {
     my ( $action, $what ) = @_;
 
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
-    my $sigil     = 'Hig';
-    my $libriskey = 'xyz';
+    my $sigil     = 'Hig'; # FIXME Use local syspref
+    my $libriskey = 'xyz'; # FIXME Use local syspref
 
     # Create a user agent object
     my $ua = LWP::UserAgent->new;

@@ -1,0 +1,45 @@
+=pod
+
+=encoding utf8
+
+=head1 LIBRIS ILL WORKFLOW
+
+A description of the Libris ILL workflow and how it is reflcted in the "Libris" 
+ILL backend.
+
+=head2 Requests *to* our library from other libraries
+
+Retrieve "incoming" requests
+
+Save requests in Koha with status = NEW and update the status in Libris to "Read" 
+
+Display requests with status NEW to librarians
+
+Let librarians change status of each request to DENIED or ACCEPTED based on 
+one of these statuses defined by Libris:
+
+=over 4
+
+=item 1 - Utlånad (On loan)
+
+=item 2 - Förkommen (Missing)
+
+=item 3 - Utlånas ej (Not for loan)
+
+=item 4 - Finns ej (Does not exist)
+
+=item 5 - F n ej tillgänglig (Currently unavailable)
+
+=item 6 - Ej anländ (Not arrived)
+
+=item 7 - Reserverad för er (Reserved)
+
+=item 8 - Övrigt (Other)
+
+=item 9 - Levererad (Delivered)
+
+=back
+
+=head2 Requests *from* our library to other libraries
+
+=cut
