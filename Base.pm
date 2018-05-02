@@ -132,7 +132,34 @@ sub metadata {
 =cut
 
 sub status_graph {
-    return {};
+    return {
+
+        Remitterad => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'Remitterad',                   # ID of this status
+            name           => 'Remitterad',                   # UI name of this status
+            ui_method_name => 'Remitterad',                   # UI name of method leading
+                                                           # to this status
+            method         => 'create',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-plus',                   # UI Style class
+        },
+        Uteliggande => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'Uteliggande',                   # ID of this status
+            name           => 'Uteliggande',                   # UI name of this status
+            ui_method_name => 'Uteliggande',                   # UI name of method leading
+                                                           # to this status
+            method         => 'requestitem',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+
+    };
 }
 
 =head3 create
