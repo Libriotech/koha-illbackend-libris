@@ -85,7 +85,7 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
             'borrowernumber' => '',
             'biblio_id'      => '',
             'branchcode'     => '',
-            'status'         => $req->{'status'},  # FIXME Why does the status not show? Must be defined in status graph? 
+            'status'         => $req->{'status'}, 
             'placed'         => '',
             'replied'        => '',
             'completed'      => '',
