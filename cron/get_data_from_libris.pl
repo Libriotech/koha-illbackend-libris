@@ -15,6 +15,7 @@ get_data_from_libris.pl - Cronjob to fetch updates from Libris.
 use LWP;
 use LWP::UserAgent;
 use JSON qw( decode_json );
+use Scalar::Util qw( reftype );
 use Getopt::Long;
 use Data::Dumper;
 use Template;
@@ -73,9 +74,12 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->status( $req->{'status'} );
         $old_illrequest->store;
         # Update the attributes
-        $old_illrequest->illrequestattributes->find({ 'type' => 'title' })->update({ 'value' => $req->{'title'} });
-        $old_illrequest->illrequestattributes->find({ 'type' => 'author' })->update({ 'value' => $req->{'author'} });
-        $old_illrequest->illrequestattributes->find({ 'type' => 'isbn_issn' })->update({ 'value' => $req->{'isbn_issn'} });
+        foreach my $attr ( keys %{ $req } ) {
+            next if ( $attr eq 'receiving_library' || $attr eq 'recipients' || $attr eq 'end_user' );
+            $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
+        }
+        # $old_illrequest->illrequestattributes->find({ 'type' => 'author' })->update({ 'value' => $req->{'author'} });
+        # $old_illrequest->illrequestattributes->find({ 'type' => 'isbn_issn' })->update({ 'value' => $req->{'isbn_issn'} });
     } else {
         say "Going to create a new request" if $verbose;
         my $illrequest = Koha::Illrequest->new;
@@ -96,15 +100,24 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
             'notesstaff'     => '',
             'backend'        => 'Libris',
             'stage'          => 'commit',
-            'attr'           => {
-                'lf_number' => $req->{'lf_number'},
-                'title'     => $req->{'title'},
-                'author'    => $req->{'author'},
-                'isbn_issn' => $req->{'isbn_issn'}
-            },
+            # 'attr'           => {
+            #     'lf_number' => $req->{'lf_number'},
+            #     'title'     => $req->{'title'},
+            #     'author'    => $req->{'author'},
+            #     'isbn_issn' => $req->{'isbn_issn'}
+            # },
         });
         say Dumper $backend_result; # FIXME Check for no errors
         say "Created new request with illrequest_id = " . $illrequest->illrequest_id if $verbose;
+        # Add attributes
+        foreach my $attr ( keys %{ $req } ) {
+            next if ( $attr eq 'receiving_library' || $attr eq 'recipients' || $attr eq 'end_user' );
+            Koha::Illrequestattribute->new({
+                illrequest_id => $illrequest->illrequest_id,
+                type          => $attr,
+                value         => $req->{ $attr },
+            })->store;
+        }
     }
 
 #        'borrowernumber' => $borrower->{borrowernumber},
