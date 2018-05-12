@@ -78,8 +78,6 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
             next if ( $attr eq 'receiving_library' || $attr eq 'recipients' || $attr eq 'end_user' );
             $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
         }
-        # $old_illrequest->illrequestattributes->find({ 'type' => 'author' })->update({ 'value' => $req->{'author'} });
-        # $old_illrequest->illrequestattributes->find({ 'type' => 'isbn_issn' })->update({ 'value' => $req->{'isbn_issn'} });
     } else {
         say "Going to create a new request" if $verbose;
         my $illrequest = Koha::Illrequest->new;
@@ -100,12 +98,6 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
             'notesstaff'     => '',
             'backend'        => 'Libris',
             'stage'          => 'commit',
-            # 'attr'           => {
-            #     'lf_number' => $req->{'lf_number'},
-            #     'title'     => $req->{'title'},
-            #     'author'    => $req->{'author'},
-            #     'isbn_issn' => $req->{'isbn_issn'}
-            # },
         });
         say Dumper $backend_result; # FIXME Check for no errors
         say "Created new request with illrequest_id = " . $illrequest->illrequest_id if $verbose;
