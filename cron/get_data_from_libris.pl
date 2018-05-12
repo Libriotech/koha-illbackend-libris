@@ -75,8 +75,15 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->store;
         # Update the attributes
         foreach my $attr ( keys %{ $req } ) {
-            next if ( $attr eq 'receiving_library' || $attr eq 'recipients' || $attr eq 'end_user' );
-            $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
+            next if ( $attr eq 'receiving_library' || $attr eq 'recipients' );
+            if ( $attr eq 'end_user' ) {
+                my $end_user = $req->{ 'end_user' };
+                foreach my $eu_data ( keys %{ $end_user } ) {
+                    $old_illrequest->illrequestattributes->find({ 'type' => "end_user_$eu_data" })->update({ 'value' => $req->{'end_user'}->{ $eu_data } });
+                }
+            } else {
+                $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
+            }
         }
     } else {
         say "Going to create a new request" if $verbose;
@@ -103,12 +110,23 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
         say "Created new request with illrequest_id = " . $illrequest->illrequest_id if $verbose;
         # Add attributes
         foreach my $attr ( keys %{ $req } ) {
-            next if ( $attr eq 'receiving_library' || $attr eq 'recipients' || $attr eq 'end_user' );
-            Koha::Illrequestattribute->new({
-                illrequest_id => $illrequest->illrequest_id,
-                type          => $attr,
-                value         => $req->{ $attr },
-            })->store;
+            next if ( $attr eq 'receiving_library' || $attr eq 'recipients' );
+            if ( $attr eq 'end_user' ) {
+                my $end_user = $req->{ 'end_user' };
+                foreach my $eu_data ( keys %{ $end_user } ) {
+                    Koha::Illrequestattribute->new({
+                        illrequest_id => $illrequest->illrequest_id,
+                        type          => "end_user_$eu_data",
+                        value         => $req->{'end_user'}->{ $eu_data },
+                    })->store;
+                }
+            } else {
+                Koha::Illrequestattribute->new({
+                    illrequest_id => $illrequest->illrequest_id,
+                    type          => $attr,
+                    value         => $req->{ $attr },
+                })->store;
+            }
         }
     }
 
