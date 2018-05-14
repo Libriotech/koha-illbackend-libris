@@ -159,28 +159,6 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         }
     }
 
-#        'borrowernumber' => $borrower->{borrowernumber},
-#        'biblionumber'   => $biblionumber,
-#        'branchcode'     => 'ILL',
-#        'status'         => 'H_ITEMREQUESTED',
-#        'medium'         => $bibdata->{MediumType},
-#        'backend'        => 'Libris',
-#        'attr'           => {
-#            'title'        => $bibdata->{Title},
-#            'author'       => $bibdata->{Author},
-#            'ordered_from' => $ordered_from,
-#            'ordered_from_borrowernumber' => $ordered_from_patron->{borrowernumber},
-#            # 'id'           => 1,
-#            'PlaceOfPublication'  => $bibdata->{PlaceOfPublication},
-#            'Publisher'           => $bibdata->{Publisher},
-#            'PublicationDate'     => $bibdata->{PublicationDate},
-#            'Language'            => $bibdata->{Language},
-#            'ItemIdentifierType'  => $request->{$message}->{ItemId}->{ItemIdentifierType},
-#            'ItemIdentifierValue' => $request->{$message}->{ItemId}->{ItemIdentifierValue},
-#            'RequestType'         => $request->{$message}->{RequestType},
-#            'RequestScopeType'    => $request->{$message}->{RequestScopeType},
-#         },
-
 }
 
 # SUBROUTINES
