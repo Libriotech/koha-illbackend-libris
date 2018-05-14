@@ -110,9 +110,22 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
         say "Created new request with illrequest_id = " . $illrequest->illrequest_id if $verbose;
         # Add attributes
         foreach my $attr ( keys %{ $req } ) {
-            next if ( $attr eq 'recipients' );
+            # "recipients" is an array of hashes, so we need to flatten it out
+            if ( $attr eq 'recipients' ) {
+                my @recipients = @{ $req->{ 'recipients' } };
+                my $recip_count = 1;
+                foreach my $recip ( @recipients ) {
+                    foreach my $key ( keys %{ $recip } ) { 
+                        Koha::Illrequestattribute->new({
+                            illrequest_id => $illrequest->illrequest_id,
+                            type          => $attr . "_$recip_count" . "_$key",
+                            value         => $recip->{ $key },
+                        })->store;
+                    }
+                    $recip_count++;
+                }
             # receiving_library and end_user are hashes, so we need to flatten them out
-            if ( $attr eq 'receiving_library' || $attr eq 'end_user' ) {
+            } elsif ( $attr eq 'receiving_library' || $attr eq 'end_user' ) {
                 my $end_user = $req->{ $attr };
                 foreach my $data ( keys %{ $end_user } ) {
                     Koha::Illrequestattribute->new({
