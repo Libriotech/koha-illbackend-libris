@@ -75,8 +75,17 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->store;
         # Update the attributes
         foreach my $attr ( keys %{ $req } ) {
-            next if ( $attr eq 'recipients' );
-            if ( $attr eq 'receiving_library' || $attr eq 'end_user' ) {
+            # "recipients" is an array of hashes, so we need to flatten it out
+            if ( $attr eq 'recipients' ) { 
+                my @recipients = @{ $req->{ 'recipients' } };
+                my $recip_count = 1;
+                foreach my $recip ( @recipients ) { 
+                    foreach my $key ( keys %{ $recip } ) { 
+                        $old_illrequest->illrequestattributes->find({ 'type' => $attr . "_$recip_count" . "_$key" })->update({ 'value' => $recip->{ $key } });
+                    }
+                    $recip_count++;
+                } 
+            } elsif ( $attr eq 'receiving_library' || $attr eq 'end_user' ) {
                 my $hashref = $req->{ $attr };
                 foreach my $data ( keys %{ $hashref } ) {
                     $old_illrequest->illrequestattributes->find({ 'type' => $attr . "_$data" })->update({ 'value' => $req->{ $attr }->{ $data } });
