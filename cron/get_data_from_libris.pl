@@ -28,7 +28,7 @@ use Koha::Illrequests;
 use Koha::Illrequest::Config;
 
 # Get options
-my ( $limit, $verbose, $debug ) = get_options();
+my ( $limit, $verbose, $debug, $test ) = get_options();
 
 # my $data = get_recent_data();
 # We should probably use "incoming", but while developing it is more predictable
@@ -37,7 +37,7 @@ my $data = get_incoming_data();
 
 say "Found $data->{'count'} requests" if $verbose;
 
-foreach my $req ( @{ $data->{'ill_requests'} } ) {
+REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
     # Output details about the request
     say "-----------------------------------------------------------------";
@@ -64,6 +64,12 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
         }
         print "Active: $recip->{'is_active_library'}";
         print "\n";
+    }
+
+    # Bail out if we are only testing
+    if ( $test ) {
+        say "We are in testing mode, so not saving any data";
+        next REQUEST;
     }
 
     # Save or update the request in Koha
@@ -181,19 +187,19 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
 sub get_incoming_data {
 
-    return get_data( 'illrequests', 'incoming' );
+    return get_data( "illrequests/__sigil__/incoming" );
 
 }
 
 sub get_recent_data {
 
-    return get_data( 'illrequests', 'recent' );
+    return get_data( "illrequests/__sigil__/recent" );
 
 }
 
 sub get_data {
 
-    my ( $action, $what ) = @_;
+    my ( $fragment ) = @_;
 
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
     my $sigil     = 'Hig'; # FIXME Use local syspref
@@ -203,8 +209,11 @@ sub get_data {
     my $ua = LWP::UserAgent->new;
     $ua->agent("Koha ILL");
 
+    # Replace placeholders in the fragment
+    $fragment =~ s/__sigil__/$sigil/g;
+
     # Create a request
-    my $url = "$base_url/$action/$sigil/$what";
+    my $url = "$base_url/$fragment";
     say "Requesting $url" if $verbose;
     my $request = HTTP::Request->new( GET => $url );
     $request->header( 'api-key' => $libriskey );
@@ -253,6 +262,10 @@ More verbose output.
 
 Even more verbose output.
 
+=item B<-t --test>
+
+Retrieve data, but do not try to save it.
+
 =item B<-h, -?, --help>
 
 Prints this help message and exits.
@@ -267,18 +280,20 @@ sub get_options {
     my $limit      = '';
     my $verbose    = '';
     my $debug      = '';
+    my $test       = '';
     my $help       = '';
 
     GetOptions (
         'l|limit=i'  => \$limit,
         'v|verbose'  => \$verbose,
         'd|debug'    => \$debug,
+        't|test'     => \$test,
         'h|?|help'   => \$help
     );
 
     pod2usage( -exitval => 0 ) if $help;
 
-    return ( $limit, $verbose, $debug );
+    return ( $limit, $verbose, $debug, $test );
 
 }
 
