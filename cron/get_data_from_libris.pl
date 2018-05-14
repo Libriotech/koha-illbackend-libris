@@ -75,11 +75,11 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->store;
         # Update the attributes
         foreach my $attr ( keys %{ $req } ) {
-            next if ( $attr eq 'receiving_library' || $attr eq 'recipients' );
-            if ( $attr eq 'end_user' ) {
-                my $end_user = $req->{ 'end_user' };
-                foreach my $eu_data ( keys %{ $end_user } ) {
-                    $old_illrequest->illrequestattributes->find({ 'type' => "end_user_$eu_data" })->update({ 'value' => $req->{'end_user'}->{ $eu_data } });
+            next if ( $attr eq 'recipients' );
+            if ( $attr eq 'receiving_library' || $attr eq 'end_user' ) {
+                my $hashref = $req->{ $attr };
+                foreach my $data ( keys %{ $hashref } ) {
+                    $old_illrequest->illrequestattributes->find({ 'type' => $attr . "_$data" })->update({ 'value' => $req->{ $attr }->{ $data } });
                 }
             } else {
                 $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
@@ -110,14 +110,15 @@ foreach my $req ( @{ $data->{'ill_requests'} } ) {
         say "Created new request with illrequest_id = " . $illrequest->illrequest_id if $verbose;
         # Add attributes
         foreach my $attr ( keys %{ $req } ) {
-            next if ( $attr eq 'receiving_library' || $attr eq 'recipients' );
-            if ( $attr eq 'end_user' ) {
-                my $end_user = $req->{ 'end_user' };
-                foreach my $eu_data ( keys %{ $end_user } ) {
+            next if ( $attr eq 'recipients' );
+            # receiving_library and end_user are hashes, so we need to flatten them out
+            if ( $attr eq 'receiving_library' || $attr eq 'end_user' ) {
+                my $end_user = $req->{ $attr };
+                foreach my $data ( keys %{ $end_user } ) {
                     Koha::Illrequestattribute->new({
                         illrequest_id => $illrequest->illrequest_id,
-                        type          => "end_user_$eu_data",
-                        value         => $req->{'end_user'}->{ $eu_data },
+                        type          => $attr . "_$data",
+                        value         => $req->{ $attr }->{ $data },
                     })->store;
                 }
             } else {
