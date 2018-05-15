@@ -184,19 +184,19 @@ sub create {
 
     my $request = $params->{request};
     $request->orderid(        $params->{other}->{orderid} );
-    $request->borrowernumber( 51 );
+    $request->borrowernumber( $params->{other}->{borrowernumber} );
     $request->biblio_id(      1 );
     $request->branchcode(     'ILL' );
-    $request->status(         $params->{other}->{status});
+    $request->status(         $params->{other}->{status} );
     $request->placed(         DateTime->now);
     $request->replied(        );
     $request->completed(      );
-    $request->medium(         $params->{other}->{medium});
+    $request->medium(         $params->{other}->{medium} );
     $request->accessurl(      );
     $request->cost(           );
     $request->notesopac(      );
     $request->notesstaff(     );
-    $request->backend(        $params->{other}->{backend});
+    $request->backend(        $params->{other}->{backend} );
     $request->store;
     # ...Populate Illrequestattributes
     while ( my ( $type, $value ) = each %{$params->{other}->{attr}} ) {
