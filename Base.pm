@@ -133,6 +133,10 @@ sub metadata {
         = $attrs->find({type => 'lf_number'})
         ? $attrs->find({type => 'lf_number'})->value
         : undef;
+    $return->{'Typ'}
+        = $attrs->find({type => 'media_type'})
+        ? $attrs->find({type => 'media_type'})->value
+        : undef;
 
     return $return;
 }
