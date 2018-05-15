@@ -21,6 +21,7 @@ use Modern::Perl;
 use DateTime;
 use Koha::Illrequestattribute;
 use Koha::Patrons;
+use utf8;
 
 =head1 NAME
 
