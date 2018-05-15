@@ -137,6 +137,10 @@ sub metadata {
         = $attrs->find({type => 'media_type'})
         ? $attrs->find({type => 'media_type'})->value
         : undef;
+    $return->{'År'}
+        = $attrs->find({type => 'year'})
+        ? $attrs->find({type => 'year'})->value
+        : undef;
 
     return $return;
 }
