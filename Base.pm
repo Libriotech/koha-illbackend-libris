@@ -120,22 +120,17 @@ sub metadata {
     my ( $self, $request ) = @_;
     my $attrs = $request->illrequestattributes;
 
-    my $title = '-';
-    if ( $attrs->find({ type => 'title' }) ) {
-        $title = $attrs->find({ type => 'title' })->value;
-    }
+    my $return;
+    $return->{'Title'}
+        = $attrs->find({type => 'title'})
+        ? $attrs->find({type => 'title'})->value
+        : undef;
+    $return->{'Author'}
+        = $attrs->find({type => 'author'})
+        ? $attrs->find({type => 'author'})->value
+        : undef;
 
-    my $author = '-';
-    if ( $attrs->find({ type => 'author' }) ) {
-        $author = $attrs->find({ type => 'author' })->value;
-    }
-
-    return {
-        # ID     => $attrs->find({ type => 'id' })->value,
-        Title  => $title,
-        Author => $author,
-        # Status => $attrs->find({ type => 'status' })->value,
-    }
+    return $return;
 }
 
 =head3 status_graph
