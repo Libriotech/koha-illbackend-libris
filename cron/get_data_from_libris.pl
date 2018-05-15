@@ -66,6 +66,9 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         print "\n";
     }
 
+    # Save or update data about the receiving library
+    my $borrowernumber_receiving_library = upsert_receiving_library( $receiving_library->{'library_code'} );
+
     # Bail out if we are only testing
     if ( $test ) {
         say "We are in testing mode, so not saving any data";
@@ -106,7 +109,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $illrequest->load_backend( 'Libris' );
         my $backend_result = $illrequest->backend_create({
             'orderid'        => $req->{'request_id'},
-            'borrowernumber' => '',
+            'borrowernumber' => $borrowernumber_receiving_library,
             'biblio_id'      => '',
             'branchcode'     => '',
             'status'         => $req->{'status'}, 
@@ -224,6 +227,63 @@ sub get_data {
 
 }
 
+=head2 upsert_receiving_library()
+
+Takes the sigil of a library as an argument and looks it up in the "libraries"
+endpoint of the Libris API. If a library with that sigil already exists in the
+Koha database, it is updated. If it does not exist, a new library is inserted,
+based on the retrieved data.
+
+The borrowernumber of the library in question is returned, either way.
+
+=cut
+
+sub upsert_receiving_library {
+
+    my ( $receiver_sigil ) = @_;
+
+    my $all_lib_data = get_data( "libraries/__sigil__/$receiver_sigil" );
+    # The API returns a hash with the single key libraries, which contains an
+    # array of hashes describing libraries. We should only be getting data about
+    # one library back, so we pick out the first one.
+    my $lib_data = $all_lib_data->{'libraries'}->[0];
+
+    # Try to find an existing library with the given sigil
+    my $library = Koha::Patrons->find({ cardnumber => $receiver_sigil });
+
+    # Map data from the API to Koha database structure
+    my $address2 = $lib_data->{'address2'};
+    if ( $lib_data->{'address3'} ) {
+        $address2 .= ', ' . $lib_data->{'address3'};
+    }
+    my $new_library_data = {
+        cardnumber   => $receiver_sigil,
+        surname      => $lib_data->{'name'},
+        categorycode => 'ILLLIBS', # FIXME Use partner_code from the ILL config
+        branchcode   => 'BIB', # FIXME
+        userid       => $receiver_sigil,
+        password     => '!',
+        address      => $lib_data->{'address1'},
+        address2     => $address2,
+        city         => $lib_data->{'city'},
+        zipcode      => $lib_data->{'zip_code'},
+    };
+
+    my $borrowernumber;
+    if ( $library ) {
+        say "*** Updating existing library" if $verbose;
+        $library->update( $new_library_data );
+        $borrowernumber = $library->borrowernumber;
+    } else {
+        say "*** Inserting new library" if $verbose;
+        my $new_library = Koha::Patron->new( $new_library_data )->store();
+        $borrowernumber = $new_library->borrowernumber;
+    }
+
+    return $borrowernumber;
+
+}
+
 =head1 OPTIONS
 
 =over 4
@@ -238,7 +298,8 @@ More verbose output.
 
 =item B<-d --debug>
 
-Even more verbose output.
+Even more verbose output. Specifically, this option will cause all retreived data
+from the API to be dumped.
 
 =item B<-t --test>
 
