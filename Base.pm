@@ -129,6 +129,10 @@ sub metadata {
         = $attrs->find({type => 'author'})
         ? $attrs->find({type => 'author'})->value
         : undef;
+    $return->{'Libris best.nr'}
+        = $attrs->find({type => 'lf_number'})
+        ? $attrs->find({type => 'lf_number'})->value
+        : undef;
 
     return $return;
 }
