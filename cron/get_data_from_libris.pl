@@ -260,7 +260,7 @@ sub upsert_receiving_library {
         cardnumber   => $receiver_sigil,
         surname      => $lib_data->{'name'},
         categorycode => 'ILLLIBS', # FIXME Use partner_code from the ILL config
-        branchcode   => 'BIB', # FIXME
+        branchcode   => 'ILL', # FIXME
         userid       => $receiver_sigil,
         password     => '!',
         address      => $lib_data->{'address1'},
