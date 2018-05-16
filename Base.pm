@@ -122,11 +122,11 @@ sub metadata {
     my $attrs = $request->illrequestattributes;
 
     my $return;
-    $return->{'Titel'}
+    $return->{'Title'}
         = $attrs->find({type => 'title'})
         ? $attrs->find({type => 'title'})->value
         : undef;
-    $return->{'Författare'}
+    $return->{'Author'}
         = $attrs->find({type => 'author'})
         ? $attrs->find({type => 'author'})->value
         : undef;
