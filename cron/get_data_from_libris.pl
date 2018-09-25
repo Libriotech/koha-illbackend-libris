@@ -101,6 +101,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 }
             } else {
                 $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
+                say "DEBUG: $attr = ", $req->{ $attr } if $debug;
             }
         }
     } else {
@@ -158,6 +159,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                     type          => $attr,
                     value         => $req->{ $attr },
                 })->store;
+                say "DEBUG: $attr = ", $req->{ $attr } if $debug;
             }
         }
     }
