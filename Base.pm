@@ -125,23 +125,23 @@ sub metadata {
     $return->{'Title'}
         = $attrs->find({type => 'title'})
         ? $attrs->find({type => 'title'})->value
-        : undef;
+        : '';
     $return->{'Author'}
         = $attrs->find({type => 'author'})
         ? $attrs->find({type => 'author'})->value
-        : undef;
+        : '';
     $return->{'Libris best.nr'}
         = $attrs->find({type => 'lf_number'})
         ? $attrs->find({type => 'lf_number'})->value
-        : undef;
+        : '';
     $return->{'Typ'}
         = $attrs->find({type => 'media_type'})
         ? $attrs->find({type => 'media_type'})->value
-        : undef;
+        : '';
     $return->{'År'}
         = $attrs->find({type => 'year'})
         ? $attrs->find({type => 'year'})->value
-        : undef;
+        : '';
 
     return $return;
 }
@@ -171,6 +171,18 @@ sub status_graph {
             id             => 'Uteliggande',                   # ID of this status
             name           => 'Uteliggande',                   # UI name of this status
             ui_method_name => 'Uteliggande',                   # UI name of method leading
+                                                           # to this status
+            method         => 'requestitem',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        Levererad => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'Levererad',                   # ID of this status
+            name           => 'Levererad',                   # UI name of this status
+            ui_method_name => 'Levererad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
             next_actions   => [ 'KILL' ], # buttons to add to all
