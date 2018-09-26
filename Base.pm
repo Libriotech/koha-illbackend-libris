@@ -189,6 +189,78 @@ sub status_graph {
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
+        "Läst" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'Läst',                   # ID of this status
+            name           => 'Läst',                   # UI name of this status
+            ui_method_name => 'Läst',                   # UI name of method leading
+                                                           # to this status
+            method         => 'requestitem',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        "Kan reserveras" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'Kan reserveras',                   # ID of this status
+            name           => 'Kan reserveras',                   # UI name of this status
+            ui_method_name => 'Kan reserveras',                   # UI name of method leading
+                                                           # to this status
+            method         => 'requestitem',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        "Makulerad" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'Makulerad',                   # ID of this status
+            name           => 'Makulerad',                   # UI name of this status
+            ui_method_name => 'Makulerad',                   # UI name of method leading
+                                                           # to this status
+            method         => 'requestitem',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        "Negativt svar" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'Negativt svar',                   # ID of this status
+            name           => 'Negativt svar',                   # UI name of this status
+            ui_method_name => 'Negativt svar',                   # UI name of method leading
+                                                           # to this status
+            method         => 'requestitem',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        "Reservation" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'Reservation',                   # ID of this status
+            name           => 'Reservation',                   # UI name of this status
+            ui_method_name => 'Reservation',                   # UI name of method leading
+                                                           # to this status
+            method         => 'requestitem',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        "Reserverad" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'Reserverad',                   # ID of this status
+            name           => 'Reserverad',                   # UI name of this status
+            ui_method_name => 'Reserverad',                   # UI name of method leading
+                                                           # to this status
+            method         => 'requestitem',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
 
     };
 }
