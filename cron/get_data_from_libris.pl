@@ -28,12 +28,33 @@ use Koha::Illrequests;
 use Koha::Illrequest::Config;
 
 # Get options
-my ( $limit, $verbose, $debug, $test ) = get_options();
+my ( $limit, $refresh, $verbose, $debug, $test ) = get_options();
 
-# my $data = get_recent_data();
-# We should probably use "incoming", but while developing it is more predictable
-# to use "recent". Change to this before using in a live setting:
-my $data = get_incoming_data(); 
+my $data;
+if ( $refresh ) {
+    # Refresh all requests in the DB with fresh data
+    my $old_requests = Koha::Illrequests->search({});
+    my $refresh_count = 0;
+    while ( my $req = $old_requests->next ) {
+        my $req_data = get_request_data( $req->orderid );
+        if ( $refresh_count == 0 ) {
+            # On the first pass we save the whole datastructure
+            $data = $req_data;
+        } else {
+            # On subsequent passes we add the aqtual request data to the array in "ill_requests"
+            push @{ $data->{ 'ill_requests' } }, $req_data->{ 'ill_requests' }->[0];
+        }
+        $refresh_count++;
+        sleep 5;
+    }
+    $data->{ 'count' } = $refresh_count;
+} else {
+    # Default: Get updated data from the API
+    # We should probably use "incoming", but while developing it is more predictable
+    # to use "recent". Change to this before using in a live setting:
+    $data = get_recent_data();
+    # $data = get_incoming_data();
+}
 
 say "Found $data->{'count'} requests" if $verbose;
 
@@ -180,6 +201,13 @@ sub get_recent_data {
 
 }
 
+sub get_request_data {
+
+    my ( $orderid ) = @_;
+    return get_data( "illrequests/__sigil__/$orderid" );
+
+}
+
 sub get_data {
 
     my ( $fragment ) = @_;
@@ -294,6 +322,10 @@ sub upsert_receiving_library {
 
 Only process the n first requests. Not implemented.
 
+=item B<-r, --refresh>
+
+Get fresh data for all requests in the database.
+
 =item B<-v --verbose>
 
 More verbose output.
@@ -319,6 +351,7 @@ sub get_options {
 
     # Options
     my $limit      = '';
+    my $refresh    = '';
     my $verbose    = '';
     my $debug      = '';
     my $test       = '';
@@ -326,6 +359,7 @@ sub get_options {
 
     GetOptions (
         'l|limit=i'  => \$limit,
+        'r|refresh'  => \$refresh,
         'v|verbose'  => \$verbose,
         'd|debug'    => \$debug,
         't|test'     => \$test,
@@ -334,7 +368,7 @@ sub get_options {
 
     pod2usage( -exitval => 0 ) if $help;
 
-    return ( $limit, $verbose, $debug, $test );
+    return ( $limit, $refresh, $verbose, $debug, $test );
 
 }
 
