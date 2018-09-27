@@ -24,8 +24,11 @@ use Pod::Usage;
 use Modern::Perl;
 binmode STDOUT, ":utf8";
 
+use C4::Context;
 use Koha::Illrequests;
 use Koha::Illrequest::Config;
+
+my $dbh = C4::Context->dbh;
 
 # Get options
 my ( $limit, $refresh, $verbose, $debug, $test ) = get_options();
@@ -45,6 +48,9 @@ if ( $refresh ) {
             push @{ $data->{ 'ill_requests' } }, $req_data->{ 'ill_requests' }->[0];
         }
         $refresh_count++;
+        if ( $limit && $limit == $refresh_count ) {
+            last;
+        }
         sleep 5;
     }
     $data->{ 'count' } = $refresh_count;
@@ -71,6 +77,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     say "\tStatus:       $req->{'status'}";
     say "\tXstatus:      $req->{'xstatus'}";
     say "\tMessage:      $req->{'message'}";
+    say "\tbib_id:       $req->{'bib_id'}";
     
     my $receiving_library = $req->{'receiving_library'};
     say "\tReceiving library: $receiving_library->{'name'} ($receiving_library->{'library_code'})";
@@ -96,12 +103,22 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         next REQUEST;
     }
 
+    # Make the connection to a bib record
+    my $biblionumber = 0;
+    if ( $req->{'bib_id'} && $req->{'bib_id'} ne '' ) {
+        # Look for the bib record based on bib_id and MARC field 001
+        my $hits = $dbh->selectrow_hashref( 'SELECT biblionumber FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $req->{'bib_id'} ) );
+        say Dumper $hits;
+        $biblionumber = $hits->{'biblionumber'};
+    }
+
     # Save or update the request in Koha
     my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'request_id'} });
     if ( $old_illrequest ) {
         say "Found an existing request with illrequest_id = " . $old_illrequest->illrequest_id if $verbose;
         # Update the request
         $old_illrequest->status( $req->{'status'} );
+        $old_illrequest->biblio_id( $biblionumber );
         $old_illrequest->store;
         # Update the attributes
         foreach my $attr ( keys %{ $req } ) {
@@ -132,7 +149,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         my $backend_result = $illrequest->backend_create({
             'orderid'        => $req->{'request_id'},
             'borrowernumber' => $borrowernumber_receiving_library,
-            'biblio_id'      => '',
+            'biblio_id'      => $biblionumber,
             'branchcode'     => '',
             'status'         => $req->{'status'}, 
             'placed'         => '',
