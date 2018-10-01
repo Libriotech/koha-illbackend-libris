@@ -267,10 +267,9 @@ sub status_graph {
 
 =head3 create
 
-  my $response = $backend->create({
-      request    => $requestdetails,
-      other      => $other,
-  });
+New Libris requests are always created/initiated in Libris itself,
+so this is just a dummy method, because the ILL module expects there
+to be a create subroutine.
 
 =cut
 
@@ -279,38 +278,13 @@ sub create {
     # -> initial placement of the request for an ILL order
     my ( $self, $params ) = @_;
 
-    my $request = $params->{request};
-    $request->orderid(        $params->{other}->{orderid} );
-    $request->borrowernumber( $params->{other}->{borrowernumber} );
-    $request->biblio_id(      1 );
-    $request->branchcode(     'ILL' );
-    $request->status(         $params->{other}->{status} );
-    $request->placed(         DateTime->now);
-    $request->replied(        );
-    $request->completed(      );
-    $request->medium(         $params->{other}->{medium} );
-    $request->accessurl(      );
-    $request->cost(           );
-    $request->notesopac(      );
-    $request->notesstaff(     );
-    $request->backend(        $params->{other}->{backend} );
-    $request->store;
-    # ...Populate Illrequestattributes
-    while ( my ( $type, $value ) = each %{$params->{other}->{attr}} ) {
-        Koha::Illrequestattribute->new({
-            illrequest_id => $request->illrequest_id,
-            type          => $type,
-            value         => $value,
-        })->store;
-    }
-
     # -> create response.
     return {
         error   => 0,
         status  => '',
         message => '',
         method  => 'create',
-        stage   => 'commit',
+        stage   => 'msg',
         next    => 'illview',
         # value   => $request_details,
     };
