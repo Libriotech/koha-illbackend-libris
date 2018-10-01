@@ -130,7 +130,11 @@ sub metadata {
         = $attrs->find({type => 'author'})
         ? $attrs->find({type => 'author'})->value
         : '';
-    $return->{'Libris best.nr'}
+    $return->{'Xstatus'}
+        = $attrs->find({type => 'xstatus'})
+        ? $attrs->find({type => 'xstatus'})->value
+        : 'Okänd status';
+        $return->{'Libris best.nr'}
         = $attrs->find({type => 'lf_number'})
         ? $attrs->find({type => 'lf_number'})->value
         : '';
