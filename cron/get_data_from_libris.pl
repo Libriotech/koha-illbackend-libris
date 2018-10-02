@@ -28,6 +28,7 @@ use C4::Context;
 use Koha::Illrequests;
 use Koha::Illrequest::Config;
 
+my $ill_config = C4::Context->config('interlibrary_loans');
 my $dbh = C4::Context->dbh;
 
 # Get options
@@ -230,8 +231,8 @@ sub get_data {
     my ( $fragment ) = @_;
 
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
-    my $sigil     = 'Hig'; # FIXME Use local syspref
-    my $libriskey = 'xyz'; # FIXME Use local syspref
+    my $sigil     = $ill_config->{'libris_sigil'};
+    my $libriskey = $ill_config->{'libris_key'};
 
     # Create a user agent object
     my $ua = LWP::UserAgent->new;

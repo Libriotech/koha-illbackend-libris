@@ -1,0 +1,33 @@
+=pod
+
+=head1 CONFIGURATION
+
+Some tips on how to configure the Libris ILL backend.
+
+=head2 koha-conf.xml
+
+In this file you need to make sure you have set up a section called 
+interlibrary_loans for the ILL stuff to work at all. Inside this section, you
+need to add the following elements: 
+
+=over 4
+
+=item * libris_sigil - The sigil used to identify the library in Libris.
+
+=item * libris_key - The API key for talking to the Libris API.
+
+=back
+
+Example: 
+
+  <yazgfs>
+    <config>
+      <interlibrary_loans>
+        ...
+        <libris_sigil>xyz</libris_sigil>
+        <libris_key>abc</libris_key>
+      </interlibrary_loans>
+    <config>
+  <yazgfs>
+
+=cut
