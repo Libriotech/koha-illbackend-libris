@@ -210,7 +210,9 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
 }
 
-# SUBROUTINES
+=head1 SUBROUTINES
+
+=cut
 
 sub get_data_by_mode {
 
