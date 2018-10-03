@@ -28,11 +28,19 @@ use C4::Context;
 use Koha::Illrequests;
 use Koha::Illrequest::Config;
 
-my $ill_config = C4::Context->config('interlibrary_loans');
-my $dbh = C4::Context->dbh;
-
 # Get options
 my ( $mode, $limit, $refresh, $verbose, $debug, $test ) = get_options();
+
+my $ill_config = C4::Context->config('interlibrary_loans');
+say Dumper $ill_config if $debug;
+foreach my $element ( qw( sigil key) ) {
+    my $key = "libris_$element";
+    unless ( $ill_config->{ $key } ) {
+        die "You need to define '$key' in koha-conf.xml! See 'docs/config.pod' for details.\n"
+    }
+}
+
+my $dbh = C4::Context->dbh;
 
 my $data;
 if ( $refresh ) {
