@@ -167,7 +167,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             'notesopac'      => '',
             'notesstaff'     => '',
             'backend'        => 'Libris',
-            'stage'          => 'commit',
+            'stage'          => 'from_api',
         });
         say Dumper $backend_result; # FIXME Check for no errors
         say "Created new request with illrequest_id = " . $illrequest->illrequest_id if $verbose;
