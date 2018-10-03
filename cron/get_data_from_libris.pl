@@ -32,7 +32,7 @@ my $ill_config = C4::Context->config('interlibrary_loans');
 my $dbh = C4::Context->dbh;
 
 # Get options
-my ( $limit, $refresh, $verbose, $debug, $test ) = get_options();
+my ( $mode, $limit, $refresh, $verbose, $debug, $test ) = get_options();
 
 my $data;
 if ( $refresh ) {
@@ -56,11 +56,8 @@ if ( $refresh ) {
     }
     $data->{ 'count' } = $refresh_count;
 } else {
-    # Default: Get updated data from the API
-    # We should probably use "incoming", but while developing it is more predictable
-    # to use "recent". Change to this before using in a live setting:
-    $data = get_recent_data();
-    # $data = get_incoming_data();
+    # Get data from Libris
+    $data = get_data_by_mode();
 }
 
 say "Found $data->{'count'} requests" if $verbose;
@@ -207,15 +204,9 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
 # SUBROUTINES
 
-sub get_incoming_data {
+sub get_data_by_mode {
 
-    return get_data( "illrequests/__sigil__/incoming" );
-
-}
-
-sub get_recent_data {
-
-    return get_data( "illrequests/__sigil__/recent" );
+    return get_data( "illrequests/__sigil__/$mode" );
 
 }
 
@@ -336,6 +327,27 @@ sub upsert_receiving_library {
 
 =over 4
 
+=item B<-m, --mode>
+
+This script can fetch data from endpoints, specified by this parameter. Available
+options are:
+
+=over 4
+
+=item * recent (default)
+
+=item * incoming
+
+=item * may_reserve
+
+=item * notfullfilled
+
+=item * delivered
+
+=back
+
+If no mode is specified, "recent" is the default.
+
 =item B<-l, --limit>
 
 Only process the n first requests. Not implemented.
@@ -368,6 +380,7 @@ Prints this help message and exits.
 sub get_options {
 
     # Options
+    my $mode       = 'recent';
     my $limit      = '';
     my $refresh    = '';
     my $verbose    = '';
@@ -376,6 +389,7 @@ sub get_options {
     my $help       = '';
 
     GetOptions (
+        'm|mode=s'   => \$mode,
         'l|limit=i'  => \$limit,
         'r|refresh'  => \$refresh,
         'v|verbose'  => \$verbose,
@@ -386,7 +400,17 @@ sub get_options {
 
     pod2usage( -exitval => 0 ) if $help;
 
-    return ( $limit, $refresh, $verbose, $debug, $test );
+    # Make sure mode has a valid value
+    my %mode_ok = (
+        'recent' => 1,
+        'incoming' => 1,
+        'may_reserve' => 1,
+        'notfullfilled' => 1,
+        'delivered' => 1,
+    );
+    pod2usage( -exitval => 0 ) unless $mode_ok{ $mode };
+
+    return ( $mode, $limit, $refresh, $verbose, $debug, $test );
 
 }
 
