@@ -201,7 +201,7 @@ sub status_graph {
             ui_method_name => 'Läst',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ 'KILL', 'RESPONSE' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -261,6 +261,18 @@ sub status_graph {
             ui_method_name => 'Reserverad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
+            next_actions   => [ 'KILL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        "RESPONSE" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'RESPONSE',                   # ID of this status
+            name           => 'Respondera',                   # UI name of this status
+            ui_method_name => 'Respondera',                   # UI name of method leading
+                                                           # to this status
+            method         => 'confirm',                    # method to this status
             next_actions   => [ 'KILL' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
@@ -357,38 +369,41 @@ using templates.
 =cut
 
 sub confirm {
-    # -> confirm placement of the ILL order
+
     my ( $self, $params ) = @_;
-    # Turn Illrequestattributes into a plain hashref
-    my $value = {};
-    my $attributes = $params->{request}->illrequestattributes;
-    foreach my $attr (@{$attributes->as_list}) {
-        $value->{$attr->type} = $attr->value;
-    };
-    # Submit request to backend...
+    my $stage = $params->{other}->{stage};
 
-    # No-op for Dummy
+    if ( $stage && $stage eq 'response' ) {
 
-    # ...parse response...
-    $attributes->find({ type => "status" })->value('On order')->store;
-    my $request = $params->{request};
-    $request->cost("30 GBP");
-    $request->orderid($value->{id});
-    $request->status("REQ");
-    $request->accessurl("URL") if $value->{url};
-    $request->store;
-    $value->{status} = "On order";
-    $value->{cost} = "30 GBP";
-    # ...then return our result:
-    return {
-        error    => 0,
-        status   => '',
-        message  => '',
-        method   => 'confirm',
-        stage    => 'commit',
-        next     => 'illview',
-        value    => $value,
-    };
+        warn "Going to update request";
+        # FIXME Do the actual update here
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => '',
+            method  => 'confirm',
+            stage   => 'response',
+            next    => 'illview',
+            # value   => $request_details,
+        };
+
+    } else {
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => '',
+            method  => 'confirm',
+            stage   => 'form',
+            next    => 'illview',
+            # value   => $request_details,
+        };
+
+    }
+
 }
 
 =head3 renew
