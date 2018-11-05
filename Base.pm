@@ -19,6 +19,10 @@ package Koha::Illbackends::Libris::Base;
 
 use Modern::Perl;
 use DateTime;
+use JSON qw( decode_json );
+use LWP::UserAgent;
+use HTTP::Request;
+
 use Koha::Illrequestattribute;
 use Koha::Patrons;
 use utf8;
@@ -177,7 +181,7 @@ sub status_graph {
             ui_method_name => 'Uteliggande',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ 'KILL', 'Läst' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -200,7 +204,7 @@ sub status_graph {
             name           => 'Läst',                   # UI name of this status
             ui_method_name => 'Läst',                   # UI name of method leading
                                                            # to this status
-            method         => 'requestitem',                    # method to this status
+            method         => 'set_status_read',                    # method to this status
             next_actions   => [ 'KILL', 'RESPONSE' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
@@ -279,6 +283,142 @@ sub status_graph {
         },
 
     };
+}
+
+=head3 set_status_read
+
+Set the status of a request to "read" ("Läst").
+
+=cut
+
+sub set_status_read {
+
+    my ( $self, $params ) = @_;
+    my $ill_config = C4::Context->config('interlibrary_loans');
+
+    my $request = $params->{request};
+    my $orderid = $request->orderid;
+    warn "*** orderid: $orderid";
+
+    my $orig_data = _get_data_from_libris( "illrequests/__sigil__/$orderid" );
+
+    # Pick out the timestamp
+    my $timestamp = $orig_data->{'ill_requests'}->[0]->{'last_modified'};
+    warn "*** timestamp: $timestamp";
+
+    ## Make the call back to Libris, to change the status
+
+    # Create a user agent object
+    my $ua = LWP::UserAgent->new;
+    $ua->agent("Koha ILL");
+
+    # Create a request
+    my $url = "http://iller.libris.kb.se/librisfjarrlan/api/illrequests/" . $ill_config->{'libris_sigil'} . "/$orderid";
+    warn "POSTing to $url";
+    my $req = HTTP::Request->new( 'POST', $url );
+    warn "*** libris_key: " . $ill_config->{'libris_key'};
+    $req->header( 'api-key' => $ill_config->{'libris_key'} );
+    $req->header( 'Content-Type' => 'application/x-www-form-urlencoded' );
+    $req->content( "action=read&timestamp=$timestamp" );
+
+    # Pass request to the user agent and get a response back
+    my $res = $ua->request($req);
+
+    # Check the outcome of the response
+    if ( $res->is_success ) {
+
+        my $json = $res->content;
+        my $new_data = decode_json( $json );
+
+        warn "*** Update action: " . $new_data->{'update_action'};
+        warn "*** Update success: " . $new_data->{'update_success'};
+        warn "*** Update message: " . $new_data->{'update_message'};
+        warn "*** Last modified: " . $new_data->{'ill_requests'}->[0]->{'last_modified'};
+        warn "*** Status: " . $new_data->{'ill_requests'}->[0]->{'status'};
+
+        # Update the request in the database
+        # FIXME Create a proper sub for updating data
+        $request->status( $new_data->{'ill_requests'}->[0]->{'status'} );
+        $request->illrequestattributes->find({ type => 'last_modified' })->value( $new_data->{'ill_requests'}->[0]->{'last_modified'} );
+        $request->store;
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => 'Status updated',
+            method  => 'set_status_read',
+            stage   => 'commit',
+            next    => 'illview',
+            # value   => $request_details,
+        };
+
+    } else {
+
+        warn $res->status_line;
+
+        # -> create response.
+        return {
+            error   => 1,
+            status  => '',
+            message => $res->status_line,
+            method  => 'set_status_read',
+            stage   => 'error',
+            next    => 'illview',
+            # value   => $request_details,
+        };
+
+    }
+
+}
+
+sub _get_data_from_libris {
+
+    my ( $fragment ) = @_;
+
+    my $ill_config = C4::Context->config('interlibrary_loans');
+
+    my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
+    my $sigil     = $ill_config->{'libris_sigil'};
+    my $libriskey = $ill_config->{'libris_key'};
+
+    # Create a user agent object
+    my $ua = LWP::UserAgent->new;
+    $ua->agent("Koha ILL");
+
+    # Replace placeholders in the fragment
+    $fragment =~ s/__sigil__/$sigil/g;
+
+    # Create a request
+    my $url = "$base_url/$fragment";
+    warn "Requesting $url";
+    my $request = HTTP::Request->new( GET => $url );
+    $request->header( 'api-key' => $libriskey );
+
+    # Pass request to the user agent and get a response back
+    my $res = $ua->request($request);
+
+    my $json;
+    # Check the outcome of the response
+    if ($res->is_success) {
+        $json = $res->content;
+    } else {
+        warn $res->status_line;
+    }
+
+    unless ( $json ) {
+        warn "No JSON!";
+        exit;
+    }
+
+    my $data = decode_json( $json );
+    if ( $data->{'count'} == 0 ) {
+        warn "No data!";
+        exit;
+    }
+
+    return $data;
+
 }
 
 =head3 create
