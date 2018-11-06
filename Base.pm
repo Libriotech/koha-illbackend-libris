@@ -181,7 +181,7 @@ sub status_graph {
             ui_method_name => 'Uteliggande',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'KILL', 'Läst' ], # buttons to add to all
+            next_actions   => [ 'Läst' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -205,7 +205,7 @@ sub status_graph {
             ui_method_name => 'Läst',                   # UI name of method leading
                                                            # to this status
             method         => 'set_status_read',                    # method to this status
-            next_actions   => [ 'KILL', 'RESPONSE' ], # buttons to add to all
+            next_actions   => [ 'RESPONSE' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -294,13 +294,123 @@ Set the status of a request to "read" ("Läst").
 sub set_status_read {
 
     my ( $self, $params ) = @_;
-    my $ill_config = C4::Context->config('interlibrary_loans');
 
     my $request = $params->{request};
+    my $res = _update_libris( $request, 'read' );
+
+    # Check the outcome of the response
+    if ( $res->is_success ) {
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => 'Status updated',
+            method  => 'set_status_read',
+            stage   => 'commit',
+            next    => 'illview',
+            # value   => $request_details,
+        };
+
+    } else {
+
+        # -> create response.
+        return {
+            error   => 1,
+            status  => '',
+            message => $res->status_line,
+            method  => 'set_status_read',
+            stage   => 'error',
+            next    => 'illview',
+            # value   => $request_details,
+        };
+
+    }
+
+}
+
+=head3 respond
+
+Set a selection of statuses.
+
+=cut
+
+sub respond {
+
+    my ( $self, $params ) = @_; 
+    my $stage = $params->{other}->{stage};
+    my $request = $params->{request};
+
+    if ( $stage && $stage eq 'response' ) { 
+
+        warn "Going to update request";
+        # &response_id=2&added_response=Test&may_reserve=0
+        my $response_id    = $params->{other}->{response_id};
+        my $added_response = $params->{other}->{added_response};
+        my $may_reserve    = $params->{other}->{may_reserve};
+        my $extra_content  = "&response_id=$response_id&added_response=$added_response&may_reserve=$may_reserve";
+        warn $extra_content;
+        my $res = _update_libris( $request, 'response', $extra_content );
+
+        if ( $res->is_success ) {
+
+            # -> create response.
+            return {
+                error   => 0,
+                status  => '', 
+                message => '', 
+                method  => 'respond',
+                stage   => 'commit',
+                next    => 'illview',
+                # value   => $request_details,
+            };
+
+        } else {
+        
+            # -> create response.
+            return {
+                error   => 1,
+                status  => '', 
+                message => $res->status_line, 
+                method  => 'respond',
+                stage   => 'commit',
+                next    => 'illview',
+                # value   => $request_details,
+            }; 
+
+        }
+
+    } else {
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '', 
+            message => '', 
+            method  => 'respond',
+            stage   => 'form',
+            next    => 'illview',
+            illrequest_id => $request->illrequest_id,
+            title     => $request->illrequestattributes->find({ type => 'title' })->value,
+            author    => $request->illrequestattributes->find({ type => 'author' })->value,
+            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value
+            # value   => $request_details,
+        };
+
+    }   
+
+}
+
+sub _update_libris {
+
+    my ( $request, $action, $extra_content ) = @_;
+
     my $orderid = $request->orderid;
+    my $ill_config = C4::Context->config('interlibrary_loans');
+    my $sigil = $ill_config->{'libris_sigil'};
     warn "*** orderid: $orderid";
 
-    my $orig_data = _get_data_from_libris( "illrequests/__sigil__/$orderid" );
+    my $orig_data = _get_data_from_libris( "illrequests/$sigil/$orderid" );
 
     # Pick out the timestamp
     my $timestamp = $orig_data->{'ill_requests'}->[0]->{'last_modified'};
@@ -313,19 +423,19 @@ sub set_status_read {
     $ua->agent("Koha ILL");
 
     # Create a request
-    my $url = "http://iller.libris.kb.se/librisfjarrlan/api/illrequests/" . $ill_config->{'libris_sigil'} . "/$orderid";
+    my $url = "http://iller.libris.kb.se/librisfjarrlan/api/illrequests/$sigil/$orderid";
     warn "POSTing to $url";
     my $req = HTTP::Request->new( 'POST', $url );
     warn "*** libris_key: " . $ill_config->{'libris_key'};
     $req->header( 'api-key' => $ill_config->{'libris_key'} );
     $req->header( 'Content-Type' => 'application/x-www-form-urlencoded' );
-    $req->content( "action=read&timestamp=$timestamp" );
+    $req->content( "action=$action&timestamp=$timestamp$extra_content" );
 
     # Pass request to the user agent and get a response back
     my $res = $ua->request($req);
 
     # Check the outcome of the response
-    if ( $res->is_success ) {
+    if ( $res->is_success ) { 
 
         my $json = $res->content;
         my $new_data = decode_json( $json );
@@ -342,33 +452,9 @@ sub set_status_read {
         $request->illrequestattributes->find({ type => 'last_modified' })->value( $new_data->{'ill_requests'}->[0]->{'last_modified'} );
         $request->store;
 
-        # -> create response.
-        return {
-            error   => 0,
-            status  => '',
-            message => 'Status updated',
-            method  => 'set_status_read',
-            stage   => 'commit',
-            next    => 'illview',
-            # value   => $request_details,
-        };
-
-    } else {
-
-        warn $res->status_line;
-
-        # -> create response.
-        return {
-            error   => 1,
-            status  => '',
-            message => $res->status_line,
-            method  => 'set_status_read',
-            stage   => 'error',
-            next    => 'illview',
-            # value   => $request_details,
-        };
-
     }
+
+    return $res;
 
 }
 
@@ -489,55 +575,6 @@ sub create {
         };
 
     }
-
-}
-
-=head3 respond
-
-Set a selection of statuses.
-
-=cut
-
-sub respond {
-
-    my ( $self, $params ) = @_; 
-    my $stage = $params->{other}->{stage};
-    my $request = $params->{request};
-
-    if ( $stage && $stage eq 'response' ) { 
-
-        warn "Going to update request";
-        # FIXME Do the actual update here
-
-        # -> create response.
-        return {
-            error   => 0,
-            status  => '', 
-            message => '', 
-            method  => 'respond',
-            stage   => 'response',
-            next    => 'illview',
-            # value   => $request_details,
-        };
-
-    } else {
-
-        # -> create response.
-        return {
-            error   => 0,
-            status  => '', 
-            message => '', 
-            method  => 'respond',
-            stage   => 'form',
-            next    => 'illview',
-            illrequest_id => $request->illrequest_id,
-            title     => $request->illrequestattributes->find({ type => 'title' })->value,
-            author    => $request->illrequestattributes->find({ type => 'author' })->value,
-            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value
-            # value   => $request_details,
-        };
-
-    }   
 
 }
 

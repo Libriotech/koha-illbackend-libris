@@ -26,9 +26,9 @@
     <fieldset class="rows">
         <legend>Response:</legend>
         <ol>
-            <li class="response">
-                <label class="response">Response:</label>
-                <select name="response" id="response">
+            <li class="response_id">
+                <label class="response_id">Response:</label>
+                <select name="response_id" id="response_id">
                     <option value="1">Utlånad</option>
                     <option value="2">Förkommen</option>
                     <option value="3">Utlånas ej</option>
@@ -51,7 +51,7 @@
             </li>
             <li class="title">
                 <input name="stage" id="stage" value="response" type="hidden"/>
-                <input name="method" id="method" value="confirm" type="hidden"/>
+                <input name="method" id="method" value="respond" type="hidden"/>
                 <input name="illrequest_id" id="illrequest_id" value="[% whole.illrequest_id %]" type="hidden"/>
                 <input type="submit" value="Save">
                 <a href="/cgi-bin/koha/ill/ill-requests.pl?method=illview&illrequest_id=[% whole.illrequest_id %]">Cancel</a>
