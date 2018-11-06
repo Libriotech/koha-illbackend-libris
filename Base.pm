@@ -276,7 +276,7 @@ sub status_graph {
             name           => 'Respondera',                   # UI name of this status
             ui_method_name => 'Respondera',                   # UI name of method leading
                                                            # to this status
-            method         => 'confirm',                    # method to this status
+            method         => 'respond',                    # method to this status
             next_actions   => [ 'KILL' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
@@ -489,6 +489,55 @@ sub create {
         };
 
     }
+
+}
+
+=head3 respond
+
+Set a selection of statuses.
+
+=cut
+
+sub respond {
+
+    my ( $self, $params ) = @_; 
+    my $stage = $params->{other}->{stage};
+    my $request = $params->{request};
+
+    if ( $stage && $stage eq 'response' ) { 
+
+        warn "Going to update request";
+        # FIXME Do the actual update here
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '', 
+            message => '', 
+            method  => 'respond',
+            stage   => 'response',
+            next    => 'illview',
+            # value   => $request_details,
+        };
+
+    } else {
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '', 
+            message => '', 
+            method  => 'respond',
+            stage   => 'form',
+            next    => 'illview',
+            illrequest_id => $request->illrequest_id,
+            title     => $request->illrequestattributes->find({ type => 'title' })->value,
+            author    => $request->illrequestattributes->find({ type => 'author' })->value,
+            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value
+            # value   => $request_details,
+        };
+
+    }   
 
 }
 
