@@ -169,7 +169,7 @@ sub status_graph {
             ui_method_name => 'Remitterad',                   # UI name of method leading
                                                            # to this status
             method         => 'create',                    # method to this status
-            next_actions   => [ ], # buttons to add to all
+            next_actions   => [ 'Läst' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-plus',                   # UI Style class
         },
