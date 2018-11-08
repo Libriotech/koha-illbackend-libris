@@ -169,7 +169,7 @@ sub status_graph {
             ui_method_name => 'Remitterad',                   # UI name of method leading
                                                            # to this status
             method         => 'create',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-plus',                   # UI Style class
         },
@@ -193,7 +193,7 @@ sub status_graph {
             ui_method_name => 'Levererad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -217,7 +217,7 @@ sub status_graph {
             ui_method_name => 'Kan reserveras',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -229,7 +229,7 @@ sub status_graph {
             ui_method_name => 'Makulerad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -241,7 +241,7 @@ sub status_graph {
             ui_method_name => 'Negativt svar',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -253,7 +253,7 @@ sub status_graph {
             ui_method_name => 'Reservation',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -265,7 +265,7 @@ sub status_graph {
             ui_method_name => 'Reserverad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -277,7 +277,7 @@ sub status_graph {
             ui_method_name => 'Respondera',                   # UI name of method leading
                                                            # to this status
             method         => 'respond',                    # method to this status
-            next_actions   => [ 'KILL' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
