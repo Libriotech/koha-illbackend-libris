@@ -138,7 +138,7 @@ sub metadata {
         = $attrs->find({type => 'xstatus'})
         ? $attrs->find({type => 'xstatus'})->value
         : 'Okänd status';
-        $return->{'Libris best.nr'}
+    $return->{'Libris best.nr'}
         = $attrs->find({type => 'lf_number'})
         ? $attrs->find({type => 'lf_number'})->value
         : '';
@@ -150,6 +150,42 @@ sub metadata {
         = $attrs->find({type => 'year'})
         ? $attrs->find({type => 'year'})->value
         : '';
+    $return->{'ISBN/ISSN'}
+        = $attrs->find({type => 'isbn_issn'})
+        ? $attrs->find({type => 'isbn_issn'})->value
+        : '';
+    $return->{'Melding'}
+        = $attrs->find({type => 'message'})
+        ? $attrs->find({type => 'message'})->value
+        : '';
+
+    if ( $return->{'Typ'} eq 'Kopia' ) {
+
+        # journal_article = volume_designation + pages + author_of_article + title_of_article
+        # We could probably use either journal_article *or* the other ones
+
+        $return->{'Detaljer'}
+            = $attrs->find({type => 'journal_article'})
+            ? $attrs->find({type => 'journal_article'})->value
+            : '';
+        $return->{'Sidor'}
+            = $attrs->find({type => 'pages'})
+            ? $attrs->find({type => 'pages'})->value
+            : '';
+        $return->{'Author of article'}
+            = $attrs->find({type => 'author_of_article'})
+            ? $attrs->find({type => 'author_of_article'})->value
+            : '';
+        $return->{'Title of article'}
+            = $attrs->find({type => 'title_of_article'})
+            ? $attrs->find({type => 'title_of_article'})->value
+            : '';
+        $return->{'Volum'}
+            = $attrs->find({type => 'volume_designation'})
+            ? $attrs->find({type => 'volume_designation'})->value
+            : '';
+
+    }
 
     return $return;
 }
