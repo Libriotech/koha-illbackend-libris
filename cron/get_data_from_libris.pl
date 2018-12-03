@@ -29,7 +29,7 @@ use Koha::Illrequests;
 use Koha::Illrequest::Config;
 
 # Get options
-my ( $mode, $limit, $refresh, $verbose, $debug, $test ) = get_options();
+my ( $mode, $start_date, $end_date, $limit, $refresh, $verbose, $debug, $test ) = get_options();
 
 my $ill_config = C4::Context->config('interlibrary_loans');
 say Dumper $ill_config if $debug;
@@ -63,6 +63,11 @@ if ( $refresh ) {
         sleep 5;
     }
     $data->{ 'count' } = $refresh_count;
+} elsif( $mode && $mode eq 'outgoing' ) {
+    # Get data from Libris
+    my $query = "start_date=$start_date&end_date=$end_date";
+    say $query if $verbose;
+    $data = get_data_by_mode( $query );
 } else {
     # Get data from Libris
     $data = get_data_by_mode();
@@ -109,13 +114,18 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         next REQUEST;
     }
 
-    # Make the connection to a bib record
     my $biblionumber = 0;
-    if ( $req->{'bib_id'} && $req->{'bib_id'} ne '' ) {
-        # Look for the bib record based on bib_id and MARC field 001
-        my $hits = $dbh->selectrow_hashref( 'SELECT biblionumber FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $req->{'bib_id'} ) );
-        say Dumper $hits;
-        $biblionumber = $hits->{'biblionumber'};
+    if ( $mode && $mode eq 'outgoing' ) {
+        # Outgoing requests - We are requesting things from others, so we do not have a record for it
+        # FIXME Get the record from Libris
+    } else {
+        # Incoming requests - Others are requesting things from us, so we should have a record for it
+        if ( $req->{'bib_id'} && $req->{'bib_id'} ne '' ) {
+            # Look for the bib record based on bib_id and MARC field 001
+            my $hits = $dbh->selectrow_hashref( 'SELECT biblionumber FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $req->{'bib_id'} ) );
+            say Dumper $hits;
+            $biblionumber = $hits->{'biblionumber'};
+        }
     }
 
     # Save or update the request in Koha
@@ -124,6 +134,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         say "Found an existing request with illrequest_id = " . $old_illrequest->illrequest_id if $verbose;
         # Update the request
         $old_illrequest->status( $req->{'status'} );
+        $old_illrequest->medium( $req->{'media_type'} );
         $old_illrequest->biblio_id( $biblionumber );
         $old_illrequest->store;
         # Update the attributes
@@ -161,7 +172,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             'placed'         => '',
             'replied'        => '',
             'completed'      => '',
-            'medium'         => '',
+            'medium'         => $req->{'media_type'},
             'accessurl'      => '',
             'cost'           => '',
             'notesopac'      => '',
@@ -216,7 +227,17 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
 sub get_data_by_mode {
 
-    return get_data( "illrequests/__sigil__/$mode" );
+    my ( $query ) = @_;
+
+    if ( $query ) {
+        # Add leading questionmark
+        $query = "?$query";
+    } else {
+        # Avoid error of uninitialized variable later
+        $query = '';
+    }
+
+    return get_data( "illrequests/__sigil__/$mode$query" );
 
 }
 
@@ -354,9 +375,21 @@ options are:
 
 =item * delivered
 
+=item * outgoing
+
 =back
 
 If no mode is specified, "recent" is the default.
+
+If "outgoing" is specified, the default date range is from "yesterday" to "today".
+
+=item B<-s, --start_date>
+
+First day to fetch outgoing requests for. Defaults to "yesterday". Only applicable if mode=outgoing.
+
+=item B<-e, --end_date>
+
+Most recent day to fetch outgoing requests for. Defaults to "today". Only applicable if mode=outgoing.
 
 =item B<-l, --limit>
 
@@ -389,8 +422,12 @@ Prints this help message and exits.
 
 sub get_options {
 
+    my $dt = DateTime->now;
+
     # Options
     my $mode       = 'recent';
+    my $end_date   = $dt->ymd; # Today
+    my $start_date = $dt->subtract(days => 1)->ymd; # Yesterday
     my $limit      = '';
     my $refresh    = '';
     my $verbose    = '';
@@ -399,13 +436,15 @@ sub get_options {
     my $help       = '';
 
     GetOptions (
-        'm|mode=s'   => \$mode,
-        'l|limit=i'  => \$limit,
-        'r|refresh'  => \$refresh,
-        'v|verbose'  => \$verbose,
-        'd|debug'    => \$debug,
-        't|test'     => \$test,
-        'h|?|help'   => \$help
+        'm|mode=s'       => \$mode,
+        's|start_date=s' => \$start_date,
+        'e|end_date=s'   => \$end_date,
+        'l|limit=i'      => \$limit,
+        'r|refresh'      => \$refresh,
+        'v|verbose'      => \$verbose,
+        'd|debug'        => \$debug,
+        't|test'         => \$test,
+        'h|?|help'       => \$help
     );
 
     pod2usage( -exitval => 0 ) if $help;
@@ -417,10 +456,12 @@ sub get_options {
         'may_reserve' => 1,
         'notfullfilled' => 1,
         'delivered' => 1,
+        'outgoing' => 1,
     );
+    # FIXME Point out that the mode was invalid
     pod2usage( -exitval => 0 ) unless $mode_ok{ $mode };
 
-    return ( $mode, $limit, $refresh, $verbose, $debug, $test );
+    return ( $mode, $start_date, $end_date, $limit, $refresh, $verbose, $debug, $test );
 
 }
 
