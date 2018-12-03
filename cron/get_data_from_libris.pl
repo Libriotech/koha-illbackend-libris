@@ -22,11 +22,13 @@ use Template;
 use DateTime;
 use Pod::Usage;
 use Modern::Perl;
+use utf8;
 binmode STDOUT, ":utf8";
 
 use C4::Context;
 use Koha::Illrequests;
 use Koha::Illrequest::Config;
+use Koha::Illbackends::Libris::Base;
 
 # Get options
 my ( $mode, $start_date, $end_date, $limit, $refresh, $verbose, $debug, $test ) = get_options();
@@ -48,6 +50,7 @@ if ( $refresh ) {
     my $old_requests = Koha::Illrequests->search({});
     my $refresh_count = 0;
     while ( my $req = $old_requests->next ) {
+        next unless $req->orderid;
         my $req_data = get_request_data( $req->orderid );
         if ( $refresh_count == 0 ) {
             # On the first pass we save the whole datastructure
@@ -115,9 +118,14 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     }
 
     my $biblionumber = 0;
-    if ( $mode && $mode eq 'outgoing' ) {
+    my $status = '';
+    if (
+        ( $mode && $mode eq 'outgoing' ) || # For --mode outgoing
+        ( $req->{ 'active_library' } ne $ill_config->{ 'libris_sigil' } ) # For --refresh
+       ) {
         # Outgoing requests - We are requesting things from others, so we do not have a record for it
         # FIXME Get the record from Libris
+        $status = 'OUT_';
     } else {
         # Incoming requests - Others are requesting things from us, so we should have a record for it
         if ( $req->{'bib_id'} && $req->{'bib_id'} ne '' ) {
@@ -126,14 +134,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             say Dumper $hits;
             $biblionumber = $hits->{'biblionumber'};
         }
+        $status = 'IN_';
     }
+    $status .= Koha::Illbackends::Libris::Base::translate_status( $req->{'status'} );
 
     # Save or update the request in Koha
     my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'request_id'} });
     if ( $old_illrequest ) {
         say "Found an existing request with illrequest_id = " . $old_illrequest->illrequest_id if $verbose;
         # Update the request
-        $old_illrequest->status( $req->{'status'} );
+        $old_illrequest->status( $status );
         $old_illrequest->medium( $req->{'media_type'} );
         $old_illrequest->biblio_id( $biblionumber );
         $old_illrequest->store;
@@ -168,7 +178,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             'borrowernumber' => $borrowernumber_receiving_library,
             'biblio_id'      => $biblionumber,
             'branchcode'     => '',
-            'status'         => $req->{'status'}, 
+            'status'         => $status,
             'placed'         => '',
             'replied'        => '',
             'completed'      => '',
@@ -381,7 +391,8 @@ options are:
 
 If no mode is specified, "recent" is the default.
 
-If "outgoing" is specified, the default date range is from "yesterday" to "today".
+If "outgoing" is specified, the default date range is from "yesterday" to "today". See --start_date
+and --end_date for other options.
 
 =item B<-s, --start_date>
 
