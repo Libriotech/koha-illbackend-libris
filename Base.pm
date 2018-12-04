@@ -235,7 +235,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_LEV',                   # ID of this status
-            name           => 'Utgåande Levererad',                   # UI name of this status
+            name           => 'Utlån Levererad',                   # UI name of this status
             ui_method_name => 'Levererad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -247,7 +247,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_KANRES',                   # ID of this status
-            name           => 'Utgåande Kan reserveras',                   # UI name of this status
+            name           => 'Utlån Kan reserveras',                   # UI name of this status
             ui_method_name => 'Kan reserveras',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -259,7 +259,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_NEG',                   # ID of this status
-            name           => 'Utgåande Negativt svar',                   # UI name of this status
+            name           => 'Utlån Negativt svar',                   # UI name of this status
             ui_method_name => 'Negativt svar',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -271,7 +271,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_LEV',                   # ID of this status
-            name           => 'Utgåande Levererad',                   # UI name of this status
+            name           => 'Utlån Levererad',                   # UI name of this status
             ui_method_name => 'Levererad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -283,7 +283,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_RESAD',                   # ID of this status
-            name           => 'Utgåande Reserverad',                   # UI name of this status
+            name           => 'Utlån Reserverad',                   # UI name of this status
             ui_method_name => 'Reserverad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -295,7 +295,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_UTEL',                   # ID of this status
-            name           => 'Utgåande Uteliggande',                   # UI name of this status
+            name           => 'Utlån Uteliggande',                   # UI name of this status
             ui_method_name => 'Uteliggande',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -307,7 +307,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_LAST',                   # ID of this status
-            name           => 'Utgåande Läst',                   # UI name of this status
+            name           => 'Utlån Läst',                   # UI name of this status
             ui_method_name => 'Läst',                   # UI name of method leading
                                                            # to this status
             method         => 'set_status_read',                    # method to this status
@@ -321,7 +321,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_REM',                   # ID of this status
-            name           => 'Ingåande Remitterad',                   # UI name of this status
+            name           => 'Inlån Remitterad',                   # UI name of this status
             ui_method_name => 'Remitterad',                   # UI name of method leading
                                                            # to this status
             method         => 'create',                    # method to this status
@@ -333,7 +333,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_UTEL',                   # ID of this status
-            name           => 'Ingåande Uteliggande',                   # UI name of this status
+            name           => 'Inlån Uteliggande',                   # UI name of this status
             ui_method_name => 'Uteliggande',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -345,7 +345,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             etd             => 'IN_LEV',                   # ID of this status
-            name           => 'Ingåande Levererad',                   # UI name of this status
+            name           => 'Inlån Levererad',                   # UI name of this status
             ui_method_name => 'Levererad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -357,7 +357,7 @@ sub status_graph {
             prev_actions => [ 'IN_REM', 'IN_UTEL' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_LAST',                   # ID of this status
-            name           => 'Ingåande Läst',                   # UI name of this status
+            name           => 'Inlån Läst',                   # UI name of this status
             ui_method_name => 'Läst',                   # UI name of method leading
                                                            # to this status
             method         => 'set_status_read',                    # method to this status
@@ -369,7 +369,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_KANRES',                   # ID of this status
-            name           => 'Ingåande Kan reserveras',                   # UI name of this status
+            name           => 'Inlån Kan reserveras',                   # UI name of this status
             ui_method_name => 'Kan reserveras',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -393,7 +393,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_NEG',                   # ID of this status
-            name           => 'Ingåande Negativt svar',                   # UI name of this status
+            name           => 'Inlån Negativt svar',                   # UI name of this status
             ui_method_name => 'Negativt svar',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
@@ -417,7 +417,7 @@ sub status_graph {
             prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_RESAD',                   # ID of this status
-            name           => 'Ingåande Reserverad',                   # UI name of this status
+            name           => 'Inlån Reserverad',                   # UI name of this status
             ui_method_name => 'Reserverad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
