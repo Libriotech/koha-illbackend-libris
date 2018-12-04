@@ -139,12 +139,13 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     $status .= Koha::Illbackends::Libris::Base::translate_status( $req->{'status'} );
 
     # Save or update the request in Koha
-    my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'request_id'} });
+    my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'lf_number'} });
     if ( $old_illrequest ) {
         say "Found an existing request with illrequest_id = " . $old_illrequest->illrequest_id if $verbose;
         # Update the request
         $old_illrequest->status( $status );
         $old_illrequest->medium( $req->{'media_type'} );
+        $old_illrequest->orderid( $req->{'lf_number'} ); # Temporary fix for updating old requests
         $old_illrequest->biblio_id( $biblionumber );
         $old_illrequest->store;
         # Update the attributes
@@ -174,7 +175,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         my $illrequest = Koha::Illrequest->new;
         $illrequest->load_backend( 'Libris' );
         my $backend_result = $illrequest->backend_create({
-            'orderid'        => $req->{'request_id'},
+            'orderid'        => $req->{'lf_number'},
             'borrowernumber' => $borrowernumber_receiving_library,
             'biblio_id'      => $biblionumber,
             'branchcode'     => '',

@@ -142,6 +142,10 @@ sub metadata {
         = $attrs->find({type => 'lf_number'})
         ? $attrs->find({type => 'lf_number'})->value
         : '';
+    $return->{'Request ID'}
+        = $attrs->find({type => 'request_id'})
+        ? $attrs->find({type => 'request_id'})->value
+        : '';
     $return->{'Typ'}
         = $attrs->find({type => 'media_type'})
         ? $attrs->find({type => 'media_type'})->value
