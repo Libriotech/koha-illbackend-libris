@@ -47,7 +47,7 @@ my $dbh = C4::Context->dbh;
 my $data;
 if ( $refresh ) {
     # Refresh all requests in the DB with fresh data
-    my $old_requests = Koha::Illrequests->search({});
+    my $old_requests = Koha::Illrequests->search({ 'backend' => 'Libris' });
     my $refresh_count = 0;
     while ( my $req = $old_requests->next ) {
         next unless $req->orderid;
