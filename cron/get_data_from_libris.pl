@@ -123,18 +123,18 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         ( $mode && $mode eq 'outgoing' ) || # For --mode outgoing
         ( $req->{ 'active_library' } ne $ill_config->{ 'libris_sigil' } ) # For --refresh
        ) {
-        # Outgoing requests - We are requesting things from others, so we do not have a record for it
+        # Inlån (outgoing request) - We are requesting things from others, so we do not have a record for it
         # FIXME Get the record from Libris
-        $status = 'OUT_';
+        $status = 'IN_';
     } else {
-        # Incoming requests - Others are requesting things from us, so we should have a record for it
+        # Utlån (incoming requests) - Others are requesting things from us, so we should have a record for it
         if ( $req->{'bib_id'} && $req->{'bib_id'} ne '' ) {
             # Look for the bib record based on bib_id and MARC field 001
             my $hits = $dbh->selectrow_hashref( 'SELECT biblionumber FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $req->{'bib_id'} ) );
             say Dumper $hits;
             $biblionumber = $hits->{'biblionumber'};
         }
-        $status = 'IN_';
+        $status = 'OUT_';
     }
     $status .= Koha::Illbackends::Libris::Base::translate_status( $req->{'status'} );
 
