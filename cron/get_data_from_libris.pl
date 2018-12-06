@@ -51,7 +51,7 @@ if ( $refresh ) {
     my $refresh_count = 0;
     while ( my $req = $old_requests->next ) {
         next unless $req->orderid;
-        my $req_data = get_request_data( $req->orderid );
+        my $req_data = Koha::Illbackends::Libris::Base::get_request_data( $req->orderid );
         if ( $refresh_count == 0 ) {
             # On the first pass we save the whole datastructure
             $data = $req_data;
@@ -70,10 +70,10 @@ if ( $refresh ) {
     # Get data from Libris
     my $query = "start_date=$start_date&end_date=$end_date";
     say $query if $verbose;
-    $data = get_data_by_mode( $query );
+    $data = Koha::Illbackends::Libris::Base::get_data_by_mode( $mode, $query );
 } else {
     # Get data from Libris
-    $data = get_data_by_mode();
+    $data = Koha::Illbackends::Libris::Base::get_data_by_mode( $mode );
 }
 
 say "Found $data->{'count'} requests" if $verbose;
@@ -109,7 +109,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     }
 
     # Save or update data about the receiving library
-    my $borrowernumber_receiving_library = upsert_receiving_library( $receiving_library->{'library_code'} );
+    my $borrowernumber_receiving_library = Koha::Illbackends::Libris::Base::upsert_receiving_library( $receiving_library->{'library_code'} );
 
     # Bail out if we are only testing
     if ( $test ) {
@@ -124,15 +124,13 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         ( $req->{ 'active_library' } ne $ill_config->{ 'libris_sigil' } ) # For --refresh
        ) {
         # Inlån (outgoing request) - We are requesting things from others, so we do not have a record for it
-        # FIXME Get the record from Libris
+        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $req );
         $status = 'IN_';
     } else {
         # Utlån (incoming requests) - Others are requesting things from us, so we should have a record for it
         if ( $req->{'bib_id'} && $req->{'bib_id'} ne '' ) {
             # Look for the bib record based on bib_id and MARC field 001
-            my $hits = $dbh->selectrow_hashref( 'SELECT biblionumber FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $req->{'bib_id'} ) );
-            say Dumper $hits;
-            $biblionumber = $hits->{'biblionumber'};
+            $biblionumber = Koha::Illbackends::Libris::Base::recordid2biblionumber( $req->{'bib_id'} );
         }
         $status = 'OUT_';
     }
@@ -147,6 +145,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->medium( $req->{'media_type'} );
         $old_illrequest->orderid( $req->{'lf_number'} ); # Temporary fix for updating old requests
         $old_illrequest->biblio_id( $biblionumber );
+        say "Connected to biblionumber=$biblionumber";
         $old_illrequest->store;
         # Update the attributes
         foreach my $attr ( keys %{ $req } ) {
@@ -229,139 +228,6 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             }
         }
     }
-
-}
-
-=head1 SUBROUTINES
-
-=cut
-
-sub get_data_by_mode {
-
-    my ( $query ) = @_;
-
-    if ( $query ) {
-        # Add leading questionmark
-        $query = "?$query";
-    } else {
-        # Avoid error of uninitialized variable later
-        $query = '';
-    }
-
-    return get_data( "illrequests/__sigil__/$mode$query" );
-
-}
-
-sub get_request_data {
-
-    my ( $orderid ) = @_;
-    return get_data( "illrequests/__sigil__/$orderid" );
-
-}
-
-sub get_data {
-
-    my ( $fragment ) = @_;
-
-    my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
-    my $sigil     = $ill_config->{'libris_sigil'};
-    my $libriskey = $ill_config->{'libris_key'};
-
-    # Create a user agent object
-    my $ua = LWP::UserAgent->new;
-    $ua->agent("Koha ILL");
-
-    # Replace placeholders in the fragment
-    $fragment =~ s/__sigil__/$sigil/g;
-
-    # Create a request
-    my $url = "$base_url/$fragment";
-    say "Requesting $url" if $verbose;
-    my $request = HTTP::Request->new( GET => $url );
-    $request->header( 'api-key' => $libriskey );
-
-    # Pass request to the user agent and get a response back
-    my $res = $ua->request($request);
-
-    my $json;
-    # Check the outcome of the response
-    if ($res->is_success) {
-        $json = $res->content;
-    } else {
-        say $res->status_line;
-    }
-
-    unless ( $json ) {
-        say "No JSON!";
-        exit;
-    }
-
-    my $data = decode_json( $json );
-    if ( $data->{'count'} == 0 ) {
-        say "No data!";
-        exit;
-    }
-
-    say Dumper $data if $debug;
-
-    return $data;
-
-}
-
-=head2 upsert_receiving_library()
-
-Takes the sigil of a library as an argument and looks it up in the "libraries"
-endpoint of the Libris API. If a library with that sigil already exists in the
-Koha database, it is updated. If it does not exist, a new library is inserted,
-based on the retrieved data.
-
-The borrowernumber of the library in question is returned, either way.
-
-=cut
-
-sub upsert_receiving_library {
-
-    my ( $receiver_sigil ) = @_;
-
-    my $all_lib_data = get_data( "libraries/__sigil__/$receiver_sigil" );
-    # The API returns a hash with the single key libraries, which contains an
-    # array of hashes describing libraries. We should only be getting data about
-    # one library back, so we pick out the first one.
-    my $lib_data = $all_lib_data->{'libraries'}->[0];
-
-    # Try to find an existing library with the given sigil
-    my $library = Koha::Patrons->find({ cardnumber => $receiver_sigil });
-
-    # Map data from the API to Koha database structure
-    my $address2 = $lib_data->{'address2'};
-    if ( $lib_data->{'address3'} ) {
-        $address2 .= ', ' . $lib_data->{'address3'};
-    }
-    my $new_library_data = {
-        cardnumber   => $receiver_sigil,
-        surname      => $lib_data->{'name'},
-        categorycode => 'ILLLIBS', # FIXME Use partner_code from the ILL config
-        branchcode   => 'ILL', # FIXME
-        userid       => $receiver_sigil,
-        password     => '!',
-        address      => $lib_data->{'address1'},
-        address2     => $address2,
-        city         => $lib_data->{'city'},
-        zipcode      => $lib_data->{'zip_code'},
-    };
-
-    my $borrowernumber;
-    if ( $library ) {
-        say "*** Updating existing library" if $verbose;
-        $library->update( $new_library_data );
-        $borrowernumber = $library->borrowernumber;
-    } else {
-        say "*** Inserting new library" if $verbose;
-        my $new_library = Koha::Patron->new( $new_library_data )->store();
-        $borrowernumber = $new_library->borrowernumber;
-    }
-
-    return $borrowernumber;
 
 }
 

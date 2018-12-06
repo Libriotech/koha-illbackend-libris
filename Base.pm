@@ -21,8 +21,11 @@ use Modern::Perl;
 use DateTime;
 use JSON qw( decode_json );
 use LWP::UserAgent;
+use LWP::Simple;
 use HTTP::Request;
 
+use C4::Biblio;
+use C4::Context;
 use Koha::Illrequestattribute;
 use Koha::Patrons;
 use utf8;
@@ -451,6 +454,245 @@ sub status_graph {
         },
 
     };
+}
+
+sub get_data_by_mode {
+
+    my ( $mode, $query ) = @_;
+
+    if ( $query ) {
+        # Add leading questionmark
+        $query = "?$query";
+    } else {
+        # Avoid error of uninitialized variable later
+        $query = '';
+    }
+
+    return get_data( "illrequests/__sigil__/$mode$query" );
+
+}
+
+=head2 upsert_receiving_library()
+
+Takes the sigil of a library as an argument and looks it up in the "libraries"
+endpoint of the Libris API. If a library with that sigil already exists in the
+Koha database, it is updated. If it does not exist, a new library is inserted,
+based on the retrieved data.
+
+The borrowernumber of the library in question is returned, either way.
+
+=cut
+
+sub upsert_receiving_library {
+
+    my ( $receiver_sigil ) = @_;
+
+    my $all_lib_data = get_data( "libraries/__sigil__/$receiver_sigil" );
+    # The API returns a hash with the single key libraries, which contains an
+    # array of hashes describing libraries. We should only be getting data about
+    # one library back, so we pick out the first one.
+    my $lib_data = $all_lib_data->{'libraries'}->[0];
+
+    # Try to find an existing library with the given sigil
+    my $library = Koha::Patrons->find({ cardnumber => $receiver_sigil });
+
+    # Map data from the API to Koha database structure
+    my $address2 = $lib_data->{'address2'};
+    if ( $lib_data->{'address3'} ) {
+        $address2 .= ', ' . $lib_data->{'address3'};
+    }
+    my $new_library_data = {
+        cardnumber   => $receiver_sigil,
+        surname      => $lib_data->{'name'},
+        categorycode => 'ILLLIBS', # FIXME Use partner_code from the ILL config
+        branchcode   => 'ILL', # FIXME
+        userid       => $receiver_sigil,
+        password     => '!',
+        address      => $lib_data->{'address1'},
+        address2     => $address2,
+        city         => $lib_data->{'city'},
+        zipcode      => $lib_data->{'zip_code'},
+    };
+
+    my $borrowernumber;
+    if ( $library ) {
+        # say "*** Updating existing library" if $verbose;
+        $library->update( $new_library_data );
+        $borrowernumber = $library->borrowernumber;
+    } else {
+        # say "*** Inserting new library" if $verbose;
+        my $new_library = Koha::Patron->new( $new_library_data )->store();
+        $borrowernumber = $new_library->borrowernumber;
+    }
+
+    return $borrowernumber;
+
+}
+
+
+sub upsert_record {
+
+    my ( $req ) = @_;
+
+    # Get the record
+    my $record;
+    if ( $req->{ 'bib_id' } =~ m/^BIB/i ) { 
+        # There is no Libris record identifier, bib_id = "BIB" + request_id. Create a mininal record
+        $record = get_record_from_request( $req );
+    } else {
+        # Looks like we have a Libris record ID, so get the record and save it
+        $record = get_record_from_libris( $req->{ 'bib_id' } );
+    }
+
+    # Update or save the record
+    my $biblionumber = Koha::Illbackends::Libris::Base::recordid2biblionumber( $req->{ 'bib_id' } );
+    my $biblioitemnumber;
+    if ( $biblionumber ) { 
+        # Update record
+        ModBiblio( $record, $biblionumber, '' );
+        say "Updated record with biblionumber=$biblionumber";
+    } else {
+        # Add a new record
+        ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
+        say "Added new record with biblionumber=$biblionumber";
+    }
+
+    return $biblionumber;
+
+}
+
+sub get_record_from_libris {
+
+    my ( $libris_id ) = @_; 
+
+    my $xml = get("http://api.libris.kb.se/sru/libris?version=1.1&operation=searchRetrieve&query=rec.recordIdentifier=$libris_id");
+    return unless $xml;
+    $xml =~ m/(<record .*>.*?<\/record>)<\/recordData>/;
+    my $record_xml = $1;
+    return unless $record_xml;
+    my $record = MARC::Record->new_from_xml( $record_xml, 'UTF-8', 'MARC21' );
+    return unless $record;
+
+    $record->encoding( 'UTF-8' );
+
+    # Remove unnecessary fields
+    foreach my $tag ( qw( 841 852 887 950 955 ) ) {
+       $record->delete_fields( $record->field( $tag ) );
+    }
+
+    say $record->as_xml();
+
+    return $record;
+
+}
+
+sub get_record_from_request {
+
+    my ( $req ) = @_; 
+
+    # Create a new record
+    my $record = MARC::Record->new();
+
+    my $f001 = MARC::Field->new( '001', $req->{ 'bib_id' } );
+    $record->insert_fields_ordered( $f001 );
+
+    if ( $req->{ 'author' } && $req->{ 'author' } ne '' ) {
+        my $author = MARC::Field->new(
+            '100',' ',' ',
+            a => $req->{ 'author' },
+        );  
+        $record->insert_fields_ordered( $author );
+    }
+
+    my $title = MARC::Field->new(
+        '245',' ',' ',
+        a => $req->{ 'title' },
+    );
+    $record->insert_fields_ordered( $title );
+
+    # FIXME Add more fields, especially for articles
+
+    say $record->as_xml();
+
+    return $record;
+
+}
+
+sub get_request_data {
+
+    my ( $orderid ) = @_;
+    return get_data( "illrequests/__sigil__/$orderid" );
+
+}
+
+sub get_data {
+
+    my ( $fragment ) = @_;
+
+    my $ill_config = C4::Context->config('interlibrary_loans');
+    my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
+    my $sigil     = $ill_config->{'libris_sigil'};
+    my $libriskey = $ill_config->{'libris_key'};
+
+    # Create a user agent object
+    my $ua = LWP::UserAgent->new;
+    $ua->agent("Koha ILL");
+
+    # Replace placeholders in the fragment
+    $fragment =~ s/__sigil__/$sigil/g;
+
+    # Create a request
+    my $url = "$base_url/$fragment";
+    say STDERR "Requesting $url";
+    my $request = HTTP::Request->new( GET => $url );
+    $request->header( 'api-key' => $libriskey );
+
+    # Pass request to the user agent and get a response back
+    my $res = $ua->request($request);
+
+    my $json;
+    # Check the outcome of the response
+    if ($res->is_success) {
+        $json = $res->content;
+    } else {
+        say STDERR $res->status_line;
+    }
+
+    unless ( $json ) {
+        die "No JSON!\n";
+    }
+
+    my $data = decode_json( $json );
+    if ( $data->{'count'} == 0 ) {
+        die "No data!\n";
+    }
+
+    # say Dumper $data if $debug;
+
+    return $data;
+
+}
+
+=head3 recordid2biblionumber
+
+  my $biblionumber = recordid2biblionumber( $recordid );
+
+Takes a record ID (typically found in the 001 MARC field), checks if
+it exists in the database and if it does, returns the corresponding
+biblionumber.
+
+=cut
+
+sub recordid2biblionumber {
+
+    my ( $recordid ) = @_;
+
+    my $dbh = C4::Context->dbh;
+    my $hits = $dbh->selectrow_hashref( 'SELECT biblionumber FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $recordid ) );
+    my $biblionumber = $hits->{'biblionumber'};
+
+    return $biblionumber;
+
 }
 
 =head3 set_status_read
