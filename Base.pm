@@ -26,6 +26,7 @@ use HTTP::Request;
 
 use C4::Biblio;
 use C4::Context;
+use C4::Items;
 use Koha::Illrequestattribute;
 use Koha::Patrons;
 use utf8;
@@ -555,6 +556,18 @@ sub upsert_record {
         # Add a new record
         ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
         say "Added new record with biblionumber=$biblionumber";
+        my $item = {
+            'homebranch'    => 'ILL',
+            'holdingbranch' => 'ILL',
+            'itype'         => 'ILL',
+        };
+        my $itemnumber;
+        ($biblionumber, $biblioitemnumber, $itemnumber ) = AddItem( $item, $biblionumber );
+        if ( $itemnumber ) {
+            say "Added new item with itemnumber=$itemnumber";
+        } else {
+            say "No item added";
+        }
     }
 
     return $biblionumber;
