@@ -686,6 +686,36 @@ sub get_data {
 
 }
 
+=head3 userid2cardnumber
+
+  my $borrowernumber = userid2cardnumber( $user_id );
+
+Takes a cardnumber (found in user_id in the Libris API) and returns the
+corresponding borrowernumber, if one exists.
+
+=cut
+
+sub userid2cardnumber {
+
+    my ( $cardnumber ) = @_;
+    my $ill_config = C4::Context->config('interlibrary_loans');
+
+say "looking for |$cardnumber|";
+
+    chomp $cardnumber;
+    return $ill_config->{ 'unknown_patron' } unless $cardnumber;
+    return $ill_config->{ 'unknown_patron' } if $cardnumber eq '';
+
+    my $patron = Koha::Patrons->find({ 'cardnumber' => $cardnumber });
+
+    if ( $patron ) {
+        return $patron->borrowernumber;
+    } else {
+        return $ill_config->{ 'unknown_patron' };
+    }
+
+}
+
 =head3 recordid2biblionumber
 
   my $biblionumber = recordid2biblionumber( $recordid );

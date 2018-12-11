@@ -16,6 +16,12 @@ need to add the following elements:
 
 =item * libris_key - The API key for talking to the Libris API.
 
+=item * unknown_patron - borrowernumber for a dummy patron that can be used
+if a connection to a real patron can not be established.
+
+=item * unknown_biblio - biblionumber of a dummy record that can be used
+if a connection to a real biblio can not be established.
+
 =back
 
 Example: 
@@ -26,6 +32,8 @@ Example:
         ...
         <libris_sigil>xyz</libris_sigil>
         <libris_key>abc</libris_key>
+        <unknown_patron>1</unknown_patron>
+        <unknown_biblio>2</unknown_biblio>
       </interlibrary_loans>
     <config>
   <yazgfs>

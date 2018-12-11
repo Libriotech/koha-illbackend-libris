@@ -35,8 +35,7 @@ my ( $mode, $start_date, $end_date, $limit, $refresh, $verbose, $debug, $test ) 
 
 my $ill_config = C4::Context->config('interlibrary_loans');
 say Dumper $ill_config if $debug;
-foreach my $element ( qw( sigil key) ) {
-    my $key = "libris_$element";
+foreach my $key ( qw( libris_sigil libris_key unknown_patron unknown_biblio ) ) {
     unless ( $ill_config->{ $key } ) {
         die "You need to define '$key' in koha-conf.xml! See 'docs/config.pod' for details.\n"
     }
@@ -108,31 +107,46 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         print "\n";
     }
 
-    # Save or update data about the receiving library
-    my $borrowernumber_receiving_library = Koha::Illbackends::Libris::Base::upsert_receiving_library( $receiving_library->{'library_code'} );
-
     # Bail out if we are only testing
     if ( $test ) {
         say "We are in testing mode, so not saving any data";
         next REQUEST;
     }
 
-    my $biblionumber = 0;
+    my $biblionumber   = 0;
+    my $borrowernumber = 0;
     my $status = '';
     if (
         ( $mode && $mode eq 'outgoing' ) || # For --mode outgoing
         ( $req->{ 'active_library' } ne $ill_config->{ 'libris_sigil' } ) # For --refresh
        ) {
-        # Inlån (outgoing request) - We are requesting things from others, so we do not have a record for it
+
+        ### Inlån (outgoing request) - We are requesting things from others, so we do not have a record for it
         $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $req );
+        # The loan is requested by one of our own patrons, so we look up the borrowernumber from the cardnumber
+        say "Looking for user_id=" . $req->{'user_id'};
+        $borrowernumber = Koha::Illbackends::Libris::Base::userid2cardnumber( $req->{'user_id'} );
+        # Set the prefix
         $status = 'IN_';
+
     } else {
-        # Utlån (incoming requests) - Others are requesting things from us, so we should have a record for it
+
+        ### Utlån (incoming requests) - Others are requesting things from us, so we should have a record for it
         if ( $req->{'bib_id'} && $req->{'bib_id'} ne '' ) {
-            # Look for the bib record based on bib_id and MARC field 001
-            $biblionumber = Koha::Illbackends::Libris::Base::recordid2biblionumber( $req->{'bib_id'} );
+            if ( $req->{'bib_id'} =~ m/^BIB/i ) {
+                $biblionumber = $ill_config->{ 'unknown_biblio' };
+            } else {
+                # Look for the bib record based on bib_id and MARC field 001
+                $biblionumber = Koha::Illbackends::Libris::Base::recordid2biblionumber( $req->{'bib_id'} );
+            }
         }
+        # The loan was requested by another library, so we save or update data (from Libris) about the receiving library
+        say "Looking for library_code=" . $receiving_library->{'library_code'};
+        $borrowernumber = Koha::Illbackends::Libris::Base::upsert_receiving_library( $receiving_library->{'library_code'} );
+        say "Found borrowernumber=$borrowernumber";
+        # Set the prefix
         $status = 'OUT_';
+
     }
     $status .= Koha::Illbackends::Libris::Base::translate_status( $req->{'status'} );
 
@@ -145,8 +159,10 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->medium( $req->{'media_type'} );
         $old_illrequest->orderid( $req->{'lf_number'} ); # Temporary fix for updating old requests
         $old_illrequest->biblio_id( $biblionumber );
-        say "Connected to biblionumber=$biblionumber";
+        say "Saving borrowernumber=$borrowernumber";
+        $old_illrequest->borrowernumber( $borrowernumber );
         $old_illrequest->store;
+        say "Connected to biblionumber=$biblionumber";
         # Update the attributes
         foreach my $attr ( keys %{ $req } ) {
             # "recipients" is an array of hashes, so we need to flatten it out
@@ -175,7 +191,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $illrequest->load_backend( 'Libris' );
         my $backend_result = $illrequest->backend_create({
             'orderid'        => $req->{'lf_number'},
-            'borrowernumber' => $borrowernumber_receiving_library,
+            'borrowernumber' => $borrowernumber,
             'biblio_id'      => $biblionumber,
             'branchcode'     => '',
             'status'         => $status,
