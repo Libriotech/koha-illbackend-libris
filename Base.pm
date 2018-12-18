@@ -515,18 +515,15 @@ sub upsert_receiving_library {
         zipcode      => $lib_data->{'zip_code'},
     };
 
-    my $borrowernumber;
     if ( $library ) {
         # say "*** Updating existing library" if $verbose;
         $library->update( $new_library_data );
-        $borrowernumber = $library->borrowernumber;
     } else {
         # say "*** Inserting new library" if $verbose;
-        my $new_library = Koha::Patron->new( $new_library_data )->store();
-        $borrowernumber = $new_library->borrowernumber;
+        $library = Koha::Patron->new( $new_library_data )->store();
     }
 
-    return $borrowernumber;
+    return $library;
 
 }
 
@@ -686,16 +683,16 @@ sub get_data {
 
 }
 
-=head3 userid2cardnumber
+=head3 userid2borrower
 
-  my $borrowernumber = userid2cardnumber( $user_id );
+  my $borrower = userid2borrower( $user_id );
 
 Takes a cardnumber (found in user_id in the Libris API) and returns the
-corresponding borrowernumber, if one exists.
+corresponding borrower, if one exists.
 
 =cut
 
-sub userid2cardnumber {
+sub userid2borrower {
 
     my ( $cardnumber ) = @_;
     my $ill_config = C4::Context->config('interlibrary_loans');
@@ -707,9 +704,9 @@ sub userid2cardnumber {
     my $patron = Koha::Patrons->find({ 'cardnumber' => $cardnumber });
 
     if ( $patron ) {
-        return $patron->borrowernumber;
+        return $patron;
     } else {
-        return $ill_config->{ 'unknown_patron' };
+        return Koha::Patrons->find({ 'borrowernumber' => $ill_config->{ 'unknown_patron' } });
     }
 
 }

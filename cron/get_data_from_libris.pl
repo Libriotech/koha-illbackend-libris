@@ -114,10 +114,10 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         next REQUEST;
     }
 
-    my $biblionumber   = 0;
-    my $borrowernumber = 0;
-    my $status = '';
-    my $is_inlan = 0;
+    my $biblionumber = 0;
+    my $borrower     = 0;
+    my $status       = '';
+    my $is_inlan     = 0;
     if (
         ( $mode && $mode eq 'outgoing' ) || # For --mode outgoing
         ( $req->{ 'active_library' } ne $ill_config->{ 'libris_sigil' } ) # For --refresh
@@ -127,7 +127,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $req );
         # The loan is requested by one of our own patrons, so we look up the borrowernumber from the cardnumber
         say "Looking for user_id=" . $req->{'user_id'};
-        $borrowernumber = Koha::Illbackends::Libris::Base::userid2cardnumber( $req->{'user_id'} );
+        $borrower = Koha::Illbackends::Libris::Base::userid2borrower( $req->{'user_id'} );
         # Set the prefix
         $status = 'IN_';
         $is_inlan = 1;
@@ -145,8 +145,8 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         }
         # The loan was requested by another library, so we save or update data (from Libris) about the receiving library
         say "Looking for library_code=" . $receiving_library->{'library_code'};
-        $borrowernumber = Koha::Illbackends::Libris::Base::upsert_receiving_library( $receiving_library->{'library_code'} );
-        say "Found borrowernumber=$borrowernumber";
+        $borrower = Koha::Illbackends::Libris::Base::upsert_receiving_library( $receiving_library->{'library_code'} );
+        say "Found borrowernumber=" . $borrower->borrowernumber;
         # Set the prefix
         $status = 'OUT_';
 
@@ -162,8 +162,9 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->medium( $req->{'media_type'} );
         $old_illrequest->orderid( $req->{'lf_number'} ); # Temporary fix for updating old requests
         $old_illrequest->biblio_id( $biblionumber );
-        say "Saving borrowernumber=$borrowernumber";
-        $old_illrequest->borrowernumber( $borrowernumber );
+        say "Saving borrowernumber=" . $borrower->borrowernumber;
+        $old_illrequest->borrowernumber( $borrower->borrowernumber );
+        $old_illrequest->branchcode( $borrower->branchcode );
         $old_illrequest->store;
         say "Connected to biblionumber=$biblionumber";
         # Update the attributes
@@ -194,9 +195,9 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $illrequest->load_backend( 'Libris' );
         my $backend_result = $illrequest->backend_create({
             'orderid'        => $req->{'lf_number'},
-            'borrowernumber' => $borrowernumber,
+            'borrowernumber' => $borrower->borrowernumber,
             'biblio_id'      => $biblionumber,
-            'branchcode'     => '',
+            'branchcode'     => $borrower->branchcode,
             'status'         => $status,
             'placed'         => '',
             'replied'        => '',
@@ -248,7 +249,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         }
         # Add a hold, but only for Inlån
         if ( $is_inlan && $is_inlan == 1 ) {
-            AddReserve( 'ILL', $borrowernumber, $biblionumber ); # FIXME use same branch as the patron
+            AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
         }
     }
 
