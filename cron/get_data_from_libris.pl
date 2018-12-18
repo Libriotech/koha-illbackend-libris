@@ -26,6 +26,7 @@ use utf8;
 binmode STDOUT, ":utf8";
 
 use C4::Context;
+use C4::Reserves;
 use Koha::Illrequests;
 use Koha::Illrequest::Config;
 use Koha::Illbackends::Libris::Base;
@@ -116,6 +117,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     my $biblionumber   = 0;
     my $borrowernumber = 0;
     my $status = '';
+    my $is_inlan = 0;
     if (
         ( $mode && $mode eq 'outgoing' ) || # For --mode outgoing
         ( $req->{ 'active_library' } ne $ill_config->{ 'libris_sigil' } ) # For --refresh
@@ -128,6 +130,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $borrowernumber = Koha::Illbackends::Libris::Base::userid2cardnumber( $req->{'user_id'} );
         # Set the prefix
         $status = 'IN_';
+        $is_inlan = 1;
 
     } else {
 
@@ -242,6 +245,10 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 })->store;
                 say "DEBUG: $attr = ", $req->{ $attr } if $debug;
             }
+        }
+        # Add a hold, but only for Inlån
+        if ( $is_inlan && $is_inlan == 1 ) {
+            AddReserve( 'ILL', $borrowernumber, $biblionumber ); # FIXME use same branch as the patron
         }
     }
 
