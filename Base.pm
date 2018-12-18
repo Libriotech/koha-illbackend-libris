@@ -700,8 +700,6 @@ sub userid2cardnumber {
     my ( $cardnumber ) = @_;
     my $ill_config = C4::Context->config('interlibrary_loans');
 
-say "looking for |$cardnumber|";
-
     chomp $cardnumber;
     return $ill_config->{ 'unknown_patron' } unless $cardnumber;
     return $ill_config->{ 'unknown_patron' } if $cardnumber eq '';
