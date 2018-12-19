@@ -341,7 +341,7 @@ sub status_graph {
             ui_method_name => 'Uteliggande',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'IN_LAST' ], # buttons to add to all
+            next_actions   => [ 'IN_LAST', 'IN_ANK' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -353,9 +353,21 @@ sub status_graph {
             ui_method_name => 'Levererad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ 'IN_ANK' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        IN_ANK => {
+            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'IN_ANK',                   # ID of this status
+            name           => 'Inlån Ankommen',                   # UI name of this status
+            ui_method_name => 'Ankomstregistrera',                   # UI name of method leading
+                                                           # to this status
+            method         => 'receive',                    # method to this status
+            next_actions   => [ 'DUMMY' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-receive-o',                   # UI Style class
         },
         IN_LAST => {
             prev_actions => [ 'IN_REM', 'IN_UTEL' ],                           # Actions containing buttons
@@ -455,6 +467,67 @@ sub status_graph {
         },
 
     };
+}
+
+sub receive {
+
+    my ( $self, $params ) = @_;
+    my $stage = $params->{other}->{stage};
+    my $request = $params->{request};
+
+    if ( $stage && $stage eq 'receive' ) {
+
+        # Set a barcode, if one was supplied
+        my $barcode = $params->{other}->{ill_barcode};
+        if ( $barcode ) {
+            my $item = Koha::Items->find({ 'biblionumber' => $request->biblio_id });
+            if ( $item->barcode ) {
+                warn "Item already has barcode: " . $item->barcode;
+	        # -> create response.
+                return {
+                    error   => 1,
+                    status  => '',
+                    message => '',
+                    method  => 'receive',
+                    stage   => 'commit',
+                    next    => 'illview',
+                    # value   => $request_details,
+                };
+            } else {
+                $item->barcode( $barcode );
+                $item->store;
+                # -> create response.
+                return {
+                    error   => 0,
+                    status  => '',
+                    message => '',
+                    method  => 'receive',
+                    stage   => 'commit',
+                    next    => 'illview',
+                    # value   => $request_details,
+                };
+            }
+        }
+
+    } else {
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => '',
+            method  => 'receive',
+            stage   => 'form',
+            next    => 'illview',
+            illrequest_id => $request->illrequest_id,
+            title     => $request->illrequestattributes->find({ type => 'title' })->value,
+            author    => $request->illrequestattributes->find({ type => 'author' })->value,
+            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value
+            # value   => $request_details,
+        };
+
+    }
+
 }
 
 sub get_data_by_mode {
