@@ -477,6 +477,10 @@ sub receive {
 
     if ( $stage && $stage eq 'receive' ) {
 
+        # Change the status of the request
+        $request->status( 'IN_ANK' );
+        $request->store;
+
         # Set a barcode, if one was supplied
         my $barcode = $params->{other}->{ill_barcode};
         if ( $barcode ) {

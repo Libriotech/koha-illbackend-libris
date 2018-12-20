@@ -157,6 +157,11 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'lf_number'} });
     if ( $old_illrequest ) {
         say "Found an existing request with illrequest_id = " . $old_illrequest->illrequest_id if $verbose;
+        # Check if we should skip this request
+        if ( $old_illrequest->status eq 'IN_ANK' ) {
+            warn "Request is already received";
+            next REQUEST;
+        }
         # Update the request
         $old_illrequest->status( $status );
         $old_illrequest->medium( $req->{'media_type'} );
