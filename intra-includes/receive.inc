@@ -14,7 +14,7 @@
 
 [% ELSIF whole.stage == "form" %]
     <h3>Receive outgoing request number [% whole.illrequest_id %].</h3>
-    <form method="POST" action="/cgi-bin/koha/ill/ill-requests.pl?method=respond&illrequest_id=[% whole.illrequest_id %]">
+    <form method="POST" action="/cgi-bin/koha/ill/ill-requests.pl?method=receive&illrequest_id=[% whole.illrequest_id %]">
     <fieldset class="rows">
         <legend>Request details</legend>
         <ol>
@@ -37,8 +37,45 @@
             </li>
         </ol>
     </fieldset>
-        <input type="submit" value="Save">
-        <a href="/cgi-bin/koha/ill/ill-requests.pl?method=illview&illrequest_id=[% whole.illrequest_id %]">Cancel</a>
+    <fieldset class="rows">
+        <legend>Message - email/print</legend>
+        <ol>
+            <li class="email_title">
+                <label class="email_title">Title:</label>
+                <input type="text" name="email_title" id="email_title" value="[% whole.email.title %]" />
+           </li>
+            <li class="email_content">
+                <label class="email_content">Message:</label>
+                <textarea name="email_content" id="email_content" rows="10" cols="50">[% whole.email.content %]</textarea>
+           </li>
+           <li class="send_email">
+                <label class="send_email">Send message:</label>
+                <input type="radio" name="send_email" value="0" checked> Nei
+                <input type="radio" name="send_email" value="1"> Ja
+           </li>
+        </ol>
+    </fieldset>
+    <fieldset class="rows">
+        <legend>Message - SMS</legend>
+        <ol>
+            <li class="sms_title">
+                <label class="sms_title">Title:</label>
+                <input type="text" name="sms_title" id="sms_title" value="[% whole.sms.title %]" />
+           </li>
+            <li class="sms_content">
+                <label class="sms_content">Message:</label>
+                <textarea name="sms_content" id="sms_content" rows="10" cols="50">[% whole.sms.content %]</textarea>
+           </li>
+           <li class="send_sms">
+                <label class="send_sms">Send message:</label>
+                <input type="radio" name="send_sms" value="0" checked> Nei
+                <input type="radio" name="send_sms" value="1"> Ja
+           </li>
+        </ol>
+    </fieldset>
+    <input type="hidden" name="letter_code" id="letter_code" value="[% whole.letter_code %]" />
+    <input type="submit" value="Receive">
+    <a href="/cgi-bin/koha/ill/ill-requests.pl?method=illview&illrequest_id=[% whole.illrequest_id %]">Cancel</a>
     </form>
 [% ELSE %]
     <p>We encountered an unexpected situation</p>

@@ -38,4 +38,16 @@ Example:
     <config>
   <yazgfs>
 
+=head2 Notices
+
+Add notices with the following codes under Tools > Notices and slips:
+
+=over 4
+
+=item * B<ILL_ANK_LAN> - For books and other media that are borrowed and returned.
+
+=item * B<ILL_ANK_KOPIA> - For article copies that are not returned.
+
+=back
+
 =cut

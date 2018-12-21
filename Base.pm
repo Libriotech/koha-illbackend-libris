@@ -27,6 +27,8 @@ use HTTP::Request;
 use C4::Biblio;
 use C4::Context;
 use C4::Items;
+use C4::Letters;
+use C4::Message;
 use Koha::Illrequestattribute;
 use Koha::Patrons;
 use utf8;
@@ -475,11 +477,35 @@ sub receive {
     my $stage = $params->{other}->{stage};
     my $request = $params->{request};
 
+    my $patron = Koha::Patrons->find({ borrowernumber => $request->borrowernumber });
+
     if ( $stage && $stage eq 'receive' ) {
 
         # Change the status of the request
         $request->status( 'IN_ANK' );
         $request->store;
+
+        # Send an email, if requested
+        if ( $params->{ 'other' }->{ 'send_email' } && $params->{ 'other' }->{ 'send_email' } == 1 ) {
+            my $email = {
+                'message_transport_type' => 'email',
+                'code' => $params->{ 'other' }->{ 'letter_code' },
+                'title' => $params->{ 'other' }->{ 'email_title' },
+                'content' => $params->{ 'other' }->{ 'email_content' },
+            };
+            C4::Message->enqueue($email, $patron->unblessed, 'email');
+        }
+
+        # Send an sms, if requested
+        if ( $params->{ 'other' }->{ 'send_sms' } && $params->{ 'other' }->{ 'send_sms' } == 1 ) {
+            my $sms = {
+                'message_transport_type' => 'sms',
+                'code' => $params->{ 'other' }->{ 'letter_code' },
+                'title' => $params->{ 'other' }->{ 'sms_title' },
+                'content' => $params->{ 'other' }->{ 'sms_content' },
+            };
+            C4::Message->enqueue($sms, $patron->unblessed, 'sms');
+        }
 
         # Set a barcode, if one was supplied
         my $barcode = $params->{other}->{ill_barcode};
@@ -515,6 +541,41 @@ sub receive {
 
     } else {
 
+        my $item = Koha::Items->find({ biblionumber => $request->biblio_id });
+
+        my $letter_code = 'ILL_ANK_LAN';
+        if ( $request->illrequestattributes->find({type => 'media_type'})->value eq 'Kopia' ) {
+            $letter_code = 'ILL_ANK_KOPIA';
+        }
+
+        # Prepare email
+        my $email =  C4::Letters::GetPreparedLetter (
+            module => 'circulation',
+            letter_code => $letter_code,
+            message_transport_type => 'email',
+            branchcode => $patron->branchcode,
+            lang => $patron->lang,
+            tables => {
+                'biblio', $item->biblionumber,
+                'biblioitems', $item->biblionumber,
+                'borrowers', $patron->borrowernumber,
+            },
+        );
+
+        # Prepare SMS
+        my $sms =  C4::Letters::GetPreparedLetter (
+            module => 'circulation',
+            letter_code => $letter_code,
+            message_transport_type => 'sms',
+            branchcode => $patron->branchcode,
+            lang => $patron->lang,
+            tables => {
+                'biblio', $item->biblionumber,
+                'biblioitems', $item->biblionumber,
+                'borrowers', $patron->borrowernumber,
+            },
+        );
+
         # -> create response.
         return {
             error   => 0,
@@ -526,7 +587,10 @@ sub receive {
             illrequest_id => $request->illrequest_id,
             title     => $request->illrequestattributes->find({ type => 'title' })->value,
             author    => $request->illrequestattributes->find({ type => 'author' })->value,
-            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value
+            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value,
+            letter_code => $letter_code,
+            email     => $email,
+            sms       => $sms,
             # value   => $request_details,
         };
 
