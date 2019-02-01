@@ -9,14 +9,15 @@ ILL backend.
 
 =head2 Requests *to* our library from other libraries
 
-Retrieve "incoming" requests
+=head3 Uteliggande | Remitterad => Läst
 
-Save requests in Koha with status = NEW and update the status in Libris to "Read" 
+Retrieve "incoming" requests. These have a status of "Uteliggande" or
+"Remitterad" and can be changed to "Läst".
 
-Display requests with status NEW to librarians
+=head3 Läst => Negativt svar
 
-Let librarians change status of each request to DENIED or ACCEPTED based on 
-one of these statuses defined by Libris:
+When a request is Läst, a response can be given to the requesting library.
+These statuses are defined by Libris:
 
 =over 4
 
@@ -26,7 +27,7 @@ one of these statuses defined by Libris:
 
 =item 3 - Utlånas ej (Not for loan)
 
-=item 4 - Finns ej (Does not exist)
+=item 4 - Finns ej (Does not exist) => [Negativt svar]
 
 =item 5 - F n ej tillgänglig (Currently unavailable)
 
@@ -39,6 +40,9 @@ one of these statuses defined by Libris:
 =item 9 - Levererad (Delivered)
 
 =back
+
+The status that will actually be returned by the API after given the responses
+above are shown in square brackets.
 
 =head2 Requests *from* our library to other libraries
 
