@@ -24,6 +24,7 @@ use Pod::Usage;
 use Modern::Perl;
 use utf8;
 binmode STDOUT, ":utf8";
+$| = 1; # Don't buffer output
 
 use C4::Context;
 use C4::Reserves;
