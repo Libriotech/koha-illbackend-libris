@@ -4,6 +4,14 @@
 
 Some tips on how to configure the Libris ILL backend.
 
+=head2 System preferences
+
+=over 4
+
+=item * B<ILLModule> = Enable
+
+=back
+
 =head2 koha-conf.xml
 
 In this file you need to make sure you have set up a section called 
@@ -12,14 +20,15 @@ need to add the following elements:
 
 =over 4
 
-=item * libris_sigil - The sigil used to identify the library in Libris.
+=item * B<libris_sigil> - The sigil used to identify the library in Libris.
 
-=item * libris_key - The API key for talking to the Libris API.
+=item * B<libris_key> - The API key for talking to the Libris API. Swedish
+libraries can look this up when they are logged into Libris.
 
-=item * unknown_patron - borrowernumber for a dummy patron that can be used
+=item * B<unknown_patron> - borrowernumber for a dummy patron that can be used
 if a connection to a real patron can not be established.
 
-=item * unknown_biblio - biblionumber of a dummy record that can be used
+=item * B<unknown_biblio> - biblionumber of a dummy record that can be used
 if a connection to a real biblio can not be established.
 
 =back
@@ -49,5 +58,21 @@ Add notices with the following codes under Tools > Notices and slips:
 =item * B<ILL_ANK_KOPIA> - For article copies that are not returned.
 
 =back
+
+The following settings should apply to all notices:
+
+=over 4
+
+=item * B<Library>: All libraries
+
+=item * B<Koha module>: Circulation
+
+=back
+
+FIXME: Suggest content for the messages.
+
+=head2 Cron jobs
+
+See "perldoc cron/get_data_from_libris.pl" for details.
 
 =cut
