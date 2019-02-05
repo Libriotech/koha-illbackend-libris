@@ -44,6 +44,8 @@ Example:
         <unknown_patron>1</unknown_patron>
         <unknown_biblio>2</unknown_biblio>
         <ill_itemtype>FJARRLAN</ill_itemtype>
+        <ill_branch>FJARRLAN</ill_branch>
+        <ill_itemtype>FJARRLAN</ill_itemtype>
       </interlibrary_loans>
     <config>
   <yazgfs>

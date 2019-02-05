@@ -629,6 +629,10 @@ sub upsert_receiving_library {
 
     my ( $receiver_sigil ) = @_;
 
+    my $ill_config = C4::Context->config( 'interlibrary_loans' );
+    my $partner_code = $ill_config->{ 'partner_code' };
+    my $ill_branch = $ill_config->{ 'ill_branch' };
+
     my $all_lib_data = get_data( "libraries/__sigil__/$receiver_sigil" );
     # The API returns a hash with the single key libraries, which contains an
     # array of hashes describing libraries. We should only be getting data about
@@ -646,8 +650,8 @@ sub upsert_receiving_library {
     my $new_library_data = {
         cardnumber   => $receiver_sigil,
         surname      => $lib_data->{'name'},
-        categorycode => 'ILLLIBS', # FIXME Use partner_code from the ILL config
-        branchcode   => 'ILL', # FIXME
+        categorycode => $partner_code,
+        branchcode   => $ill_branch,
         userid       => $receiver_sigil,
         password     => '!',
         address      => $lib_data->{'address1'},
