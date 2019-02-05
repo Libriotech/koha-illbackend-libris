@@ -671,7 +671,10 @@ sub upsert_receiving_library {
 
 sub upsert_record {
 
-    my ( $req ) = @_;
+    my ( $req, $branchcode ) = @_;
+
+    my $ill_config = C4::Context->config( 'interlibrary_loans' );
+    my $ill_itemtype = $ill_config->{ 'ill_itemtype' };
 
     # Get the record
     my $record;
@@ -695,9 +698,9 @@ sub upsert_record {
         ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
         say "Added new record with biblionumber=$biblionumber";
         my $item = {
-            'homebranch'    => 'ILL',
-            'holdingbranch' => 'ILL',
-            'itype'         => 'ILL',
+            'homebranch'    => $branchcode,
+            'holdingbranch' => $branchcode,
+            'itype'         => $ill_itemtype,
         };
         my $itemnumber;
         ($biblionumber, $biblioitemnumber, $itemnumber ) = AddItem( $item, $biblionumber );

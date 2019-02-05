@@ -124,12 +124,12 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         ( $req->{ 'active_library' } ne $ill_config->{ 'libris_sigil' } ) # For --refresh
        ) {
 
-        ### Inlån (outgoing request) - We are requesting things from others, so we do not have a record for it
-        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $req );
         # The loan is requested by one of our own patrons, so we look up the borrowernumber from the cardnumber
         say "Looking for user_id=" . $req->{'user_id'};
         $borrower = Koha::Illbackends::Libris::Base::userid2borrower( $req->{'user_id'} );
         say Dumper $borrower->unblessed if $debug;
+        ### Inlån (outgoing request) - We are requesting things from others, so we do not have a record for it
+        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $req, $borrower->branchcode );
         # Set the prefix
         $status = 'IN_';
         $is_inlan = 1;

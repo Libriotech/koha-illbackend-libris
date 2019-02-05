@@ -43,6 +43,7 @@ Example:
         <libris_key>abc</libris_key>
         <unknown_patron>1</unknown_patron>
         <unknown_biblio>2</unknown_biblio>
+        <ill_itemtype>FJARRLAN</ill_itemtype>
       </interlibrary_loans>
     <config>
   <yazgfs>
