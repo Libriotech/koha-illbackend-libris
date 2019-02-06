@@ -168,6 +168,10 @@ sub metadata {
         = $attrs->find({type => 'message'})
         ? $attrs->find({type => 'message'})->value
         : '';
+    $return->{'Aktivt bibliotek'}
+        = $attrs->find({type => 'active_library'})
+        ? $attrs->find({type => 'active_library'})->value
+        : '';
 
     if ( $return->{'Typ'} eq 'Kopia' ) {
 
