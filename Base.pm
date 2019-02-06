@@ -238,67 +238,67 @@ sub status_graph {
 
         ### Outgoing ###
         OUT_LEV => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_LEV',                   # ID of this status
             name           => 'Utlån Levererad',                   # UI name of this status
             ui_method_name => 'Levererad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         OUT_KANRES => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_KANRES',                   # ID of this status
             name           => 'Utlån Kan reserveras',                   # UI name of this status
             ui_method_name => 'Kan reserveras',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         OUT_NEG => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_NEG',                   # ID of this status
             name           => 'Utlån Negativt svar',                   # UI name of this status
             ui_method_name => 'Negativt svar',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         OUT_LEV => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_LEV',                   # ID of this status
             name           => 'Utlån Levererad',                   # UI name of this status
             ui_method_name => 'Levererad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         OUT_RESAD => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_RESAD',                   # ID of this status
             name           => 'Utlån Reserverad',                   # UI name of this status
             ui_method_name => 'Reserverad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         OUT_UTEL => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_UTEL',                   # ID of this status
             name           => 'Utlån Uteliggande',                   # UI name of this status
@@ -310,33 +310,33 @@ sub status_graph {
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         OUT_LAST => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'OUT_LAST',                   # ID of this status
             name           => 'Utlån Läst',                   # UI name of this status
             ui_method_name => 'Läst',                   # UI name of method leading
                                                            # to this status
             method         => 'set_status_read',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
 
         ### Incoming ###
         IN_REM => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_REM',                   # ID of this status
             name           => 'Inlån Remitterad',                   # UI name of this status
             ui_method_name => 'Remitterad',                   # UI name of method leading
                                                            # to this status
             method         => 'create',                    # method to this status
-            next_actions   => [ 'IN_LAST' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-plus',                   # UI Style class
         },
         IN_UTEL => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_UTEL',                   # ID of this status
             name           => 'Inlån Uteliggande',                   # UI name of this status
@@ -348,7 +348,7 @@ sub status_graph {
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         IN_LEV => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             etd             => 'IN_LEV',                   # ID of this status
             name           => 'Inlån Levererad',                   # UI name of this status
@@ -360,14 +360,14 @@ sub status_graph {
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         IN_ANK => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_ANK',                   # ID of this status
             name           => 'Inlån Ankommen',                   # UI name of this status
             ui_method_name => 'Ankomstregistrera',                   # UI name of method leading
                                                            # to this status
             method         => 'receive',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-receive-o',                   # UI Style class
         },
@@ -384,62 +384,62 @@ sub status_graph {
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         IN_KANRES => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_KANRES',                   # ID of this status
             name           => 'Inlån Kan reserveras',                   # UI name of this status
             ui_method_name => 'Kan reserveras',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         "Makulerad" => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'Makulerad',                   # ID of this status
             name           => 'Makulerad',                   # UI name of this status
             ui_method_name => 'Makulerad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         IN_NEG => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_NEG',                   # ID of this status
             name           => 'Inlån Negativt svar',                   # UI name of this status
             ui_method_name => 'Negativt svar',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         "Reservation" => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'Reservation',                   # ID of this status
             name           => 'Reservation',                   # UI name of this status
             ui_method_name => 'Reservation',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         IN_RESAD => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_RESAD',                   # ID of this status
             name           => 'Inlån Reserverad',                   # UI name of this status
             ui_method_name => 'Reserverad',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
@@ -451,19 +451,7 @@ sub status_graph {
             ui_method_name => 'Respondera',                   # UI name of method leading
                                                            # to this status
             method         => 'respond',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
-                                                           # requests with this status
-            ui_method_icon => 'fa-send-o',                   # UI Style class
-        },
-        "DUMMY" => {
-            prev_actions => [ 'DUMMY' ],                           # Actions containing buttons
-                                                           # leading to this status
-            id             => 'RESPONSE',                   # ID of this status
-            name           => 'Respondera',                   # UI name of this status
-            ui_method_name => 'Respondera',                   # UI name of method leading
-                                                           # to this status
-            method         => 'respond',                    # method to this status
-            next_actions   => [ 'DUMMY' ], # buttons to add to all
+            next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
