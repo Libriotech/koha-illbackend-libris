@@ -24,20 +24,6 @@
         </ol>
     </fieldset>
     <fieldset class="rows">
-        <legend>Receive</legend>
-        <ol>
-            <li class="ill_barcode">
-                <label class="ill_barcode">Barcode:</label>
-                <input type="text" name="ill_barcode" id="ill_barcode" />
-            </li>
-            <li class="title">
-                <input name="stage" id="stage" value="receive" type="hidden"/>
-                <input name="method" id="method" value="receive" type="hidden"/>
-                <input name="illrequest_id" id="illrequest_id" value="[% whole.illrequest_id %]" type="hidden"/>
-            </li>
-        </ol>
-    </fieldset>
-    <fieldset class="rows">
         <legend>Message - email/print</legend>
         <ol>
             <li class="email_title">
@@ -73,9 +59,24 @@
            </li>
         </ol>
     </fieldset>
-    <input type="hidden" name="letter_code" id="letter_code" value="[% whole.letter_code %]" />
-    <input type="submit" value="Receive">
-    <a href="/cgi-bin/koha/ill/ill-requests.pl?method=illview&illrequest_id=[% whole.illrequest_id %]">Cancel</a>
+    <fieldset class="rows">
+        <legend>Motta</legend>
+        <ol>
+            <li class="ill_barcode">
+                <label class="ill_barcode">Streckkod:</label>
+                <input type="text" name="ill_barcode" id="ill_barcode" />
+                <br><span class="hint">När du läser streckkoden kommer skjemat at skickas in.</span>
+            </li>
+            <li class="title">
+                <input name="stage" id="stage" value="receive" type="hidden"/>
+                <input name="method" id="method" value="receive" type="hidden"/>
+                <input name="illrequest_id" id="illrequest_id" value="[% whole.illrequest_id %]" type="hidden"/>
+            </li>
+        </ol>
+        <input type="hidden" name="letter_code" id="letter_code" value="[% whole.letter_code %]" />
+        <input type="submit" value="Motta">
+        <a href="/cgi-bin/koha/ill/ill-requests.pl?method=illview&illrequest_id=[% whole.illrequest_id %]">Avbryt</a>
+    </fieldset>
     </form>
 [% ELSE %]
     <p>We encountered an unexpected situation</p>
