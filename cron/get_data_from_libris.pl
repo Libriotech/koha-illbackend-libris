@@ -125,8 +125,14 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
        ) {
 
         # The loan is requested by one of our own patrons, so we look up the borrowernumber from the cardnumber
-        say "Looking for user_id=" . $req->{'user_id'};
-        $borrower = Koha::Illbackends::Libris::Base::userid2borrower( $req->{'user_id'} );
+        if ( $req->{'user_id'} ) {
+            my $userid = $req->{'user_id'};
+            $userid =~ s/ //g;
+            say "Looking for user_id=$userid";
+            $borrower = Koha::Illbackends::Libris::Base::userid2borrower( $userid );
+        } else {
+            $borrower = Koha::Patrons->find({ 'borrowernumber' => $ill_config->{ 'unknown_patron' } });
+        }
         say Dumper $borrower->unblessed if $debug;
         ### Inlån (outgoing request) - We are requesting things from others, so we do not have a record for it
         $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $req, $borrower->branchcode );
