@@ -227,6 +227,7 @@ sub translate_status {
         'Läst'           => 'LAST',   # Read
         'Reserverad'     => 'RESAD',  # Reserved
         'Uteliggande'    => 'UTEL',   # Waiting
+        'Remitterad'     => 'REM',
     );
     return $map{ $raw_status };
 
