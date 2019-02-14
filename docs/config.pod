@@ -104,4 +104,9 @@ Elements under "Details from Libris" can be hidden with OPACUserCSS:
   $("label[for='medium']").parent().hide();
   $("label[for='placed']").parent().hide();
 
+See also:
+
+  Bug 22285 - OPAC shows too much info about ILL requests
+  L<https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=22285>
+
 =cut
