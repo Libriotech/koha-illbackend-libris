@@ -82,4 +82,26 @@ FIXME: Suggest content for the messages.
 
 See "perldoc cron/get_data_from_libris.pl" for details.
 
+=head2 Tips and tricks
+
+=head3 Hide the "Create a new request" button in OPAC
+
+Libris ILL does not allow patrons to create requests from the OPAC, so we can
+just hide this button, by adding the following to the OPACUserCSS syspref:
+
+  #ill-backend-dropdown { display: none; }
+
+=head3 Hide some ILL metadata elements in the OPAC
+
+Elements under "Details from library" can be hidden with OPACUserJS:
+
+  .requestattr-Melding  { display: none; }
+  .requestattr-Libris   { display: none; }
+
+Elements under "Details from Libris" can be hidden with OPACUserCSS:
+
+  $("label[for='backend']").parent().hide();
+  $("label[for='medium']").parent().hide();
+  $("label[for='placed']").parent().hide();
+
 =cut
