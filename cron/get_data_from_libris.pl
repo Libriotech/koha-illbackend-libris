@@ -33,7 +33,7 @@ use Koha::Illrequest::Config;
 use Koha::Illbackends::Libris::Base;
 
 # Get options
-my ( $mode, $start_date, $end_date, $limit, $refresh, $verbose, $debug, $test ) = get_options();
+my ( $mode, $start_date, $end_date, $limit, $refresh, $refresh_all, $verbose, $debug, $test ) = get_options();
 
 my $ill_config = C4::Context->config('interlibrary_loans');
 say Dumper $ill_config if $debug;
@@ -46,9 +46,15 @@ foreach my $key ( qw( libris_sigil libris_key unknown_patron unknown_biblio ) ) 
 my $dbh = C4::Context->dbh;
 
 my $data;
-if ( $refresh ) {
-    # Refresh all requests in the DB with fresh data
-    my $old_requests = Koha::Illrequests->search({ 'backend' => 'Libris' });
+if ( $refresh || $refresh_all ) {
+    my $old_requests;
+    if ( $refresh ) {
+        # Only refresh requests with certain statuses
+        $old_requests = Koha::Illrequests->search([ { status => 'IN_LAST' }, { status => 'IN_KANRES' } ]);
+    } else {
+        # Refresh all requests in the DB with fresh data
+        $old_requests = Koha::Illrequests->search({ 'backend' => 'Libris' });
+    }
     my $refresh_count = 0;
     while ( my $req = $old_requests->next ) {
         next unless $req->orderid;
@@ -312,6 +318,11 @@ Only process the n first requests. Not implemented.
 
 =item B<-r, --refresh>
 
+Get fresh data for requests with certain statuses in the database. This should
+catch requests that fall outside the --start_date and --end_date range.
+
+=item B<-r, --refresh_all>
+
 Get fresh data for all requests in the database.
 
 =item B<-v --verbose>
@@ -340,15 +351,16 @@ sub get_options {
     my $dt = DateTime->now;
 
     # Options
-    my $mode       = 'recent';
-    my $end_date   = $dt->ymd; # Today
-    my $start_date = $dt->subtract(days => 1)->ymd; # Yesterday
-    my $limit      = '';
-    my $refresh    = '';
-    my $verbose    = '';
-    my $debug      = '';
-    my $test       = '';
-    my $help       = '';
+    my $mode        = 'recent';
+    my $end_date    = $dt->ymd; # Today
+    my $start_date  = $dt->subtract(days => 1)->ymd; # Yesterday
+    my $limit       = '';
+    my $refresh     = '';
+    my $refresh_all = '';
+    my $verbose     = '';
+    my $debug       = '';
+    my $test        = '';
+    my $help        = '';
 
     GetOptions (
         'm|mode=s'       => \$mode,
@@ -356,6 +368,7 @@ sub get_options {
         'e|end_date=s'   => \$end_date,
         'l|limit=i'      => \$limit,
         'r|refresh'      => \$refresh,
+        'r|refresh_all'  => \$refresh_all,
         'v|verbose'      => \$verbose,
         'd|debug'        => \$debug,
         't|test'         => \$test,
@@ -376,7 +389,7 @@ sub get_options {
     # FIXME Point out that the mode was invalid
     pod2usage( -exitval => 0 ) unless $mode_ok{ $mode };
 
-    return ( $mode, $start_date, $end_date, $limit, $refresh, $verbose, $debug, $test );
+    return ( $mode, $start_date, $end_date, $limit, $refresh, $refresh_all, $verbose, $debug, $test );
 
 }
 
