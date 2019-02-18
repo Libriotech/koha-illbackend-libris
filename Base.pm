@@ -384,7 +384,7 @@ sub status_graph {
             ui_method_name => 'Läst',                   # UI name of method leading
                                                            # to this status
             method         => 'set_status_read',                    # method to this status
-            next_actions   => [ 'IN_RESPONSE' ], # buttons to add to all
+            next_actions   => [ 'IN_ANK' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
