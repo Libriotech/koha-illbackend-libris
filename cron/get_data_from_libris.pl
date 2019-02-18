@@ -35,6 +35,7 @@ use Koha::Illbackends::Libris::Base;
 # Get options
 my ( $mode, $start_date, $end_date, $limit, $refresh, $refresh_all, $verbose, $debug, $test ) = get_options();
 
+# Check for a complete ILL config in koha-conf.xml
 my $ill_config = C4::Context->config('interlibrary_loans');
 say Dumper $ill_config if $debug;
 foreach my $key ( qw( libris_sigil libris_key unknown_patron unknown_biblio ) ) {
@@ -45,6 +46,9 @@ foreach my $key ( qw( libris_sigil libris_key unknown_patron unknown_biblio ) ) 
 
 my $dbh = C4::Context->dbh;
 
+## Retrieve data from Libris
+
+# We are doing a full or partial refresh
 my $data;
 if ( $refresh || $refresh_all ) {
     my $old_requests;
@@ -73,11 +77,13 @@ if ( $refresh || $refresh_all ) {
         sleep 5;
     }
     $data->{ 'count' } = $refresh_count;
+# Outgoing requests, aka Inlån
 } elsif( $mode && $mode eq 'outgoing' ) {
     # Get data from Libris
     my $query = "start_date=$start_date&end_date=$end_date";
     say $query if $verbose;
     $data = Koha::Illbackends::Libris::Base::get_data_by_mode( $mode, $query );
+# All other operations
 } else {
     # Get data from Libris
     $data = Koha::Illbackends::Libris::Base::get_data_by_mode( $mode );
@@ -87,7 +93,8 @@ say "Found $data->{'count'} requests" if $verbose;
 
 REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
-    # Output details about the request
+## Output details about the request
+
     say "-----------------------------------------------------------------";
     say "* $req->{'request_id'} / $req->{'lf_number'}:  $req->{'title'} ($req->{'year'})";
     say "\tAuthor:       $req->{'author'} / $req->{'imprint'} / $req->{'place_of_publication'}";
@@ -125,10 +132,10 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     my $borrower     = 0;
     my $status       = '';
     my $is_inlan     = 0;
-    if (
-        ( $mode && $mode eq 'outgoing' ) || # For --mode outgoing
-        ( $req->{ 'active_library' } ne $ill_config->{ 'libris_sigil' } ) # For --refresh
-       ) {
+
+## Inlån (outgoing request) - We are requesting things from others, so we do not have a record for it
+
+    if ( ( $mode && $mode eq 'outgoing' ) || ( $req->{ 'active_library' } ne $ill_config->{ 'libris_sigil' } ) ) {
 
         # The loan is requested by one of our own patrons, so we look up the borrowernumber from the cardnumber
         if ( $req->{'user_id'} ) {
@@ -140,7 +147,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             $borrower = Koha::Patrons->find({ 'borrowernumber' => $ill_config->{ 'unknown_patron' } });
         }
         say Dumper $borrower->unblessed if $debug;
-        ### Inlån (outgoing request) - We are requesting things from others, so we do not have a record for it
+        # Create a record
         $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $req, $borrower->branchcode );
         # Set the prefix
         $status = 'IN_';
@@ -148,12 +155,15 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
     } else {
 
-        ### Utlån (incoming requests) - Others are requesting things from us, so we should have a record for it
+## Utlån (incoming requests) - Others are requesting things from us, so we should have a record for it
+
+        # Do we have a record identifier?
         if ( $req->{'bib_id'} && $req->{'bib_id'} ne '' ) {
             if ( $req->{'bib_id'} =~ m/^BIB/i ) {
+                # We only have a made up biblio identifier (starting with BIB), so we use the dummy record
                 $biblionumber = $ill_config->{ 'unknown_biblio' };
             } else {
-                # Look for the bib record based on bib_id and MARC field 001
+                # Look for an actual bib record based on bib_id and MARC field 001
                 $biblionumber = Koha::Illbackends::Libris::Base::recordid2biblionumber( $req->{'bib_id'} );
             }
         }
@@ -165,10 +175,14 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $status = 'OUT_';
 
     }
+    # Translate from the literal status to a code
     $status .= Koha::Illbackends::Libris::Base::translate_status( $req->{'status'} );
 
-    # Save or update the request in Koha
+## Save or update the request in Koha
+
+    # Look for the Libris order number
     my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'lf_number'} });
+    # We have an old request, so we update it
     if ( $old_illrequest ) {
         say "Found an existing request with illrequest_id = " . $old_illrequest->illrequest_id if $verbose;
         # Check if we should skip this request
@@ -208,6 +222,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 say "DEBUG: $attr = ", $req->{ $attr } if ( $req->{ $attr } && $debug );
             }
         }
+    # We do not have an old request, so we create a new one
     } else {
         say "Going to create a new request" if $verbose;
         my $illrequest = Koha::Illrequest->new;
