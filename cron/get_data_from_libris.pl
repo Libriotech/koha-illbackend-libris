@@ -222,6 +222,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 say "DEBUG: $attr = ", $req->{ $attr } if ( $req->{ $attr } && $debug );
             }
         }
+        # Check if there is a reserve, if not add one
+        if ( $is_inlan && $is_inlan == 1 ) {
+            my $res = Koha::Holds->find({ borrowernumber => $borrower->borrowernumber, biblionumber => $biblionumber });
+            if ( $res ) {
+                say "Found reserve with reserve_id=", $res->reserve_id;
+            } else {
+                say "Reserve NOT FOUND! Going to add one for branchcode=", $borrower->branchcode, " borrowernumber=", $borrower->borrowernumber, "biblionumber=$biblionumber";
+                AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+            }
+        }
     # We do not have an old request, so we create a new one
     } else {
         say "Going to create a new request" if $verbose;
