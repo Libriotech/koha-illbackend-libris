@@ -62,6 +62,7 @@ if ( $refresh || $refresh_all ) {
     my $refresh_count = 0;
     while ( my $req = $old_requests->next ) {
         next unless $req->orderid;
+        say "Going to refresh request with illrequest_id=", $req->illrequest_id;
         my $req_data = Koha::Illbackends::Libris::Base::get_request_data( $req->orderid );
         if ( $refresh_count == 0 ) {
             # On the first pass we save the whole datastructure
@@ -346,7 +347,7 @@ Only process the n first requests. Not implemented.
 Get fresh data for requests with certain statuses in the database. This should
 catch requests that fall outside the --start_date and --end_date range.
 
-=item B<-r, --refresh_all>
+=item B<-a, --refresh_all>
 
 Get fresh data for all requests in the database.
 
@@ -393,7 +394,7 @@ sub get_options {
         'e|end_date=s'   => \$end_date,
         'l|limit=i'      => \$limit,
         'r|refresh'      => \$refresh,
-        'r|refresh_all'  => \$refresh_all,
+        'a|refresh_all'  => \$refresh_all,
         'v|verbose'      => \$verbose,
         'd|debug'        => \$debug,
         't|test'         => \$test,
