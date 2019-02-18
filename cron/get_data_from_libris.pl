@@ -28,6 +28,7 @@ $| = 1; # Don't buffer output
 
 use C4::Context;
 use C4::Reserves;
+use Koha::Illcomment;
 use Koha::Illrequests;
 use Koha::Illrequest::Config;
 use Koha::Illbackends::Libris::Base;
@@ -190,6 +191,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         if ( $old_illrequest->status eq 'IN_ANK' ) {
             warn "Request is already received";
             next REQUEST;
+        }
+        # Make a comment if the status changed
+        if ( $status ne $old_illrequest->status ) {
+            my $comment = Koha::Illcomment->new({
+                illrequest_id  => $old_illrequest->illrequest_id,
+                borrowernumber => $ill_config->{ 'libris_borrowernumber' },
+                comment        => "Status ändrad från ", $old_illrequest->status, " till $status",
+            });
+            $comment->store();
+            say "New status: $status" if $debug;
         }
         # Update the request
         $old_illrequest->status( $status );
