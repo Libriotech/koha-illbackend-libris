@@ -222,6 +222,7 @@ sub translate_status {
     my ( $raw_status ) = @_;
     my %map = (
         'Kan reserveras' => 'KANRES', # Can be reserved
+        'Reservation'    => 'RES',    # Requesting library has requested a reservation
         'Negativt svar'  => 'NEG',    # Negative answer
         'Levererad'      => 'LEV',    # Delivered
         'Läst'           => 'LAST',   # Read
@@ -424,11 +425,11 @@ sub status_graph {
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
-        "Reservation" => {
+        "IN_RES" => {
             prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
-            id             => 'Reservation',                   # ID of this status
-            name           => 'Reservation',                   # UI name of this status
+            id             => 'IN_RES',                   # ID of this status
+            name           => 'Inlån Reservation',                   # UI name of this status
             ui_method_name => 'Reservation',                   # UI name of method leading
                                                            # to this status
             method         => 'requestitem',                    # method to this status
