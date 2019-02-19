@@ -197,7 +197,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             my $comment = Koha::Illcomment->new({
                 illrequest_id  => $old_illrequest->illrequest_id,
                 borrowernumber => $ill_config->{ 'libris_borrowernumber' },
-                comment        => "Status ändrad från ", $old_illrequest->status, " till $status",
+                comment        => "Status ändrad från " . $old_illrequest->status . " till $status",
             });
             $comment->store();
             say "New status: $status" if $debug;
