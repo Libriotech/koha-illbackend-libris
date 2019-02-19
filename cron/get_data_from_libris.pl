@@ -233,6 +233,11 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                     $old_illrequest->illrequestattributes->find({ 'type' => $attr . "_$data" })->update({ 'value' => $req->{ $attr }->{ $data } });
                 }
             } else {
+                # Add lf_number (Libris ILL request ID) at the end of the title. This is a workaround while we wait for
+                # Koha Bug 21834 - Display illrequests.orderid in the table of ILL requests
+                if ( $attr eq 'title' ) {
+                    $req->{ 'title' } .= ' [' . $req->{ 'lf_number' } . ']';
+                }
                 $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
                 say "DEBUG: $attr = ", $req->{ $attr } if ( $req->{ $attr } && $debug );
             }
@@ -298,6 +303,11 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                     })->store;
                 }
             } else {
+                # Add lf_number (Libris ILL request ID) at the end of the title. This is a workaround while we wait for
+                # Koha Bug 21834 - Display illrequests.orderid in the table of ILL requests
+                if ( $attr eq 'title' ) {
+                    $req->{ 'title' } .= ' [' . $req->{ 'lf_number' } . ']';
+                }
                 Koha::Illrequestattribute->new({
                     illrequest_id => $illrequest->illrequest_id,
                     type          => $attr,
