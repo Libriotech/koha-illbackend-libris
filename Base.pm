@@ -461,7 +461,18 @@ sub status_graph {
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
-
+        "IN_UTL" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'IN_UTL',                   # ID of this status
+            name           => 'Inlån Utlånad',                   # UI name of this status
+            ui_method_name => 'Utlånad',                   # UI name of method leading
+                                                           # to this status
+            method         => 'respond',                    # method to this status
+            next_actions   => [ ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
     };
 }
 
