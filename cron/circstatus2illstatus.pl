@@ -16,7 +16,7 @@ my $sg = Koha::Illbackends::Libris::Base::status_graph();
 
 my %statuses = (
     'IN_ANK' => 'IN_UTL',
-    'IN_UTL' => 'IN_RET'
+    'IN_UTL' => 'IN_RET',
 );
 
 # Status pairs
@@ -34,7 +34,7 @@ foreach my $old_status ( keys %statuses ) {
 
         my $on_loan = $dbh->selectrow_hashref( 'SELECT issue_id FROM issues WHERE borrowernumber = ? AND itemnumber IN ( SELECT itemnumber FROM items WHERE biblionumber = ? )', undef, $borrowernumber, $biblionumber );
         my $updated = '';
-        if ( ( $old_status eq 'IN_ANK' && $on_loan ) OR ( $old_status eq 'IN_UTL' && !$on_loan ) ) {
+        if ( ( $old_status eq 'IN_ANK' && $on_loan ) || ( $old_status eq 'IN_UTL' && !$on_loan ) ) {
             # Do the actual update
             $req->status( $new_status );
             $req->store;
