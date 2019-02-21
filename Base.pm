@@ -172,6 +172,14 @@ sub metadata {
         = $attrs->find({type => 'active_library'})
         ? $attrs->find({type => 'active_library'})->value
         : '';
+    $return->{'Lånetid, garanterad'}
+        = $attrs->find({type => 'due_date_guar'})
+        ? $attrs->find({type => 'due_date_guar'})->value
+        : '';
+    $return->{'Lånetid, max'}
+        = $attrs->find({type => 'due_date_max'})
+        ? $attrs->find({type => 'due_date_max'})->value
+        : '';
 
     if ( $return->{'Typ'} eq 'Kopia' ) {
 
@@ -497,7 +505,6 @@ sub receive {
     my $patron = Koha::Patrons->find({ borrowernumber => $request->borrowernumber });
 
     if ( $stage && $stage eq 'receive' ) {
-
         # Change the status of the request
         $request->status( 'IN_ANK' );
         $request->store;
@@ -522,6 +529,22 @@ sub receive {
                 'content' => $params->{ 'other' }->{ 'sms_content' },
             };
             C4::Message->enqueue($sms, $patron->unblessed, 'sms');
+        }
+
+        # Save the two due dates
+        if ( $params->{ 'other' }->{ 'due_date_guar' } ) {
+            Koha::Illrequestattribute->new({
+                illrequest_id => $request->illrequest_id,
+                type          => 'due_date_guar',
+                value         => $params->{ 'other' }->{ 'due_date_guar' },
+            })->store;
+        }
+        if ( $params->{ 'other' }->{ 'due_date_max' } ) {
+            Koha::Illrequestattribute->new({
+                illrequest_id => $request->illrequest_id,
+                type          => 'due_date_max',
+                value         => $params->{ 'other' }->{ 'due_date_max' },
+            })->store;
         }
 
         # Set a barcode, if one was supplied

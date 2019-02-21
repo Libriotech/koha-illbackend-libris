@@ -24,6 +24,19 @@
         </ol>
     </fieldset>
     <fieldset class="rows">
+        <legend>Lånetid</legend>
+        <ol>
+            <li class="due_date_guar">
+                <label class="due_date_guar">Lånetid, garanterad:</label>
+                <input type="text" name="due_date_guar" id="due_date_guar" value="[% whole.due_date_guar %]" />
+           </li>
+            <li class="due_date_max">
+                <label class="due_date_max">Lånetid, max:</label>
+                <input type="text" name="due_date_max" id="due_date_max" value="[% whole.due_date_max %]" />
+           </li>
+        </ol>
+    </fieldset>
+    <fieldset class="rows">
         <legend>Message - email/print</legend>
         <ol>
             <li class="email_title">
