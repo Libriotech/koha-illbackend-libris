@@ -356,7 +356,7 @@ sub status_graph {
         IN_LEV => {
             prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
-            etd             => 'IN_LEV',                   # ID of this status
+            id             => 'IN_LEV',                   # ID of this status
             name           => 'Inlån Levererad',                   # UI name of this status
             ui_method_name => 'Levererad',                   # UI name of method leading
                                                            # to this status
@@ -467,6 +467,18 @@ sub status_graph {
             id             => 'IN_UTL',                   # ID of this status
             name           => 'Inlån Utlånad',                   # UI name of this status
             ui_method_name => 'Utlånad',                   # UI name of method leading
+                                                           # to this status
+            method         => 'respond',                    # method to this status
+            next_actions   => [ ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        "IN_RET" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'IN_RET',                   # ID of this status
+            name           => 'Inlån Återlämnad',                   # UI name of this status
+            ui_method_name => 'Innleverad',                   # UI name of method leading
                                                            # to this status
             method         => 'respond',                    # method to this status
             next_actions   => [ ], # buttons to add to all
