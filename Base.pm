@@ -245,6 +245,8 @@ sub translate_status {
 
 =head3 status_graph
 
+The icons refered to here are Font Awesome icons, see L<https://fontawesome.com/v4.7.0/icons/> for a list.
+
 =cut
 
 sub status_graph {
@@ -381,7 +383,7 @@ sub status_graph {
             ui_method_name => 'Ankomstregistrera',                   # UI name of method leading
                                                            # to this status
             method         => 'receive',                    # method to this status
-            next_actions   => [ ], # buttons to add to all
+            next_actions   => [ 'IN_AVSL' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-receive-o',                   # UI Style class
         },
@@ -493,7 +495,75 @@ sub status_graph {
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
+        "IN_AVSL" => {
+            prev_actions => [ 'IN_RET', 'IN_ANK' ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'IN_AVSL',                   # ID of this status
+            name           => 'Inlån Avslutad',                   # UI name of this status
+            ui_method_name => 'Avsluta',                   # UI name of method leading
+                                                           # to this status
+            method         => 'close',                    # method to this status
+            next_actions   => [ ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-stop',                   # UI Style class
+        },
     };
+}
+
+sub close {
+
+    my ( $self, $params ) = @_;
+    my $stage = $params->{other}->{stage};
+    my $request = $params->{request};
+    my $ill_config = C4::Context->config( 'interlibrary_loans' );
+    my $sg = Koha::Illbackends::Libris::Base::status_graph();
+
+    # Update the items connected to the the biblio connected to the request
+    # (There should only be one item, but we do a loop to be on the safe side)
+    my $ill_closed_itemtype = $ill_config->{ 'ill_closed_itemtype' };
+    my $items = Koha::Items->search({ biblionumber => $request->biblio_id });
+    while ( my $item = $items->next ) {
+        # Chenge the itemtype to something that says e.g. "Closed ILL"
+        $item->itype( $ill_closed_itemtype );
+        # Set the item to "not for loan"
+        $item->notforloan( 1 );
+        # Remove the barcode (we might ILL the same item with the same barcode later)
+        $item->barcode( undef );
+        # Save the changes
+        $item->store;
+    }
+
+    # Remove any holds (If we are clsoing a request that was never picked up there
+    # should be a hold. If we are closing a request that has been on loan to a patron
+    # and then returned there should not be one.)
+    my $holds = Koha::Holds->search({ biblionumber => $request->biblio_id });
+    while ( my $hold = $holds->next ) {
+        $hold->delete;
+    }
+
+    # Update the status
+    my $old_status_name = $sg->{ $request->status }->{ 'name' };
+    my $new_status_name = $sg->{ 'IN_AVSL' }->{ 'name' };
+    $request->status( 'IN_AVSL' );
+    $request->store;
+    # Add a comment
+    my $comment = Koha::Illcomment->new({
+        illrequest_id  => $request->illrequest_id,
+        borrowernumber => $ill_config->{ 'libris_borrowernumber' },
+        comment        => "Status ändrad från $old_status_name till $new_status_name.",
+    });
+    $comment->store();
+
+    # Return to illview
+    return {
+        error   => 0,
+        status  => '',
+        message => '',
+        method  => 'receive',
+        stage   => 'commit',
+        next    => 'illview',
+    };
+
 }
 
 sub receive {

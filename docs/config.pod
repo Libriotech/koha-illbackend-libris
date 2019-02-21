@@ -36,6 +36,10 @@ if a connection to a real biblio can not be established.
 =item * B<ill_itemtype> - When items are created for ILL documents, use this
 itemtype.
 
+=item * B<ill_closed_itemtype> - Use this itemtype when an ILL is marked as
+done. If you do not want to differentiate between items that are done and
+items that are not done, set this to the same value as ill_itemtype.
+
 =item * B<libris_borrowernumber> - A "fake" patron that can be used to add
 automatic ILL comments.
 
@@ -54,6 +58,7 @@ Example:
         <unknown_biblio>2</unknown_biblio>
         <ill_branch>FJARRLAN</ill_branch>
         <ill_itemtype>FJARRLAN</ill_itemtype>
+        <ill_closed_itemtype>FJARRLANX</ill_closed_itemtype>
       </interlibrary_loans>
     <config>
   <yazgfs>
