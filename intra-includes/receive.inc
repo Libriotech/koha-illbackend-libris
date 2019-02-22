@@ -21,8 +21,10 @@
             <li class="illtitle"> <label class="illtitle">Title:</label>      [% whole.title %]</li>
             <li class="author">   <label class="author">Author:</label>       [% whole.author %]</li>
             <li class="lf_number"><label class="lf_number">LF number:</label> [% whole.lf_number %]</li>
+            <li class="type">     <label class="type">Typ:</label>            [% whole.type %]</li>
         </ol>
     </fieldset>
+    [% IF whole.type == 'Lån' %]
     <fieldset class="rows">
         <legend>Lånetid</legend>
         <ol>
@@ -36,6 +38,7 @@
            </li>
         </ol>
     </fieldset>
+    [% END %]
     <fieldset class="rows">
         <legend>Message - email/print</legend>
         <ol>
@@ -72,20 +75,22 @@
            </li>
         </ol>
     </fieldset>
+    [% IF whole.type == 'Lån' %]
     <fieldset class="rows">
-        <legend>Motta</legend>
+        <legend>Streckkod</legend>
         <ol>
             <li class="ill_barcode">
                 <label class="ill_barcode">Streckkod:</label>
                 <input type="text" name="ill_barcode" id="ill_barcode" />
                 <br><span class="hint">När du läser streckkoden kommer skjemat at skickas in.</span>
             </li>
-            <li class="title">
-                <input name="stage" id="stage" value="receive" type="hidden"/>
-                <input name="method" id="method" value="receive" type="hidden"/>
-                <input name="illrequest_id" id="illrequest_id" value="[% whole.illrequest_id %]" type="hidden"/>
-            </li>
         </ol>
+    </fieldset>
+    [% END %]
+    <fieldset class="action">
+        <input name="stage" id="stage" value="receive" type="hidden"/>
+        <input name="method" id="method" value="receive" type="hidden"/>
+        <input name="illrequest_id" id="illrequest_id" value="[% whole.illrequest_id %]" type="hidden"/>
         <input type="hidden" name="letter_code" id="letter_code" value="[% whole.letter_code %]" />
         <input type="submit" value="Motta">
         <a href="/cgi-bin/koha/ill/ill-requests.pl?method=illview&illrequest_id=[% whole.illrequest_id %]">Avbryt</a>

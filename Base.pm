@@ -576,7 +576,13 @@ sub receive {
 
     if ( $stage && $stage eq 'receive' ) {
         # Change the status of the request
-        $request->status( 'IN_ANK' );
+        if ( $request->illrequestattributes->find({ type => 'media_type' })->value eq 'Lån' ) {
+            # This is a loan, set the status to "arrived"
+            $request->status( 'IN_ANK' );
+        } else {
+            # This is a copy, mark the request as "done"
+            $request->status( 'IN_AVSL' );
+        }
         $request->store;
 
         # Send an email, if requested
@@ -649,6 +655,16 @@ sub receive {
             }
         }
 
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => '',
+            method  => 'receive',
+            stage   => 'commit',
+            next    => 'illview',
+        };
+
     } else {
 
         my $item = Koha::Items->find({ biblionumber => $request->biblio_id });
@@ -698,6 +714,7 @@ sub receive {
             title     => $request->illrequestattributes->find({ type => 'title' })->value,
             author    => $request->illrequestattributes->find({ type => 'author' })->value,
             lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value,
+            type      => $request->illrequestattributes->find({ type => 'media_type' })->value,
             letter_code => $letter_code,
             email     => $email,
             sms       => $sms,
