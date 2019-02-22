@@ -246,8 +246,8 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 say "DEBUG: $attr = ", $req->{ $attr } if ( $req->{ $attr } && $debug );
             }
         }
-        # Check if there is a reserve, if not add one
-        if ( $is_inlan && $is_inlan == 1 ) {
+        # Check if there is a reserve, if not add one (only for Inlån and loans, not copies)
+        if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
             my $res = Koha::Holds->find({ borrowernumber => $borrower->borrowernumber, biblionumber => $biblionumber });
             if ( $res ) {
                 say "Found reserve with reserve_id=", $res->reserve_id;
@@ -320,8 +320,8 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 say "DEBUG: $attr = ", $req->{ $attr } if $debug;
             }
         }
-        # Add a hold, but only for Inlån
-        if ( $is_inlan && $is_inlan == 1 ) {
+        # Add a hold, but only for Inlån and for loans, not copies
+        if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
             AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
         }
     }
