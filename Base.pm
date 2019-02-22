@@ -385,7 +385,7 @@ sub status_graph {
             method         => 'receive',                    # method to this status
             next_actions   => [ 'IN_AVSL' ], # buttons to add to all
                                                            # requests with this status
-            ui_method_icon => 'fa-receive-o',                   # UI Style class
+            ui_method_icon => 'fa-inbox',                   # UI Style class
         },
         IN_LAST => {
             prev_actions => [ 'IN_REM', 'IN_UTEL' ],                           # Actions containing buttons
@@ -397,7 +397,7 @@ sub status_graph {
             method         => 'set_status_read',                    # method to this status
             next_actions   => [ 'IN_ANK' ], # buttons to add to all
                                                            # requests with this status
-            ui_method_icon => 'fa-send-o',                   # UI Style class
+            ui_method_icon => 'fa-check-square-o',                   # UI Style class
         },
         IN_KANRES => {
             prev_actions => [ ],                           # Actions containing buttons
