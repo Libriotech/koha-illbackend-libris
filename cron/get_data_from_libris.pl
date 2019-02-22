@@ -96,8 +96,10 @@ say "Found $data->{'count'} requests" if $verbose;
 REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
     # If this request is marked with a "local" status we skip to the next request
-    my $old_stat = Koha::Illrequests->find({ orderid => $req->{'lf_number'} })->status;
-    next REQUEST if ( $old_stat eq 'IN_UTL' || $old_stat eq 'IN_RET' || $old_stat eq 'IN_AVSL' );
+    if ( Koha::Illrequests->find({ orderid => $req->{'lf_number'} }) ) {
+        my $old_stat = Koha::Illrequests->find({ orderid => $req->{'lf_number'} })->status;
+        next REQUEST if ( $old_stat && $old_stat eq 'IN_UTL' || $old_stat eq 'IN_RET' || $old_stat eq 'IN_AVSL' );
+    }
 
 ## Output details about the request
 
