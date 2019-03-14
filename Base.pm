@@ -818,16 +818,15 @@ sub upsert_record {
     }
 
     # Update or save the record
-    # my $biblionumber = Koha::Illbackends::Libris::Base::recordid2biblionumber( $req->{ 'bib_id' } );
-    # my $biblioitemnumber;
-    # if ( $biblionumber ) {
-    #     # Update record
-    #     ModBiblio( $record, $biblionumber, '' );
-    #     say "Updated record with biblionumber=$biblionumber";
-    # } else {
-
-        # Always add a new record
-        my ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
+    my $biblionumber = Koha::Illbackends::Libris::Base::recordid2biblionumber( $req->{ 'bib_id' } );
+    my $biblioitemnumber;
+    if ( $biblionumber ) { 
+        # Update record
+        ModBiblio( $record, $biblionumber, '' );
+        say "Updated record with biblionumber=$biblionumber";
+    } else {
+        # Add a new record
+        ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
         say "Added new record with biblionumber=$biblionumber";
         my $item = {
             'homebranch'    => $branchcode,
@@ -841,8 +840,7 @@ sub upsert_record {
         } else {
             say "No item added";
         }
-
-    # }
+    }
 
     return $biblionumber;
 
