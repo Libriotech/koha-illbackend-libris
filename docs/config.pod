@@ -10,6 +10,9 @@ Some tips on how to configure the Libris ILL backend.
 
 =item * B<ILLModule> = Enable
 
+=item * Use B<OpacHiddenItems> to hide the itemtypes given in B<ill_itemtype> and
+B<ill_closed_itemtype> below from the OPAC. E.g.: "itype: [FJARRLAN, FJARRLANX]".
+
 =back
 
 =head2 koha-conf.xml
