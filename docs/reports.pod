@@ -1,0 +1,23 @@
+=pod
+
+=head1 REPORTS
+
+Reports you can save in the Reports module in Koha, in order to gain some
+insights into the ILL module and its workings.
+
+=head2 Too many reserves
+
+During development we have seen a few cases of records that get a series of
+reserves/holds on them, all for the same patron. This report should catch any
+such mishaps. 
+
+  SELECT 
+    CONCAT('<a href=\"/cgi-bin/koha/catalogue/detail.pl?biblionumber=', i.biblionumber, '\">', i.biblionumber, '</a>' ) AS biblionumber,
+    COUNT(*) AS Antal 
+  FROM items i, reserves r 
+  WHERE i.biblionumber = r.biblionumber 
+    AND i.itype = 'FJARRLAN' 
+  GROUP BY i.biblionumber 
+  HAVING Antal > 1
+
+=cut
