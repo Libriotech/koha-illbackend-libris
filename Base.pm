@@ -1260,7 +1260,7 @@ sub create {
 	$request->borrowernumber( $params->{other}->{borrowernumber} );
         $request->biblio_id(      1 );
 	    $request->branchcode(     $params->{other}->{branchcode} );
-	    $request->status(         translate_status( $params->{other}->{status} ) );
+	    $request->status(         $params->{other}->{status} );
 	    $request->placed(         DateTime->now);
 	    $request->replied(        );
 	    $request->completed(      );
