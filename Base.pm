@@ -1258,7 +1258,7 @@ sub create {
         my $request = $params->{request};
 	$request->orderid(        $params->{other}->{orderid} );
 	$request->borrowernumber( $params->{other}->{borrowernumber} );
-        $request->biblio_id(      1 );
+        $request->biblio_id(      $other->{biblio_id} );
 	    $request->branchcode(     $params->{other}->{branchcode} );
 	    $request->status(         $params->{other}->{status} );
 	    $request->placed(         DateTime->now);
