@@ -245,7 +245,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                     $req->{ 'title' } .= ' [' . $req->{ 'lf_number' } . ']';
                 }
                 $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
-                say "DEBUG: $attr = ", $req->{ $attr } if ( $req->{ $attr } && $debug );
+                say "DEBUG: $attr = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
             }
         }
         # Check if there is a reserve, if not add one (only for Inlån and loans, not copies)
