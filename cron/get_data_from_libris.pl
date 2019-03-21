@@ -155,8 +155,6 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             $borrower = Koha::Patrons->find({ 'borrowernumber' => $ill_config->{ 'unknown_patron' } });
         }
         say Dumper $borrower->unblessed if $debug;
-        # Create a record
-        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $req, $borrower->branchcode );
         # Set the prefix
         $status = 'IN_';
         $is_inlan = 1;
@@ -198,6 +196,8 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             warn "Request is already received";
             next REQUEST;
         }
+        # Update the record
+        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( 'update', $req, $borrower->branchcode, $old_illrequest );
         # Make a comment if the status changed
         if ( $status ne $old_illrequest->status ) {
             my $sg = Koha::Illbackends::Libris::Base::status_graph();
@@ -249,17 +249,21 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             }
         }
         # Check if there is a reserve, if not add one (only for Inlån and loans, not copies)
-        if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
+        if ( ( $is_inlan && $is_inlan == 1 ) && $req->{'media_type'} eq 'Lån' ) {
             my $res = Koha::Holds->find({ borrowernumber => $borrower->borrowernumber, biblionumber => $biblionumber });
             if ( $res ) {
-                say "Found reserve with reserve_id=", $res->reserve_id;
+                say "Found an old reserve with reserve_id=", $res->reserve_id;
             } else {
-                say "Reserve NOT FOUND! Going to add one for branchcode=", $borrower->branchcode, " borrowernumber=", $borrower->borrowernumber, "biblionumber=$biblionumber";
-                AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+                say "Reserve NOT FOUND! Going to add one for branchcode=", $borrower->branchcode, " borrowernumber=", $borrower->borrowernumber, " biblionumber=$biblionumber";
+                my $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+                say "Reserve added with reserve_id=$reserve_id";
             }
         }
     # We do not have an old request, so we create a new one
     } else {
+        # Create a record
+        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( 'insert', $req, $borrower->branchcode );
+        # Create the request
         say "Going to create a new request" if $verbose;
         my $illrequest = Koha::Illrequest->new;
         $illrequest->load_backend( 'Libris' );
@@ -324,7 +328,8 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         }
         # Add a hold, but only for Inlån and for loans, not copies
         if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
-            AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+            my $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+            say "Reserve added with reserve_id=$reserve_id";
         }
     }
 

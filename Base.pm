@@ -802,25 +802,26 @@ sub upsert_receiving_library {
 
 sub upsert_record {
 
-    my ( $req, $branchcode ) = @_;
+    my ( $action, $libris_req, $branchcode, $saved_req ) = @_;
 
     my $ill_config = C4::Context->config( 'interlibrary_loans' );
     my $ill_itemtype = $ill_config->{ 'ill_itemtype' };
 
     # Get the record
     my $record;
-    if ( $req->{ 'bib_id' } =~ m/^BIB/i ) { 
+    if ( $libris_req->{ 'bib_id' } =~ m/^BIB/i ) { 
         # There is no Libris record identifier, bib_id = "BIB" + request_id. Create a mininal record
-        $record = get_record_from_request( $req );
+        $record = get_record_from_request( $libris_req );
     } else {
         # Looks like we have a Libris record ID, so get the record and save it
-        $record = get_record_from_libris( $req->{ 'bib_id' } );
+        $record = get_record_from_libris( $libris_req->{ 'bib_id' } );
     }
 
     # Update or save the record
-    my $biblionumber = Koha::Illbackends::Libris::Base::recordid2biblionumber( $req->{ 'bib_id' } );
-    my $biblioitemnumber;
-    if ( $biblionumber ) { 
+    my ( $biblionumber, $biblioitemnumber );
+    if ( $action eq 'update' ) { 
+        # Find the record connected to the saved request
+        $biblionumber = $saved_req->biblio_id;
         # Update record
         ModBiblio( $record, $biblionumber, '' );
         say "Updated record with biblionumber=$biblionumber";
