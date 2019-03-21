@@ -319,7 +319,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                     type          => $attr,
                     value         => $req->{ $attr },
                 })->store;
-                say "DEBUG: $attr = ", $req->{ $attr } if $debug;
+                say "DEBUG: $attr = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
             }
         }
         # Add a hold, but only for Inlån and for loans, not copies
