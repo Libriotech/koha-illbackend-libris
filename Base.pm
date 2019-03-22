@@ -518,7 +518,15 @@ sub close {
     my $ill_config = C4::Context->config( 'interlibrary_loans' );
     my $sg = Koha::Illbackends::Libris::Base::status_graph();
 
-    # Update the items connected to the the biblio connected to the request
+    # Remove any holds (If we are clsoing a request that was never picked up there
+    # should be a hold. If we are closing a request that has been on loan to a patron
+    # and then returned there should not be one.)
+    my $holds = Koha::Holds->search({ biblionumber => $request->biblio_id });
+    while ( my $hold = $holds->next ) {
+        $hold->delete;
+    }
+
+    # Update and delete the items connected to the the biblio connected to the request
     # (There should only be one item, but we do a loop to be on the safe side)
     my $ill_closed_itemtype = $ill_config->{ 'ill_closed_itemtype' };
     my $items = Koha::Items->search({ biblionumber => $request->biblio_id });
@@ -531,17 +539,15 @@ sub close {
         $item->barcode( undef );
         # Save the changes
         $item->store;
+        # Delete the item
+        DelItemCheck( $item->biblionumber, $item->itemnumber);
     }
+    # Delete the record
+    my $error = DelBiblio( $request->biblio_id );
 
-    # Remove any holds (If we are clsoing a request that was never picked up there
-    # should be a hold. If we are closing a request that has been on loan to a patron
-    # and then returned there should not be one.)
-    my $holds = Koha::Holds->search({ biblionumber => $request->biblio_id });
-    while ( my $hold = $holds->next ) {
-        $hold->delete;
-    }
-
-    # Update the status
+    # Update the status of the request
+    # The status given to requests here should result in the requests being hidden
+    # from the regular view in the staff client
     my $old_status_name = $sg->{ $request->status }->{ 'name' };
     my $new_status_name = $sg->{ 'IN_AVSL' }->{ 'name' };
     $request->status( 'IN_AVSL' );
