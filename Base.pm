@@ -237,6 +237,7 @@ sub translate_status {
         'Reserverad'     => 'RESAD',  # Reserved
         'Uteliggande'    => 'UTEL',   # Waiting
         'Remitterad'     => 'REM',
+        'Avbeställd'     => 'AVBEST', # Cancelled
     );
     return $map{ $raw_status };
 
@@ -494,6 +495,18 @@ sub status_graph {
             next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        "IN_AVBEST" => {
+            prev_actions   => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'IN_AVBEST',                   # ID of this status
+            name           => 'Inlån Avbeställd',                   # UI name of this status
+            ui_method_name => 'Avbeställd',                   # UI name of method leading
+                                                           # to this status
+            method         => '',                    # method to this status
+            next_actions   => [ 'IN_AVSL' ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-stop',                   # UI Style class
         },
         "IN_AVSL" => {
             prev_actions => [ 'IN_RET', 'IN_ANK' ],                           # Actions containing buttons
