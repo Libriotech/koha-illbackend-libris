@@ -78,6 +78,9 @@ Add notices with the following codes under Tools > Notices and slips:
 
 =back
 
+NOTE: The codes for these notices are hardcoded in the Libris backend, so the
+notices have to ba created with exactly these codes.
+
 The following settings should apply to all notices:
 
 =over 4
@@ -88,7 +91,7 @@ The following settings should apply to all notices:
 
 =back
 
-=head3 ILL_ANK_LAN - Email and print
+=head3 ILL_ANK_KOPIA - Email and print
 
   Hej, <<borrowers.firstname>> <<borrowers.surname>>!
   
