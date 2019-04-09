@@ -88,7 +88,27 @@ The following settings should apply to all notices:
 
 =back
 
-FIXME: Suggest content for the messages.
+=head3 ILL_ANK_LAN - Email and print
+
+  Hej, <<borrowers.firstname>> <<borrowers.surname>>!
+  
+  Din artikelkopia har ankommit till biblioteket:
+  
+  <<biblio.title>> av <<biblio.author>>
+  
+  Vänliga hälsningar
+  Biblioteket
+
+=head3 ILL_ANK_LAN - Email and print
+
+  Hej, <<borrowers.firstname>> <<borrowers.surname>>!
+  
+  Ditt fjärrlån har ankommit till biblioteket:
+  
+  <<biblio.title>> av <<biblio.author>>
+  
+  Vänliga hälsningar
+  Biblioteket
 
 =head2 Cron jobs
 
@@ -96,7 +116,7 @@ See "perldoc cron/get_data_from_libris.pl" for details.
 
 =head2 Temporary hacks
 
-On around line 526 og Koha/Illrequest.pm change this:
+On around line 526 of Koha/Illrequest.pm change this:
 
     foreach my $backend_status_key ( keys %{$backend_status_graph} ) {
         my $backend_status = $backend_status_graph->{$backend_status_key};
