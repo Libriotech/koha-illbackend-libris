@@ -1,0 +1,47 @@
+=pod
+
+=head1 CRONJOBS
+
+The Libris ILL backend relies on a number of cronjobs to be run in the background, 
+to gather data from Libris and update statuses. Here is one suggested way of 
+setting things up.
+
+=head2 Run a shell script from cron
+
+Start with a small file in /etc/cron.d/, something like this:
+
+ */3 * * * * root /path/to/ill-libris-innlan.sh
+
+This will run /path/to/ill-libris-innlan.sh every three minutes
+
+=head2 The shell script
+
+This is where the interesting stuff happens:
+
+ #!/bin/bash
+ 
+ DATETIME=$(date +"%FT%H%M")
+ GET_DATA="/path/to/koha-illbackend-libris/cron/get_data_from_libris.pl"
+ CIRCSTAT="/path/to/koha-illbackend-libris/cron/circstatus2illstatus.pl"
+ LOGDIR="/path/to/ill-libris-logdir"
+ 
+ # Get outgoing requests
+ /usr/sbin/koha-shell -c "/usr/bin/perl $GET_DATA -v -d -m outgoing > $LOGDIR/ill-libris-$DATETIME-outgoing.log 2>&1" <instance>
+ 
+ # Refresh requests we are already tracking
+ /usr/sbin/koha-shell -c "/usr/bin/perl $GET_DATA -v -d --refresh > $LOGDIR/ill-libris-$DATETIME-refresh.log 2>&1" <instance>
+ 
+ # Do updates based on local circ statuses
+ /usr/sbin/koha-shell -c "/usr/bin/perl $CIRCSTAT > $LOGDIR/ill-libris-$DATETIME-circstat.log 2>&1" <instance>
+ 
+ # Delete logs older than 30 days
+ find $LOGDIR/* -mtime +30 -exec rm {} \;
+
+Replace "/path/to/" with the actual paths to your clone of koha-illbackend-libris
+and the place you want your logs to live.
+
+Replace <instance> with the actual name of you instance (as given by koha-list).
+
+Adjust the "+30" in the last line if you want to keep logs for longer or shorter time.
+
+=cut
