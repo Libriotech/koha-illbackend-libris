@@ -389,7 +389,7 @@ sub status_graph {
             ui_method_icon => 'fa-inbox',                   # UI Style class
         },
         IN_LAST => {
-            prev_actions => [ 'IN_REM', 'IN_UTEL' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_LAST',                   # ID of this status
             name           => 'Inlån Läst',                   # UI name of this status
@@ -461,7 +461,7 @@ sub status_graph {
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
         "IN_RESPONSE" => {
-            prev_actions => [ 'IN_LAST' ],                           # Actions containing buttons
+            prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
             id             => 'IN_RESPONSE',                   # ID of this status
             name           => 'Respondera',                   # UI name of this status
