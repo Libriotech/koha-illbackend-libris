@@ -115,7 +115,7 @@ The following settings should apply to all notices:
 
 =head2 Cron jobs
 
-See "perldoc cron/get_data_from_libris.pl" for details.
+See "perldoc docs/cron.pod" for details.
 
 =head2 Temporary hacks
 
