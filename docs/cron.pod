@@ -35,7 +35,8 @@ This is where the interesting stuff happens:
  /usr/sbin/koha-shell -c "/usr/bin/perl $CIRCSTAT > $LOGDIR/ill-libris-$DATETIME-circstat.log 2>&1" <instance>
  
  # Delete logs older than 30 days
- find $LOGDIR/* -mtime +30 -exec rm {} \;
+ cd $LOGDIR
+ find . -mtime +28 -exec rm {} \;
 
 Replace "/path/to/" with the actual paths to your clone of koha-illbackend-libris
 and the place you want your logs to live.
