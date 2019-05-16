@@ -23,6 +23,7 @@ use JSON qw( decode_json );
 use LWP::UserAgent;
 use LWP::Simple;
 use HTTP::Request;
+use Data::Dumper;
 
 use C4::Biblio;
 use C4::Context;
@@ -1259,10 +1260,6 @@ sub _get_data_from_libris {
 
 =head3 create
 
-New Libris requests are always created/initiated in Libris itself,
-so this is just a dummy method, because the ILL module expects there
-to be a create subroutine.
-
 =cut
 
 sub create {
@@ -1270,35 +1267,42 @@ sub create {
     # -> initial placement of the request for an ILL order
     my ( $self, $params ) = @_;
 
+warn "In create";
+warn Dumper $params;
+
     my $other = $params->{other};
     my $stage = $other->{stage};
 
-    if ( $stage && $stage eq 'from_api' ) {
+    if ( $stage && $stage eq 'save' ) {
 
         my $request = $params->{request};
         $request->orderid(        $params->{other}->{orderid} );
         $request->borrowernumber( $params->{other}->{borrowernumber} );
         $request->biblio_id(      $other->{biblio_id} );
-        $request->branchcode(     $params->{other}->{branchcode} );
-        $request->status(         $params->{other}->{status} );
+        $request->branchcode(     'FJARRLAN' ); # FIXME $params->{other}->{branchcode} );
+        $request->status(         'IN_UTEL' ); # FIXME $params->{other}->{status} );
         $request->placed(         DateTime->now);
         $request->replied(        );
         $request->completed(      );
-        $request->medium(         $params->{other}->{medium} );
         $request->accessurl(      );
         $request->cost(           );
         $request->notesopac(      );
         $request->notesstaff(     );
-        $request->backend(        $params->{other}->{backend} );
+        $request->backend(        'Libris' );
         $request->store;
         # ...Populate Illrequestattributes
-        while ( my ( $type, $value ) = each %{$params->{other}->{attr}} ) {
-            Koha::Illrequestattribute->new({
-                illrequest_id => $request->illrequest_id,
-                type          => $type,
-                value         => $value,
-            })->store;
-        }
+        Koha::Illrequestattribute->new({
+            illrequest_id => $request->illrequest_id,
+            type          => 'type',
+            value         => $params->{other}->{medium},
+        })->store;
+# while ( my ( $type, $value ) = each %{$params->{other}->{attr}} ) {
+#     Koha::Illrequestattribute->new({
+#         illrequest_id => $request->illrequest_id,
+#         type          => $type,
+#         value         => $value,
+#         })->store;
+#     }
 
         # -> create response.
         return {
@@ -1313,14 +1317,16 @@ sub create {
 
     } else {
 
+        # Show the empty form
+
         # -> create response.
         return {
             error   => 0,
             status  => '',
             message => '',
             method  => 'create',
-            stage   => 'msg',
-            next    => 'illview',
+            stage   => 'form',
+            next    => 'save',
             # value   => $request_details,
         };
 
