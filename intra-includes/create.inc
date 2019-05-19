@@ -32,18 +32,27 @@
       <label for="price_paid" class="price_paid">Pris betald:</label>
       <input type="text" name="price_paid" id="price_paid" />
     </li>
-    <li class="notesopac">
-      <label for="notesopac" class="notesopac">OPAC-note:</label>
-      <input type="text" name="notesopac" id="notesopac" />
-    </li>
-    <li class="notesstaff">
-      <label for="notesstaff" class="notesstaff">Intern note:</label>
-      <input type="text" name="notesstaff" id="notesstaff" />
-    </li>
     <li class="orderid">
       <label for="orderid" class="orderid">Beställnings-ID:</label>
       <input type="text" name="orderid" id="orderid" />
     </li>
+</fieldset>
+<fieldset class="rows">
+    <legend>Noter</legend>
+    <ol>
+    <li class="notesopac">
+      <label for="notesopac" class="notesopac">OPAC-note:</label>
+      <textarea name="notesopac" id="notesopac" rows="10" cols="50"></textarea>
+    </li>
+    <li class="notesstaff">
+      <label for="notesstaff" class="notesstaff">Intern note:</label>
+      <textarea name="notesstaff" id="notesstaff" rows="10" cols="50"></textarea>
+    </li>
+    </ol>
+</fieldset>
+<fieldset class="rows">
+    <legend>Bibliografiska detaljer</legend>
+    <ol>
     <li class="illtitle">
       <label for="illtitle" class="illtitle">Titel:</label>
       <input type="text" name="illtitle" id="illtitle" />
