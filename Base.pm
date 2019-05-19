@@ -1280,7 +1280,7 @@ warn Dumper $params;
         $request->borrowernumber( $params->{other}->{borrowernumber} );
         $request->biblio_id(      $other->{biblio_id} );
         $request->branchcode(     'FJARRLAN' ); # FIXME $params->{other}->{branchcode} );
-        $request->status(         'IN_UTEL' ); # FIXME $params->{other}->{status} );
+        $request->status(         'IN_UTEL' );
         $request->placed(         DateTime->now);
         $request->replied(        );
         $request->completed(      );
