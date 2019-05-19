@@ -1282,8 +1282,6 @@ warn Dumper $params;
         $request->branchcode(     'FJARRLAN' ); # FIXME $params->{other}->{branchcode} );
         $request->status(         'IN_UTEL' );
         $request->placed(         DateTime->now);
-        $request->replied(        );
-        $request->completed(      );
         $request->accessurl(      );
         $request->cost(           );
         $request->notesopac(      );
