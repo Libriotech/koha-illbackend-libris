@@ -1289,18 +1289,24 @@ warn Dumper $params;
         $request->backend(        'Libris' );
         $request->store;
         # ...Populate Illrequestattributes
-        Koha::Illrequestattribute->new({
-            illrequest_id => $request->illrequest_id,
-            type          => 'type',
-            value         => $params->{other}->{medium},
-        })->store;
-# while ( my ( $type, $value ) = each %{$params->{other}->{attr}} ) {
-#     Koha::Illrequestattribute->new({
-#         illrequest_id => $request->illrequest_id,
-#         type          => $type,
-#         value         => $value,
-#         })->store;
-#     }
+        # Create a mapping between what the fields in the form are called and
+        # what we want to save in the database. This also specifies which fields
+        # should be saved as attributes.
+        my %attrmap = (
+            'medium'   => 'type',
+            'illtitle' => 'title',
+            'author'   => 'author',
+        );
+        foreach my $type ( keys %attrmap ) {
+            my $save_as_type = $attrmap{ $type };
+            Koha::Illrequestattribute->new({
+                illrequest_id => $request->illrequest_id,
+                type          => $save_as_type,
+                value         => $params->{other}->{ $type },
+            })->store;
+        }
+
+# warn Dumper $params->{other}->{attr};
 
         # -> create response.
         return {
