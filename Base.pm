@@ -1282,10 +1282,11 @@ warn Dumper $params;
         $request->branchcode(     'FJARRLAN' ); # FIXME $params->{other}->{branchcode} );
         $request->status(         'IN_UTEL' );
         $request->placed(         DateTime->now);
-        $request->accessurl(      );
-        $request->cost(           );
-        $request->notesopac(      );
-        $request->notesstaff(     );
+        $request->medium(         $params->{other}->{medium} );
+        $request->accessurl(      $params->{other}->{accessurl} );
+        $request->cost(           $params->{other}->{cost} );
+        $request->notesopac(      $params->{other}->{notesopac} );
+        $request->notesstaff(     $params->{other}->{notesstaff} );
         $request->backend(        'Libris' );
         $request->store;
         # ...Populate Illrequestattributes
@@ -1293,9 +1294,16 @@ warn Dumper $params;
         # what we want to save in the database. This also specifies which fields
         # should be saved as attributes.
         my %attrmap = (
-            'medium'   => 'type',
-            'illtitle' => 'title',
-            'author'   => 'author',
+            'medium'         => 'type',
+            'illtitle'       => 'title',
+            'author'         => 'author',
+            'year'           => 'year',
+            'isbn_issn'      => 'isbn_issn',
+            'message'        => 'message',
+            'active_library' => 'active_library',
+            'medium'         => 'media_type',
+            'due_date_guar'  => 'due_date_guar',
+            'due_date_max'   => 'due_date_max',
         );
         foreach my $type ( keys %attrmap ) {
             my $save_as_type = $attrmap{ $type };
