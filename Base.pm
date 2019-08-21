@@ -1273,7 +1273,45 @@ warn Dumper $params;
     my $other = $params->{other};
     my $stage = $other->{stage};
 
-    if ( $stage && $stage eq 'save' ) {
+    if ( $stage && $stage eq 'from_api' ) {
+
+        my $request = $params->{request};
+        $request->orderid(        $params->{other}->{orderid} );
+        $request->borrowernumber( $params->{other}->{borrowernumber} );
+        $request->biblio_id(      $other->{biblio_id} );
+        $request->branchcode(     $params->{other}->{branchcode} );
+        $request->status(         $params->{other}->{status} );
+        $request->placed(         DateTime->now);
+        $request->replied(        );
+        $request->completed(      );
+        $request->medium(         $params->{other}->{medium} );
+        $request->accessurl(      );
+        $request->cost(           );
+        $request->notesopac(      );
+        $request->notesstaff(     );
+        $request->backend(        $params->{other}->{backend} );
+        $request->store;
+        # ...Populate Illrequestattributes
+        while ( my ( $type, $value ) = each %{$params->{other}->{attr}} ) {
+            Koha::Illrequestattribute->new({
+                illrequest_id => $request->illrequest_id,
+                type          => $type,
+                value         => $value,
+            })->store;
+        }
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => '',
+            method  => 'create',
+            stage   => 'commit',
+            next    => 'illview',
+            # value   => $request_details,
+        };
+
+    } elsif ( $stage && $stage eq 'save' ) {
 
         my $request = $params->{request};
         $request->orderid(        $params->{other}->{orderid} );
