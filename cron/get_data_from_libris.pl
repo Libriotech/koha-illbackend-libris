@@ -229,7 +229,12 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 my $recip_count = 1;
                 foreach my $recip ( @recipients ) { 
                     foreach my $key ( keys %{ $recip } ) { 
-                        $old_illrequest->illrequestattributes->find({ 'type' => $attr . "_$recip_count" . "_$key" })->update({ 'value' => $recip->{ $key } });
+                        my $att = $old_illrequest->illrequestattributes->find({ 'type' => $attr . "_$recip_count" . "_$key" });
+                        if ( $att ) {
+                            $att->update({ 'value' => $recip->{ $key } });
+                        } else {
+                            # FIXME
+                        }
                     }
                     $recip_count++;
                 } 
