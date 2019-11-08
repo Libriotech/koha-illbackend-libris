@@ -544,7 +544,7 @@ sub close {
     my $ill_closed_itemtype = $ill_config->{ 'ill_closed_itemtype' };
     my $items = Koha::Items->search({ biblionumber => $request->biblio_id });
     while ( my $item = $items->next ) {
-        # Chenge the itemtype to something that says e.g. "Closed ILL"
+        # Change the itemtype to something that says e.g. "Closed ILL"
         $item->itype( $ill_closed_itemtype );
         # Set the item to "not for loan"
         $item->notforloan( 1 );
