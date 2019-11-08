@@ -49,7 +49,7 @@
       <input type="text" name="orderid" id="orderid" />
     </li>
     <li class="message">
-      <label for="message" class="message">Melding:</label>
+      <label for="message" class="message">Anmärkning:</label>
       <input type="text" name="message" id="message" />
     </li>
 </fieldset>
