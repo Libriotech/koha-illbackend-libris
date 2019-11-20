@@ -57,11 +57,11 @@
     <legend>Noter</legend>
     <ol>
     <li class="notesopac">
-      <label for="notesopac" class="notesopac">OPAC-note:</label>
+      <label for="notesopac" class="notesopac">OPAC-kommentar (till låntagaren):</label>
       <textarea name="notesopac" id="notesopac" rows="10" cols="50"></textarea>
     </li>
     <li class="notesstaff">
-      <label for="notesstaff" class="notesstaff">Intern note:</label>
+      <label for="notesstaff" class="notesstaff">Internkommentar:</label>
       <textarea name="notesstaff" id="notesstaff" rows="10" cols="50"></textarea>
     </li>
     </ol>
@@ -81,17 +81,49 @@
       <label for="year" class="year">År:</label>
       <input type="text" name="year" id="year" />
     </li>
+    <li class="volume">
+      <label for="volume" class="volume">Volume:</label>
+      <input type="text" name="volume" id="volume" />
+    </li>
+    <li class="part">
+      <label for="part" class="part">Del / utgåva:</label>
+      <input type="text" name="part" id="part" />
+    </li>
     <li class="isbn_issn">
       <label for="isbn_issn" class="isbn_issn">ISBN/ISSN:</label>
       <input type="text" name="isbn_issn" id="isbn_issn" />
     </li>
-    <li>
+    </ol>
+</fieldset>
+<fieldset class="rows">
+    <legend>Artikkel/kapitel/del</legend>
+    <ol>
+    <li class="arttitle">
+      <label for="arttitle" class="arttitle">Titel:</label>
+      <input type="text" name="arttitle" id="arttitle" />
+    </li>
+    <li class="artauthor">
+      <label for="artauthor" class="artauthor">Författare:</label>
+      <input type="text" name="artauthor" id="artauthor" />
+    </li>
+    <li class="pages">
+      <label for="pages" class="pages">Sidor:</label>
+      <input type="text" name="pages" id="pages" />
+    </li>
+  </ol>
+</fieldset>
+<fieldset class="rows">
+    <legend>Handläggare</legend>
+    <ol>
+    <li class="librarian">
+      <label for="librarian" class="librarian">Handläggare:</label>
+      <input type="text" name="librarian" id="librarian" />
+    </li>
+  </ol>
+</fieldset>
       <input name="stage" id="stage" value="save" type="hidden">
       <input name="method" id="method" value="create" type="hidden">
       <input name="backend" id="backend" value="Libris" type="hidden" />
       <input type="submit" value="Save">
       <a href="/cgi-bin/koha/ill/ill-requests.pl?method=illview&illrequest_id=[% whole.illrequest_id %]">Cancel</a>
-    </li>
-  </ol>
-</fieldset>
 </form>

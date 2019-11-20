@@ -1342,6 +1342,12 @@ warn Dumper $params;
             'medium'         => 'media_type',
             'due_date_guar'  => 'due_date_guar',
             'due_date_max'   => 'due_date_max',
+            'volume'         => 'volume_designation',
+            'pages'          => 'pages',
+            'arttitle'       => 'title_of_article',
+            'artauthor'      => 'author_of_article',
+            'year'           => 'year',
+            'librarian'      => 'operator',
         );
         foreach my $type ( keys %attrmap ) {
             my $save_as_type = $attrmap{ $type };
