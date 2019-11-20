@@ -5,6 +5,17 @@
 Reports you can save in the Reports module in Koha, in order to gain some
 insights into the ILL module and its workings.
 
+=head2 Finnished requests
+
+All requests with status "IN_AVSL":
+
+  SELECT 
+    CONCAT( '<a href="/cgi-bin/koha/ill/ill-requests.pl?method=illview&illrequest_id=', illrequest_id, '">', illrequest_id, '</a>' ) AS Link, 
+    illrequests.*
+  FROM illrequests
+  WHERE status = 'IN_AVSL'
+  ORDER BY illrequest_id DESC
+
 =head2 Too many reserves
 
 During development we have seen a few cases of records that get a series of
