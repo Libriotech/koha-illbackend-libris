@@ -9,6 +9,14 @@ Koha ILL Backend for Libris ILL (used in Sweden).
 The official documentation of the Libris ILL API is available here: 
 L<http://iller.libris.kb.se/librisfjarrlan/api/doc>
 
+See the "docs" directory for more documentation on this ILL backend.
+
+=head1 MAJOR CHANGES
+
+=over 4
+
+=item * 2019-11-21: Add support for empty form.
+
 =head1 AUTHOR
 
 Magnus Enger <magnus@libriotech.no>
