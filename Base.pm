@@ -23,6 +23,7 @@ use JSON qw( decode_json );
 use LWP::UserAgent;
 use LWP::Simple;
 use HTTP::Request;
+use Data::Dumper;
 
 use C4::Biblio;
 use C4::Context;
@@ -1259,16 +1260,15 @@ sub _get_data_from_libris {
 
 =head3 create
 
-New Libris requests are always created/initiated in Libris itself,
-so this is just a dummy method, because the ILL module expects there
-to be a create subroutine.
-
 =cut
 
 sub create {
 
     # -> initial placement of the request for an ILL order
     my ( $self, $params ) = @_;
+
+warn "In create";
+warn Dumper $params;
 
     my $other = $params->{other};
     my $stage = $other->{stage};
@@ -1311,7 +1311,54 @@ sub create {
             # value   => $request_details,
         };
 
-    } else {
+    } elsif ( $stage && $stage eq 'save' ) {
+
+        my $request = $params->{request};
+        $request->orderid(        $params->{other}->{orderid} );
+        $request->borrowernumber( $params->{other}->{borrowernumber} );
+        $request->biblio_id(      $other->{biblio_id} );
+        $request->branchcode(     'FJARRLAN' ); # FIXME $params->{other}->{branchcode} );
+        $request->status(         'IN_UTEL' );
+        $request->placed(         DateTime->now);
+        $request->medium(         $params->{other}->{medium} );
+        $request->accessurl(      $params->{other}->{accessurl} );
+        $request->cost(           $params->{other}->{cost} );
+        $request->notesopac(      $params->{other}->{notesopac} );
+        $request->notesstaff(     $params->{other}->{notesstaff} );
+        $request->backend(        'Libris' );
+        $request->store;
+        # ...Populate Illrequestattributes
+        # Create a mapping between what the fields in the form are called and
+        # what we want to save in the database. This also specifies which fields
+        # should be saved as attributes.
+        my %attrmap = (
+            'medium'         => 'type',
+            'illtitle'       => 'title',
+            'author'         => 'author',
+            'year'           => 'year',
+            'isbn_issn'      => 'isbn_issn',
+            'message'        => 'message',
+            'active_library' => 'active_library',
+            'medium'         => 'media_type',
+            'due_date_guar'  => 'due_date_guar',
+            'due_date_max'   => 'due_date_max',
+            'volume'         => 'volume_designation',
+            'pages'          => 'pages',
+            'arttitle'       => 'title_of_article',
+            'artauthor'      => 'author_of_article',
+            'year'           => 'year',
+            'librarian'      => 'operator',
+        );
+        foreach my $type ( keys %attrmap ) {
+            my $save_as_type = $attrmap{ $type };
+            Koha::Illrequestattribute->new({
+                illrequest_id => $request->illrequest_id,
+                type          => $save_as_type,
+                value         => $params->{other}->{ $type },
+            })->store;
+        }
+
+# warn Dumper $params->{other}->{attr};
 
         # -> create response.
         return {
@@ -1319,8 +1366,23 @@ sub create {
             status  => '',
             message => '',
             method  => 'create',
-            stage   => 'msg',
+            stage   => 'commit',
             next    => 'illview',
+            # value   => $request_details,
+        };
+
+    } else {
+
+        # Show the empty form
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => '',
+            method  => 'create',
+            stage   => 'form',
+            next    => 'save',
             # value   => $request_details,
         };
 
