@@ -15,6 +15,7 @@ get_data_from_libris.pl - Cronjob to fetch updates from Libris.
 use LWP;
 use LWP::UserAgent;
 use JSON qw( decode_json );
+use YAML::Syck;
 use Scalar::Util qw( reftype );
 use Getopt::Long;
 use Data::Dumper;
@@ -34,16 +35,23 @@ use Koha::Illrequest::Config;
 use Koha::Illbackends::Libris::Base;
 
 # Get options
-my ( $mode, $start_date, $end_date, $limit, $refresh, $refresh_all, $verbose, $debug, $test ) = get_options();
+my ( $libris_sigil, $mode, $start_date, $end_date, $limit, $refresh, $refresh_all, $verbose, $debug, $test ) = get_options();
 
-# Check for a complete ILL config in koha-conf.xml
-my $ill_config = C4::Context->config('interlibrary_loans');
-say Dumper $ill_config if $debug;
+# Get the path to, and read in, the Libris ILL config file
+my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+my $ill_config = LoadFile( $ill_config_file );
+
+# Make sure relevant data for the active sigil/library are easily available
+$ill_config->{ 'libris_sigil' } = $libris_sigil;
+$ill_config->{ 'libris_key' } = $ill_config->{ 'libraries' }->{ $libris_sigil }->{ 'libris_key' };
+
+# Check for a complete ILL config 
 foreach my $key ( qw( libris_sigil libris_key unknown_patron unknown_biblio ) ) {
     unless ( $ill_config->{ $key } ) {
         die "You need to define '$key' in koha-conf.xml! See 'docs/config.pod' for details.\n"
     }
 }
+say Dumper $ill_config if $debug;
 
 my $dbh = C4::Context->dbh;
 
@@ -64,7 +72,7 @@ if ( $refresh || $refresh_all ) {
     while ( my $req = $old_requests->next ) {
         next unless $req->orderid;
         say "Going to refresh request with illrequest_id=", $req->illrequest_id;
-        my $req_data = Koha::Illbackends::Libris::Base::get_request_data( $req->orderid );
+        my $req_data = Koha::Illbackends::Libris::Base::get_request_data( $ill_config, $req->orderid );
         if ( $refresh_count == 0 ) {
             # On the first pass we save the whole datastructure
             $data = $req_data;
@@ -84,11 +92,11 @@ if ( $refresh || $refresh_all ) {
     # Get data from Libris
     my $query = "start_date=$start_date&end_date=$end_date";
     say $query if $verbose;
-    $data = Koha::Illbackends::Libris::Base::get_data_by_mode( $mode, $query );
+    $data = Koha::Illbackends::Libris::Base::get_data_by_mode( $ill_config, $mode, $query );
 # All other operations
 } else {
     # Get data from Libris
-    $data = Koha::Illbackends::Libris::Base::get_data_by_mode( $mode );
+    $data = Koha::Illbackends::Libris::Base::get_data_by_mode( $ill_config, $mode );
 }
 
 say "Found $data->{'count'} requests" if $verbose;
@@ -154,7 +162,11 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         } else {
             $borrower = Koha::Patrons->find({ 'borrowernumber' => $ill_config->{ 'unknown_patron' } });
         }
-        say Dumper $borrower->unblessed if $debug;
+        if ( $borrower ) {
+            say Dumper $borrower->unblessed if $debug;
+        } else {
+            say "Borrower not found";  
+        }
         # Set the prefix
         $status = 'IN_';
         $is_inlan = 1;
@@ -175,7 +187,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         }
         # The loan was requested by another library, so we save or update data (from Libris) about the receiving library
         say "Looking for library_code=" . $receiving_library->{'library_code'};
-        $borrower = Koha::Illbackends::Libris::Base::upsert_receiving_library( $receiving_library->{'library_code'} );
+        $borrower = Koha::Illbackends::Libris::Base::upsert_receiving_library( $ill_config, $receiving_library->{'library_code'} );
         say "Found borrowernumber=" . $borrower->borrowernumber;
         # Set the prefix
         $status = 'OUT_';
@@ -262,7 +274,11 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     # We do not have an old request, so we create a new one
     } else {
         # Create a record
-        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( 'insert', $req, $borrower->branchcode );
+        my $borrower_branchcode = '';
+        if ( $borrower ) {
+            $borrower_branchcode = $borrower->branchcode;
+        }
+        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( 'insert', $req, $borrower_branchcode );
         # Create the request
         say "Going to create a new request" if $verbose;
         my $illrequest = Koha::Illrequest->new;
@@ -339,6 +355,10 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
 =over 4
 
+=item B<--sigil>
+
+Which of the sigils defined in the configfile should we fetch data for?
+
 =item B<-m, --mode>
 
 This script can fetch data from endpoints, specified by this parameter. Available
@@ -412,18 +432,20 @@ sub get_options {
     my $dt = DateTime->now;
 
     # Options
-    my $mode        = 'recent';
-    my $end_date    = $dt->ymd; # Today
-    my $start_date  = $dt->subtract(days => 1)->ymd; # Yesterday
-    my $limit       = '';
-    my $refresh     = '';
-    my $refresh_all = '';
-    my $verbose     = '';
-    my $debug       = '';
-    my $test        = '';
-    my $help        = '';
+    my $libris_sigil = '';
+    my $mode         = 'recent';
+    my $end_date     = $dt->ymd; # Today
+    my $start_date   = $dt->subtract(days => 1)->ymd; # Yesterday
+    my $limit        = '';
+    my $refresh      = '';
+    my $refresh_all  = '';
+    my $verbose      = '';
+    my $debug        = '';
+    my $test         = '';
+    my $help         = '';
 
     GetOptions (
+        'sigil=s'        => \$libris_sigil,
         'm|mode=s'       => \$mode,
         's|start_date=s' => \$start_date,
         'e|end_date=s'   => \$end_date,
@@ -438,6 +460,8 @@ sub get_options {
 
     pod2usage( -exitval => 0 ) if $help;
 
+    pod2usage( -msg => "\nYou must specify --sigil\n", -exitval => 0 ) unless $libris_sigil ne '';
+
     # Make sure mode has a valid value
     my %mode_ok = (
         'recent' => 1,
@@ -450,7 +474,7 @@ sub get_options {
     # FIXME Point out that the mode was invalid
     pod2usage( -exitval => 0 ) unless $mode_ok{ $mode };
 
-    return ( $mode, $start_date, $end_date, $limit, $refresh, $refresh_all, $verbose, $debug, $test );
+    return ( $libris_sigil, $mode, $start_date, $end_date, $limit, $refresh, $refresh_all, $verbose, $debug, $test );
 
 }
 

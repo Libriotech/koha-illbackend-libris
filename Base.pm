@@ -747,7 +747,7 @@ sub receive {
 
 sub get_data_by_mode {
 
-    my ( $mode, $query ) = @_;
+    my ( $ill_config, $mode, $query ) = @_;
 
     if ( $query ) {
         # Add leading questionmark
@@ -757,7 +757,7 @@ sub get_data_by_mode {
         $query = '';
     }
 
-    return get_data( "illrequests/__sigil__/$mode$query" );
+    return get_data( $ill_config, "illrequests/__sigil__/$mode$query" );
 
 }
 
@@ -774,13 +774,12 @@ The borrowernumber of the library in question is returned, either way.
 
 sub upsert_receiving_library {
 
-    my ( $receiver_sigil ) = @_;
+    my ( $ill_config, $receiver_sigil ) = @_;
 
-    my $ill_config = C4::Context->config( 'interlibrary_loans' );
     my $partner_code = $ill_config->{ 'partner_code' };
     my $ill_branch = $ill_config->{ 'ill_branch' };
 
-    my $all_lib_data = get_data( "libraries/__sigil__/$receiver_sigil" );
+    my $all_lib_data = get_data( $ill_config, "libraries/__sigil__/$receiver_sigil" );
     # The API returns a hash with the single key libraries, which contains an
     # array of hashes describing libraries. We should only be getting data about
     # one library back, so we pick out the first one.
@@ -926,16 +925,15 @@ sub get_record_from_request {
 
 sub get_request_data {
 
-    my ( $orderid ) = @_;
-    return get_data( "illrequests/__sigil__/$orderid" );
+    my ( $ill_config, $orderid ) = @_;
+    return get_data( $ill_config, "illrequests/__sigil__/$orderid" );
 
 }
 
 sub get_data {
 
-    my ( $fragment ) = @_;
+    my ( $ill_config, $fragment ) = @_;
 
-    my $ill_config = C4::Context->config('interlibrary_loans');
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
     my $sigil     = $ill_config->{'libris_sigil'};
     my $libriskey = $ill_config->{'libris_key'};
@@ -1153,15 +1151,24 @@ sub _update_libris {
     my ( $request, $action, $extra_content ) = @_;
 
     my $orderid = $request->orderid;
-    my $ill_config = C4::Context->config('interlibrary_loans');
-    my $sigil = $ill_config->{'libris_sigil'};
     warn "*** orderid: $orderid";
+
+    # Figure out the sigil that the current request is connected to
+    my $requesting_library = $request->illrequestattributes->find({ type => 'requesting_library' })->value();
+
+    # Get the path to, and read in, the Libris ILL config file
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
+
+    # Make sure relevant data for the active sigil/library are easily available
+    $ill_config->{ 'libris_sigil' } = $libris_sigil;
+    $ill_config->{ 'libris_key' } = $ill_config->{ 'libraries' }->{ $libris_sigil }->{ 'libris_key' };
 
     my $status = $request->status;
     $status =~ m/(.*?)_.*/g;
     my $direction = $1;
 
-    my $orig_data = _get_data_from_libris( "illrequests/$sigil/$orderid" );
+    my $orig_data = _get_data_from_libris( $ill_config, "illrequests/$sigil/$orderid" );
 
     # Pick out the timestamp
     my $timestamp = $orig_data->{'ill_requests'}->[0]->{'last_modified'};
@@ -1211,9 +1218,7 @@ sub _update_libris {
 
 sub _get_data_from_libris {
 
-    my ( $fragment ) = @_;
-
-    my $ill_config = C4::Context->config('interlibrary_loans');
+    my ( $ill_config, $fragment ) = @_;
 
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
     my $sigil     = $ill_config->{'libris_sigil'};
