@@ -41,15 +41,21 @@ my ( $libris_sigil, $mode, $start_date, $end_date, $limit, $refresh, $refresh_al
 my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
 my $ill_config = LoadFile( $ill_config_file );
 
-# Make sure relevant data for the active sigil/library are easily available
-$ill_config->{ 'libris_sigil' } = $libris_sigil;
-$ill_config->{ 'libris_key' } = $ill_config->{ 'libraries' }->{ $libris_sigil }->{ 'libris_key' };
+# $libris_sigil will only be set if we are using $mode. If we are doing a refresh,
+# it will not be set.
+if ( $libris_sigil ) {
 
-# Check for a complete ILL config 
-foreach my $key ( qw( libris_sigil libris_key unknown_patron unknown_biblio ) ) {
-    unless ( $ill_config->{ $key } ) {
-        die "You need to define '$key' in koha-conf.xml! See 'docs/config.pod' for details.\n"
+    # Make sure relevant data for the active sigil/library are easily available
+    $ill_config->{ 'libris_sigil' } = $libris_sigil;
+    $ill_config->{ 'libris_key' } = $ill_config->{ 'libraries' }->{ $libris_sigil }->{ 'libris_key' };
+
+    # Check for a complete ILL config 
+    foreach my $key ( qw( libris_sigil libris_key unknown_patron unknown_biblio ) ) {
+        unless ( $ill_config->{ $key } ) {
+            die "You need to define '$key' in koha-conf.xml! See 'docs/config.pod' for details.\n"
+        }
     }
+
 }
 say Dumper $ill_config if $debug;
 
@@ -72,6 +78,12 @@ if ( $refresh || $refresh_all ) {
     while ( my $req = $old_requests->next ) {
         next unless $req->orderid;
         say "Going to refresh request with illrequest_id=", $req->illrequest_id;
+        # Find the sigil of the library that requested the ILL this is stoed as
+        # ILL request attribute "requesting_library"
+        my $sigil = $req->illrequestattributes->find({ type => 'requesting_library' })->value();
+        # Use this to set the active sigil and key in the config
+        $ill_config->{ 'libris_sigil' } = $sigil;
+        $ill_config->{ 'libris_key' } = $ill_config->{ 'libraries' }->{ $sigil }->{ 'libris_key' };
         my $req_data = Koha::Illbackends::Libris::Base::get_request_data( $ill_config, $req->orderid );
         if ( $refresh_count == 0 ) {
             # On the first pass we save the whole datastructure
