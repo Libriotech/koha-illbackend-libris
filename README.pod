@@ -17,6 +17,12 @@ See the "docs" directory for more documentation on this ILL backend.
 
 =item * 2019-11-21: Add support for empty form.
 
+=item * 2019-11-26: Add support for multiple sigils. PLEASE NOTE: This changes
+the way settings for the Libris backend are stored, from koha-conf.xml to a
+separate YAML file. Please see the README for details on the new config.
+
+=back
+
 =head1 AUTHOR
 
 Magnus Enger <magnus@libriotech.no>
