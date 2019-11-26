@@ -460,7 +460,17 @@ sub get_options {
 
     pod2usage( -exitval => 0 ) if $help;
 
-    pod2usage( -msg => "\nYou must specify --sigil\n", -exitval => 0 ) unless $libris_sigil ne '';
+    if ( $mode && $refresh ) {
+        pod2usage( -msg => "\n--mode and --refresh can not be specified at the same time.\n", -exitval => 0 );
+    }
+
+    if ( $refresh && $libris_sigil ) {
+        pod2usage( -msg => "\n--refresh and --sigil can not be specified at the same time.\n", -exitval => 0 );
+    }
+
+    if ( $mode && !$libris_sigil ) {
+        pod2usage( -msg => "\nIf you specify --mode you must also specify --sigil.\n", -exitval => 0 );
+    }
 
     # Make sure mode has a valid value
     my %mode_ok = (
