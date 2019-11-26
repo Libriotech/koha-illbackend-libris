@@ -1154,15 +1154,16 @@ sub _update_libris {
     warn "*** orderid: $orderid";
 
     # Figure out the sigil that the current request is connected to
-    my $requesting_library = $request->illrequestattributes->find({ type => 'requesting_library' })->value();
+    my $sigil = $request->illrequestattributes->find({ type => 'requesting_library' })->value();
+    warn "Handling request on behalf of $sigil";
 
     # Get the path to, and read in, the Libris ILL config file
     my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
     my $ill_config = LoadFile( $ill_config_file );
 
     # Make sure relevant data for the active sigil/library are easily available
-    $ill_config->{ 'libris_sigil' } = $libris_sigil;
-    $ill_config->{ 'libris_key' } = $ill_config->{ 'libraries' }->{ $libris_sigil }->{ 'libris_key' };
+    $ill_config->{ 'libris_sigil' } = $sigil;
+    $ill_config->{ 'libris_key' } = $ill_config->{ 'libraries' }->{ $sigil }->{ 'libris_key' };
 
     my $status = $request->status;
     $status =~ m/(.*?)_.*/g;
@@ -1209,6 +1210,10 @@ sub _update_libris {
         $request->status( $direction . '_' . translate_status( $new_data->{'ill_requests'}->[0]->{'status'} ) );
         $request->illrequestattributes->find({ type => 'last_modified' })->value( $new_data->{'ill_requests'}->[0]->{'last_modified'} );
         $request->store;
+
+    } else {
+
+        warn "--- ERROR ---";
 
     }
 
