@@ -821,9 +821,8 @@ sub upsert_receiving_library {
 
 sub upsert_record {
 
-    my ( $action, $libris_req, $branchcode, $saved_req ) = @_;
+    my ( $ill_config, $action, $libris_req, $branchcode, $saved_req ) = @_;
 
-    my $ill_config = C4::Context->config( 'interlibrary_loans' );
     my $ill_itemtype = $ill_config->{ 'ill_itemtype' };
 
     # Get the record
