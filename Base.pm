@@ -529,7 +529,8 @@ sub close {
     my ( $self, $params ) = @_;
     my $stage = $params->{other}->{stage};
     my $request = $params->{request};
-    my $ill_config = C4::Context->config( 'interlibrary_loans' );
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
     my $sg = Koha::Illbackends::Libris::Base::status_graph();
 
     # Remove any holds (If we are clsoing a request that was never picked up there
