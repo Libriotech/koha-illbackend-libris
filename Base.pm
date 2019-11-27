@@ -20,6 +20,7 @@ package Koha::Illbackends::Libris::Base;
 use Modern::Perl;
 use DateTime;
 use JSON qw( decode_json );
+use YAML::Syck;
 use LWP::UserAgent;
 use LWP::Simple;
 use HTTP::Request;

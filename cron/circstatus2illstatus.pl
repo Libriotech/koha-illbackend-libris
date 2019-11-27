@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use Modern::Perl;
+use YAML::Syck;
 use Data::Dumper;
 use utf8;
 binmode STDOUT, ":utf8";
