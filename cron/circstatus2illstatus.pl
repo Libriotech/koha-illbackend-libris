@@ -11,7 +11,11 @@ use Koha::Illbackends::Libris::Base;
 use C4::Context;
 
 my $dbh = C4::Context->dbh;
-my $ill_config = C4::Context->config('interlibrary_loans');
+
+# Get the path to, and read in, the Libris ILL config file
+my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+my $ill_config = LoadFile( $ill_config_file );
+
 my $sg = Koha::Illbackends::Libris::Base::status_graph();
 
 my $anon = C4::Context->preference( 'AnonymousPatron' );
