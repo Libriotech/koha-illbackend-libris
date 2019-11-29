@@ -561,12 +561,16 @@ sub close {
     # Delete the record
     my $error = DelBiblio( $request->biblio_id );
 
-    # Update the status of the request
+    # Update the illrequest
     # The status given to requests here should result in the requests being hidden
     # from the regular view in the staff client
     my $old_status_name = $sg->{ $request->status }->{ 'name' };
     my $new_status_name = $sg->{ 'IN_AVSL' }->{ 'name' };
     $request->status( 'IN_AVSL' );
+    # Anonymize (replace actual borrowernumber with that of anonymous patron)
+    my $anon = C4::Context->preference( 'AnonymousPatron' );
+    $request->borrowernumber( $anon );
+    # Save the changes
     $request->store;
     # Add a comment
     my $comment = Koha::Illcomment->new({
@@ -575,6 +579,32 @@ sub close {
         comment        => "Status ändrad från $old_status_name till $new_status_name.",
     });
     $comment->store();
+
+    # Ill request attributes that should be anonymized
+    my @anon_fields = qw(
+        end_user_library_card
+        end_user_address
+        end_user_approved_by
+        end_user_city
+        end_user_email
+        end_user_first_name
+        end_user_institution
+        end_user_institution_delivery
+        end_user_institution_phone
+        end_user_last_name
+        end_user_library_card
+        end_user_mobile
+        end_user_phone
+        end_user_user_id
+        end_user_zip_code
+        enduser_id
+        libris_enduser_request_id
+        user
+        user_id
+    );
+    foreach my $field ( @anon_fields ) {
+        $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+    }
 
     # Return to illview
     return {
@@ -594,18 +624,14 @@ sub receive {
     my $stage = $params->{other}->{stage};
     my $request = $params->{request};
 
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
+
     my $patron = Koha::Patrons->find({ borrowernumber => $request->borrowernumber });
 
     if ( $stage && $stage eq 'receive' ) {
-        # Change the status of the request
-        if ( $request->illrequestattributes->find({ type => 'media_type' })->value eq 'Lån' ) {
-            # This is a loan, set the status to "arrived"
-            $request->status( 'IN_ANK' );
-        } else {
-            # This is a copy, mark the request as "done"
-            $request->status( 'IN_AVSL' );
-        }
-        $request->store;
+
+        ## Do the actual receiving of something
 
         # Send an email, if requested
         if ( $params->{ 'other' }->{ 'send_email' } && $params->{ 'other' }->{ 'send_email' } == 1 ) {
@@ -629,52 +655,60 @@ sub receive {
             C4::Message->enqueue($sms, $patron->unblessed, 'sms');
         }
 
-        # Save the two due dates
-        if ( $params->{ 'other' }->{ 'due_date_guar' } ) {
-            Koha::Illrequestattribute->new({
-                illrequest_id => $request->illrequest_id,
-                type          => 'due_date_guar',
-                value         => $params->{ 'other' }->{ 'due_date_guar' },
-            })->store;
-        }
-        if ( $params->{ 'other' }->{ 'due_date_max' } ) {
-            Koha::Illrequestattribute->new({
-                illrequest_id => $request->illrequest_id,
-                type          => 'due_date_max',
-                value         => $params->{ 'other' }->{ 'due_date_max' },
-            })->store;
-        }
+        # Change the status of the request
+        if ( $request->illrequestattributes->find({ type => 'media_type' })->value eq 'Lån' ) {
 
-        # Set a barcode, if one was supplied
-        my $barcode = $params->{other}->{ill_barcode};
-        if ( $barcode ) {
-            my $item = Koha::Items->find({ 'biblionumber' => $request->biblio_id });
-            if ( $item->barcode ) {
-                warn "Item already has barcode: " . $item->barcode;
-	        # -> create response.
-                return {
-                    error   => 1,
-                    status  => '',
-                    message => '',
-                    method  => 'receive',
-                    stage   => 'commit',
-                    next    => 'illview',
-                    # value   => $request_details,
-                };
-            } else {
-                $item->barcode( $barcode );
-                $item->store;
-                # -> create response.
-                return {
-                    error   => 0,
-                    status  => '',
-                    message => '',
-                    method  => 'receive',
-                    stage   => 'commit',
-                    next    => 'illview',
-                    # value   => $request_details,
-                };
+            ## This is a loan
+
+            # Set the status to "arrived"
+            $request->status( 'IN_ANK' );
+            $request->store;
+
+            # Save the two due dates
+            if ( $params->{ 'other' }->{ 'due_date_guar' } ) {
+                Koha::Illrequestattribute->new({
+                    illrequest_id => $request->illrequest_id,
+                    type          => 'due_date_guar',
+                    value         => $params->{ 'other' }->{ 'due_date_guar' },
+                })->store;
             }
+            if ( $params->{ 'other' }->{ 'due_date_max' } ) {
+                Koha::Illrequestattribute->new({
+                    illrequest_id => $request->illrequest_id,
+                    type          => 'due_date_max',
+                    value         => $params->{ 'other' }->{ 'due_date_max' },
+                })->store;
+            }
+
+            # Set a barcode, if one was supplied
+            my $barcode = $params->{other}->{ill_barcode};
+            if ( $barcode ) {
+                my $item = Koha::Items->find({ 'biblionumber' => $request->biblio_id });
+                if ( $item->barcode ) {
+                    warn "Item already has barcode: " . $item->barcode;
+                } else {
+                    $item->barcode( $barcode );
+                    $item->store;
+                }
+            }
+
+        } else {
+
+            ## This is an article/copy
+
+            if ( $ill_config->{'close_article_request_on_receive'} && $ill_config->{'close_article_request_on_receive'} == 1 ) {
+                # Mark the request as "done"
+                $request->status( 'IN_AVSL' );
+                $request->store;
+                # Close the request (delete record and item, anonymize etc)
+                $request->close;
+            } else {
+                # Mark the request as "received". It will have to be closed later.
+                $request->status( 'IN_ANK' );
+                $request->store;
+
+            }
+
         }
 
         # -> create response.
@@ -688,6 +722,8 @@ sub receive {
         };
 
     } else {
+
+        ## Show the screen for receiving something
 
         my $item = Koha::Items->find({ biblionumber => $request->biblio_id });
 

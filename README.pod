@@ -27,7 +27,7 @@ separate YAML file. Please see the F<docs/config.pod> for details on the new con
 
 =over 4
 
-=item * 2019-11-29: update_library_data
+=item * 2019-11-29: update_library_data, close_article_request_on_receive
 
 =back
 

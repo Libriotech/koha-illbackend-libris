@@ -23,29 +23,6 @@ my $anon = C4::Context->preference( 'AnonymousPatron' );
 die "You need to set the AnonymousPatron syspref\n" unless $anon;
 say "Anonymous patron: $anon";
 
-# Fields that should be anonymized
-my @anon_fields = qw(
-    end_user_library_card
-    end_user_address
-    end_user_approved_by
-    end_user_city
-    end_user_email
-    end_user_first_name
-    end_user_institution
-    end_user_institution_delivery
-    end_user_institution_phone
-    end_user_last_name
-    end_user_library_card
-    end_user_mobile
-    end_user_phone
-    end_user_user_id
-    end_user_zip_code
-    enduser_id
-    libris_enduser_request_id
-    user
-    user_id
-);
-
 # Status pairs
 my %statuses = (
     'IN_ANK' => 'IN_UTL',
@@ -86,18 +63,7 @@ STATUS: foreach my $old_status ( keys %statuses ) {
             # Anonymize and clean up if this was a loan that was just returned
             if ( $req->status eq 'IN_RET' && !$on_loan ) {
                 say "Going to anonymize and clean up";
-                # 1. We do not anonymize the issue, since it is already returned and can be
-                # anonymized by other features in Koha
-                # 2. Anonymize the illrequest (replace borrowernumber with AnonymousPatron)
-                $req->borrowernumber( $anon );
-                $req->store;
-                # 3. Anonymize the data from Libris (illrequestattributes)
-                foreach my $field ( @anon_fields ) {
-                    $req->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
-                }
-                # 4. Delete the item (move to deleteditems)
-                # 5. Delete the record (move to deleted records)
-                # The last two deletes are done in Koha::Illbackends::Libris::Base::close()
+                $req->close;
             }
         }
         say "illrequest_id=" . $req->illrequest_id . " borrowernumber=$borrowernumber biblionumber=$biblionumber new_status=$updated";

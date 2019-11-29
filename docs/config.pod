@@ -73,6 +73,12 @@ patron in Koha. If update_library_data = 0, saved libraries are B<not> updated
 when their data is fetched from Libris again. If update_library_data = 1, saved
 libraries are updated.
 
+=item * B<close_article_request_on_receive> - When an article/copy is received,
+it can either be closed (record and item deleted, request anonymized) immediately
+(close_article_request_on_receive = 1) or this can be left for later
+(close_article_request_on_receive = 0). In the latter case, the request must be
+manually closed ("Avslutad").
+
 =back
 
 Example:
@@ -91,6 +97,7 @@ Example:
   ill_itemtype: FJARRLAN
   ill_closed_itemtype: FJARRLANX
   update_library_data: 0
+  close_article_request_on_receive: 0
 
 =head2 Notices
 
