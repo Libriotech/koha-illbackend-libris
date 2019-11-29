@@ -23,6 +23,14 @@ separate YAML file. Please see the F<docs/config.pod> for details on the new con
 
 =back
 
+=head1 NEW CONFIG VARIABLES
+
+=over 4
+
+=item * 2019-11-29: update_library_data
+
+=back
+
 =head1 AUTHOR
 
 Magnus Enger <magnus@libriotech.no>

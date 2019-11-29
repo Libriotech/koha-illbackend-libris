@@ -767,8 +767,8 @@ sub get_data_by_mode {
 
 Takes the sigil of a library as an argument and looks it up in the "libraries"
 endpoint of the Libris API. If a library with that sigil already exists in the
-Koha database, it is updated. If it does not exist, a new library is inserted,
-based on the retrieved data.
+Koha database, and the config variable B<update_library_data> is true, it is updated.
+If it does not exist, a new library is inserted, based on the retrieved data.
 
 The borrowernumber of the library in question is returned, either way.
 
@@ -808,7 +808,7 @@ sub upsert_receiving_library {
         zipcode      => $lib_data->{'zip_code'},
     };
 
-    if ( $library ) {
+    if ( $library && $ill_config->{ 'update_library_data' } && $ill_config->{ 'update_library_data' } == 1 ) {
         # say "*** Updating existing library" if $verbose;
         $library->update( $new_library_data );
     } else {
