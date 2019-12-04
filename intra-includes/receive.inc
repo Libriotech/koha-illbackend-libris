@@ -36,6 +36,14 @@
                     [% END %]
                 </select>
            </li>
+           <li class="borrowernumber">
+                <label class="borrowernumber">Låntagare:</label>
+                <input type="text" name="borrowernumber" id="borrowernumber" value="[% whole.borrowernumber %]" />
+           </li>
+           <li class="active_library">
+                <label class="active_library">Långivande bibliotek:</label>
+                <input type="text" name="active_library" id="active_library" value="[% whole.active_library %]" />
+           </li>
         </ol>
     </fieldset>
     [% IF whole.type == 'Lån' %]

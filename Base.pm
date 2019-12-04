@@ -633,11 +633,13 @@ sub receive {
 
         ## Do the actual receiving of something
 
-        # Possibly update the ILL type
-        $request->medium( $params->{ 'other' }->{ 'type' } );
+        # Possibly update parts of the request and the attributes
+        $request->medium(         $params->{ 'other' }->{ 'type' } );
+        $request->borrowernumber( $params->{ 'other' }->{ 'borrowernumber' } );
+        $request->illrequestattributes->find({ 'type' => 'media_type'     })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+        $request->illrequestattributes->find({ 'type' => 'type'           })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+        $request->illrequestattributes->find({ 'type' => 'active_library' })->update({ 'value' => $params->{ 'other' }->{ 'active_library' } });
         $request->store;
-        $request->illrequestattributes->find({ 'type' => 'media_type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
-        $request->illrequestattributes->find({ 'type' => 'type'       })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
 
         # Send an email, if requested
         if ( $params->{ 'other' }->{ 'send_email' } && $params->{ 'other' }->{ 'send_email' } == 1 ) {
@@ -775,10 +777,12 @@ sub receive {
             stage   => 'form',
             next    => 'illview',
             illrequest_id => $request->illrequest_id,
+            borrowernumber => $request->borrowernumber,
             title     => $request->illrequestattributes->find({ type => 'title' })->value,
             author    => $request->illrequestattributes->find({ type => 'author' })->value,
             lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value,
             type      => $request->illrequestattributes->find({ type => 'media_type' })->value,
+            active_library => => $request->illrequestattributes->find({ type => 'active_library' })->value,
             letter_code => $letter_code,
             email     => $email,
             sms       => $sms,
