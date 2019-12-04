@@ -271,6 +271,8 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
                 say "DEBUG: $attr = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
             }
+            # Special treatment for the type of ILL (loan/copy)
+            $old_illrequest->illrequestattributes->find({ 'type' => 'type' })->update({ 'value' => $req->{'media_type'} });
         }
         # Check if there is a reserve, if not add one (only for Inlån and loans, not copies)
         if ( ( $is_inlan && $is_inlan == 1 ) && $req->{'media_type'} eq 'Lån' ) {
@@ -353,6 +355,12 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 })->store;
                 say "DEBUG: $attr = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
             }
+            # Special treatment for the type of ILL (loan/copy)
+            Koha::Illrequestattribute->new({
+                illrequest_id => $illrequest->illrequest_id,
+                type          => 'type',
+                value         => $req->{'media_type'},
+            })->store;
         }
         # Add a hold, but only for Inlån and for loans, not copies
         if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {

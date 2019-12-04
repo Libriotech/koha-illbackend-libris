@@ -633,6 +633,12 @@ sub receive {
 
         ## Do the actual receiving of something
 
+        # Possibly update the ILL type
+        $request->medium( $params->{ 'other' }->{ 'type' } );
+        $request->store;
+        $request->illrequestattributes->find({ 'type' => 'media_type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+        $request->illrequestattributes->find({ 'type' => 'type'       })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+
         # Send an email, if requested
         if ( $params->{ 'other' }->{ 'send_email' } && $params->{ 'other' }->{ 'send_email' } == 1 ) {
             my $email = {

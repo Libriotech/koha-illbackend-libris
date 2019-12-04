@@ -21,7 +21,21 @@
             <li class="illtitle"> <label class="illtitle">Title:</label>      [% whole.title %]</li>
             <li class="author">   <label class="author">Author:</label>       [% whole.author %]</li>
             <li class="lf_number"><label class="lf_number">LF number:</label> [% whole.lf_number %]</li>
-            <li class="type">     <label class="type">Typ:</label>            [% whole.type %]</li>
+            <li class="type">
+                <label class="type">Typ:</label>
+                <select name="type" id="type" >
+                    [% IF whole.type == 'Lån' %]
+                        <option value="Lån" selected="selected">Lån</option>
+                    [% ELSE %]
+                        <option value="Lån">Lån</option>
+                    [% END %]
+                    [% IF whole.type == 'Kopia' %]
+                        <option value="Kopia" selected="selected">Kopia</option>
+                    [% ELSE %]
+                        <option value="Kopia">Kopia</option>
+                    [% END %]
+                </select>
+           </li>
         </ol>
     </fieldset>
     [% IF whole.type == 'Lån' %]
