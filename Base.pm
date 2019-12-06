@@ -637,7 +637,7 @@ sub receive {
         $request->medium(         $params->{ 'other' }->{ 'type' } );
         $request->borrowernumber( $params->{ 'other' }->{ 'borrowernumber' } );
         $request->illrequestattributes->find({ 'type' => 'media_type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
-        if ( $request->illrequestattributes->find({ type => 'type' })->value ) {
+        if ( $request->illrequestattributes->find({ type => 'type' }) && $request->illrequestattributes->find({ type => 'type' })->value ) {
             $request->illrequestattributes->find({ 'type' => 'type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
         } else {
             Koha::Illrequestattribute->new({
