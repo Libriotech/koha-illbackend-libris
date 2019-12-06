@@ -636,8 +636,16 @@ sub receive {
         # Possibly update parts of the request and the attributes
         $request->medium(         $params->{ 'other' }->{ 'type' } );
         $request->borrowernumber( $params->{ 'other' }->{ 'borrowernumber' } );
-        $request->illrequestattributes->find({ 'type' => 'media_type'     })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
-        $request->illrequestattributes->find({ 'type' => 'type'           })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+        $request->illrequestattributes->find({ 'type' => 'media_type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+        if ( $request->illrequestattributes->find({ type => 'type' })->value ) {
+            $request->illrequestattributes->find({ 'type' => 'type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+        } else {
+            Koha::Illrequestattribute->new({
+                illrequest_id => $request->illrequest_id,
+                type          => 'type',
+                value         => $params->{ 'other' }->{ 'type' },
+            })->store;
+        }
         $request->illrequestattributes->find({ 'type' => 'active_library' })->update({ 'value' => $params->{ 'other' }->{ 'active_library' } });
         $request->store;
 
