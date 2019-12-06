@@ -717,7 +717,7 @@ sub receive {
                 $request->status( 'IN_AVSL' );
                 $request->store;
                 # Close the request (delete record and item, anonymize etc)
-                $request->close;
+                $request->close();
             } else {
                 # Mark the request as "received". It will have to be closed later.
                 $request->status( 'IN_ANK' );
