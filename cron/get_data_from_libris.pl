@@ -34,6 +34,14 @@ use Koha::Illrequests;
 use Koha::Illrequest::Config;
 use Koha::Illbackends::Libris::Base;
 
+# Special treatment for some metadata elements, to make them show up in the main ILL table
+# Libris metadata elements on the left, Koha ILL metadata elements on the right
+my %metadata_map = (
+    'media_type' => 'type',
+    'title_of_article' => 'article_title', # FIXME Base.pm, line 1412
+    'volume_designation' => 'volume',
+);
+
 # Get options
 my ( $libris_sigil, $mode, $start_date, $end_date, $limit, $refresh, $refresh_all, $verbose, $debug, $test ) = get_options();
 
@@ -271,8 +279,11 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
                 say "DEBUG: $attr = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
             }
-            # Special treatment for the type of ILL (loan/copy)
-            $old_illrequest->illrequestattributes->find({ 'type' => 'type' })->update({ 'value' => $req->{'media_type'} });
+            # FIXME Special treatment for some metadata elements, to make them show up in the main ILL table
+            # Only update if we have a mapping from the Libris metadata
+            if ( defined $metadata_map{ $attr } ) {
+                $old_illrequest->illrequestattributes->find({ 'type' => $metadata_map{ $attr } })->update({ 'value' => $req->{ $attr } });
+            }
         }
         # Check if there is a reserve, if not add one (only for Inlån and loans, not copies)
         if ( ( $is_inlan && $is_inlan == 1 ) && $req->{'media_type'} eq 'Lån' ) {
@@ -355,12 +366,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 })->store;
                 say "DEBUG: $attr = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
             }
-            # Special treatment for the type of ILL (loan/copy)
-            Koha::Illrequestattribute->new({
-                illrequest_id => $illrequest->illrequest_id,
-                type          => 'type',
-                value         => $req->{'media_type'},
-            })->store;
+            # Special treatment for some metadata elements, to make them show up in the main ILL table
+            # Only add if we have a mapping from the Libris metadata
+            if ( defined $metadata_map{ $attr } ) {
+                Koha::Illrequestattribute->new({
+                    illrequest_id => $illrequest->illrequest_id,
+                    type          => $metadata_map{ $attr },
+                    value         => $req->{ $attr },
+                })->store;
+                say "DEBUG: ", $metadata_map{ $attr }, " = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
+            }
         }
         # Add a hold, but only for Inlån and for loans, not copies
         if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
