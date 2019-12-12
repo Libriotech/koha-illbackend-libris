@@ -891,6 +891,11 @@ sub upsert_record {
         $record = get_record_from_libris( $libris_req->{ 'bib_id' } );
     }
 
+    # Make sure we have the default itemtype in 942$c
+    $record->insert_fields_ordered(
+        MARC::Field->new('942', '', '', c => $ill_itemtype ),
+    );
+
     # Update or save the record
     my ( $biblionumber, $biblioitemnumber );
     if ( $action eq 'update' ) { 
@@ -900,10 +905,6 @@ sub upsert_record {
         ModBiblio( $record, $biblionumber, '' );
         say "Updated record with biblionumber=$biblionumber";
     } else {
-        # Make sure we have the default itemtype in 942$c
-        $record->insert_fields_ordered(
-            MARC::Field->new('942', '', '', c => $ill_itemtype ),
-        );
         # Add a new record
         ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
         say "Added new record with biblionumber=$biblionumber";
