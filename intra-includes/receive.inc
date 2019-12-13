@@ -46,7 +46,6 @@
            </li>
         </ol>
     </fieldset>
-    [% IF whole.type == 'Lån' %]
     <fieldset class="rows">
         <legend>Lånetid</legend>
         <ol>
@@ -60,7 +59,6 @@
            </li>
         </ol>
     </fieldset>
-    [% END %]
     <fieldset class="rows">
         <legend>Message - email/print</legend>
         <ol>
@@ -97,7 +95,6 @@
            </li>
         </ol>
     </fieldset>
-    [% IF whole.type == 'Lån' %]
     <fieldset class="rows">
         <legend>Streckkod</legend>
         <ol>
@@ -108,7 +105,6 @@
             </li>
         </ol>
     </fieldset>
-    [% END %]
     <fieldset class="action">
         <input name="stage" id="stage" value="receive" type="hidden"/>
         <input name="method" id="method" value="receive" type="hidden"/>
