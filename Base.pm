@@ -879,7 +879,8 @@ sub upsert_record {
 
     my ( $ill_config, $action, $libris_req, $branchcode, $saved_req ) = @_;
 
-    my $ill_itemtype = $ill_config->{ 'ill_itemtype' };
+    my $ill_itemtype   = $ill_config->{ 'ill_itemtype' };
+    my $ill_callnumber = $ill_config->{ 'ill_callnumber' } ? $ill_config->{ 'ill_callnumber' } : '';
 
     # Get the record
     my $record;
@@ -909,9 +910,10 @@ sub upsert_record {
         ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
         say "Added new record with biblionumber=$biblionumber";
         my $item = {
-            'homebranch'    => $branchcode,
-            'holdingbranch' => $branchcode,
-            'itype'         => $ill_itemtype,
+            'homebranch'     => $branchcode,
+            'holdingbranch'  => $branchcode,
+            'itype'          => $ill_itemtype,
+            'itemcallnumber' => $ill_callnumber,
         };
         my $itemnumber;
         ($biblionumber, $biblioitemnumber, $itemnumber ) = AddItem( $item, $biblionumber );

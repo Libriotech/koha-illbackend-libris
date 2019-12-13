@@ -67,6 +67,9 @@ items that are not done, set this to the same value as ill_itemtype.
 =item * B<libris_borrowernumber> - A "fake" patron that can be used to add
 automatic ILL comments.
 
+=item * B<ill_callnumber> - A standard callnumber that will be added to all
+items created by the ILL processes.
+
 =item * B<update_library_data> - Data about ILL partner libraries is retrieved
 from Libris. If a library has not been seen before, its data is saved as a new
 patron in Koha. If update_library_data = 0, saved libraries are B<not> updated
@@ -96,6 +99,7 @@ Example:
   ill_branch: FJARRLAN
   ill_itemtype: FJARRLAN
   ill_closed_itemtype: FJARRLANX
+  ill_callnumber: Fjärrlån
   update_library_data: 0
   close_article_request_on_receive: 0
 

@@ -29,6 +29,8 @@ separate YAML file. Please see the F<docs/config.pod> for details on the new con
 
 =item * 2019-11-29: update_library_data, close_article_request_on_receive
 
+=item * 2019-12-13: ill_callnumber
+
 =back
 
 =head1 AUTHOR
