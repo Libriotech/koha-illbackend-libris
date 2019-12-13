@@ -250,7 +250,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->biblio_id( $biblionumber );
         say "Saving borrowernumber=" . $borrower->borrowernumber;
         $old_illrequest->borrowernumber( $borrower->borrowernumber );
-        $old_illrequest->branchcode( $borrower->branchcode );
+        # $old_illrequest->branchcode( $borrower->branchcode ); Could be edited manually
         $old_illrequest->store;
         say "Connected to biblionumber=$biblionumber";
         # Update the attributes
