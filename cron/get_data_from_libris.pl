@@ -177,6 +177,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         if ( $req->{'user_id'} ) {
             my $userid = $req->{'user_id'};
             $userid =~ s/ //g;
+            # FIXME Do more checking of the user_id?
             say "Looking for user_id=$userid";
             $borrower = Koha::Illbackends::Libris::Base::userid2borrower( $userid );
         } else {
