@@ -1,5 +1,7 @@
 =pod
 
+=encoding UTF8
+
 =head1 CONFIGURATION
 
 Some tips on how to configure the Libris ILL backend.
@@ -19,14 +21,33 @@ B<ill_closed_itemtype> below from the OPAC. E.g.: "itype: [FJARRLAN, FJARRLANX]"
 
 In this file you need to make sure you have set up a section called 
 interlibrary_loans for the ILL stuff to work at all. Inside this section, you
-need to add the following elements: 
+need to add the following element:
+
+  <yazgfs>
+    <config>
+      <interlibrary_loans>
+        ...
+        <libris_config>/path/to/config.yaml</libris_config>
+      </interlibrary_loans>
+    <config>
+  <yazgfs>
+
+=head2 config.yaml
+
+A config file in YAML format that should contain the following data:
 
 =over 4
 
-=item * B<libris_sigil> - The sigil used to identify the library in Libris.
+=item * B<libraries> - A hash of hashes, where the "Libris sigil" (The sigil or
+identifier used to identify the library in Libris.) acts as the key, and the
+following values should be present for each entry:
+
+=over 4
 
 =item * B<libris_key> - The API key for talking to the Libris API. Swedish
 libraries can look this up when they are logged into Libris.
+
+=back
 
 =item * B<unknown_patron> - borrowernumber for a dummy patron that can be used
 if a connection to a real patron can not be established.
@@ -46,25 +67,41 @@ items that are not done, set this to the same value as ill_itemtype.
 =item * B<libris_borrowernumber> - A "fake" patron that can be used to add
 automatic ILL comments.
 
+=item * B<ill_callnumber> - A standard callnumber that will be added to all
+items created by the ILL processes.
+
+=item * B<update_library_data> - Data about ILL partner libraries is retrieved
+from Libris. If a library has not been seen before, its data is saved as a new
+patron in Koha. If update_library_data = 0, saved libraries are B<not> updated
+when their data is fetched from Libris again. If update_library_data = 1, saved
+libraries are updated.
+
+=item * B<close_article_request_on_receive> - When an article/copy is received,
+it can either be closed (record and item deleted, request anonymized) immediately
+(close_article_request_on_receive = 1) or this can be left for later
+(close_article_request_on_receive = 0). In the latter case, the request must be
+manually closed ("Avslutad").
+
 =back
 
-Example: 
+Example:
 
-  <yazgfs>
-    <config>
-      <interlibrary_loans>
-        ...
-        <libris_sigil>xyz</libris_sigil>
-        <libris_key>abc</libris_key>
-        <libris_borrowernumber>123</libris_borrowernumber>
-        <unknown_patron>1</unknown_patron>
-        <unknown_biblio>2</unknown_biblio>
-        <ill_branch>FJARRLAN</ill_branch>
-        <ill_itemtype>FJARRLAN</ill_itemtype>
-        <ill_closed_itemtype>FJARRLANX</ill_closed_itemtype>
-      </interlibrary_loans>
-    <config>
-  <yazgfs>
+  ---
+  
+  libraries
+    Ab:
+      libris_key: cde
+    Fg:
+      libris_key: hij
+  libris_borrowernumber: 123
+  unknown_patron: 1
+  unknown_biblio: 2
+  ill_branch: FJARRLAN
+  ill_itemtype: FJARRLAN
+  ill_closed_itemtype: FJARRLANX
+  ill_callnumber: Fjärrlån
+  update_library_data: 0
+  close_article_request_on_receive: 0
 
 =head2 Notices
 

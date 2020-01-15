@@ -46,4 +46,16 @@ above are shown in square brackets.
 
 =head2 Requests *from* our library to other libraries
 
+=head2 NEW REQUESTS
+
+New requests can come into the system a couple of different ways:
+
+=over 4
+
+=item * From the Libris API (processed by F<cron/get_data_from_libris.pm>)
+
+=item * The empty form (processed by create() in F<Base.pm>)
+
+=back
+
 =cut

@@ -20,9 +20,11 @@ package Koha::Illbackends::Libris::Base;
 use Modern::Perl;
 use DateTime;
 use JSON qw( decode_json );
+use YAML::Syck;
 use LWP::UserAgent;
 use LWP::Simple;
 use HTTP::Request;
+use Data::Dumper;
 
 use C4::Biblio;
 use C4::Context;
@@ -528,7 +530,8 @@ sub close {
     my ( $self, $params ) = @_;
     my $stage = $params->{other}->{stage};
     my $request = $params->{request};
-    my $ill_config = C4::Context->config( 'interlibrary_loans' );
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
     my $sg = Koha::Illbackends::Libris::Base::status_graph();
 
     # Remove any holds (If we are clsoing a request that was never picked up there
@@ -558,12 +561,16 @@ sub close {
     # Delete the record
     my $error = DelBiblio( $request->biblio_id );
 
-    # Update the status of the request
+    # Update the illrequest
     # The status given to requests here should result in the requests being hidden
     # from the regular view in the staff client
     my $old_status_name = $sg->{ $request->status }->{ 'name' };
     my $new_status_name = $sg->{ 'IN_AVSL' }->{ 'name' };
     $request->status( 'IN_AVSL' );
+    # Anonymize (replace actual borrowernumber with that of anonymous patron)
+    my $anon = C4::Context->preference( 'AnonymousPatron' );
+    $request->borrowernumber( $anon );
+    # Save the changes
     $request->store;
     # Add a comment
     my $comment = Koha::Illcomment->new({
@@ -572,6 +579,32 @@ sub close {
         comment        => "Status ändrad från $old_status_name till $new_status_name.",
     });
     $comment->store();
+
+    # Ill request attributes that should be anonymized
+    my @anon_fields = qw(
+        end_user_library_card
+        end_user_address
+        end_user_approved_by
+        end_user_city
+        end_user_email
+        end_user_first_name
+        end_user_institution
+        end_user_institution_delivery
+        end_user_institution_phone
+        end_user_last_name
+        end_user_library_card
+        end_user_mobile
+        end_user_phone
+        end_user_user_id
+        end_user_zip_code
+        enduser_id
+        libris_enduser_request_id
+        user
+        user_id
+    );
+    foreach my $field ( @anon_fields ) {
+        $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+    }
 
     # Return to illview
     return {
@@ -591,17 +624,29 @@ sub receive {
     my $stage = $params->{other}->{stage};
     my $request = $params->{request};
 
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
+
     my $patron = Koha::Patrons->find({ borrowernumber => $request->borrowernumber });
 
     if ( $stage && $stage eq 'receive' ) {
-        # Change the status of the request
-        if ( $request->illrequestattributes->find({ type => 'media_type' })->value eq 'Lån' ) {
-            # This is a loan, set the status to "arrived"
-            $request->status( 'IN_ANK' );
+
+        ## Do the actual receiving of something
+
+        # Possibly update parts of the request and the attributes
+        $request->medium(         $params->{ 'other' }->{ 'type' } );
+        $request->borrowernumber( $params->{ 'other' }->{ 'borrowernumber' } );
+        $request->illrequestattributes->find({ 'type' => 'media_type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+        if ( $request->illrequestattributes->find({ type => 'type' }) && $request->illrequestattributes->find({ type => 'type' })->value ) {
+            $request->illrequestattributes->find({ 'type' => 'type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
         } else {
-            # This is a copy, mark the request as "done"
-            $request->status( 'IN_AVSL' );
+            Koha::Illrequestattribute->new({
+                illrequest_id => $request->illrequest_id,
+                type          => 'type',
+                value         => $params->{ 'other' }->{ 'type' },
+            })->store;
         }
+        $request->illrequestattributes->find({ 'type' => 'active_library' })->update({ 'value' => $params->{ 'other' }->{ 'active_library' } });
         $request->store;
 
         # Send an email, if requested
@@ -626,52 +671,60 @@ sub receive {
             C4::Message->enqueue($sms, $patron->unblessed, 'sms');
         }
 
-        # Save the two due dates
-        if ( $params->{ 'other' }->{ 'due_date_guar' } ) {
-            Koha::Illrequestattribute->new({
-                illrequest_id => $request->illrequest_id,
-                type          => 'due_date_guar',
-                value         => $params->{ 'other' }->{ 'due_date_guar' },
-            })->store;
-        }
-        if ( $params->{ 'other' }->{ 'due_date_max' } ) {
-            Koha::Illrequestattribute->new({
-                illrequest_id => $request->illrequest_id,
-                type          => 'due_date_max',
-                value         => $params->{ 'other' }->{ 'due_date_max' },
-            })->store;
-        }
+        # Change the status of the request
+        if ( $request->illrequestattributes->find({ type => 'media_type' })->value eq 'Lån' ) {
 
-        # Set a barcode, if one was supplied
-        my $barcode = $params->{other}->{ill_barcode};
-        if ( $barcode ) {
-            my $item = Koha::Items->find({ 'biblionumber' => $request->biblio_id });
-            if ( $item->barcode ) {
-                warn "Item already has barcode: " . $item->barcode;
-	        # -> create response.
-                return {
-                    error   => 1,
-                    status  => '',
-                    message => '',
-                    method  => 'receive',
-                    stage   => 'commit',
-                    next    => 'illview',
-                    # value   => $request_details,
-                };
-            } else {
-                $item->barcode( $barcode );
-                $item->store;
-                # -> create response.
-                return {
-                    error   => 0,
-                    status  => '',
-                    message => '',
-                    method  => 'receive',
-                    stage   => 'commit',
-                    next    => 'illview',
-                    # value   => $request_details,
-                };
+            ## This is a loan
+
+            # Set the status to "arrived"
+            $request->status( 'IN_ANK' );
+            $request->store;
+
+            # Save the two due dates
+            if ( $params->{ 'other' }->{ 'due_date_guar' } ) {
+                Koha::Illrequestattribute->new({
+                    illrequest_id => $request->illrequest_id,
+                    type          => 'due_date_guar',
+                    value         => $params->{ 'other' }->{ 'due_date_guar' },
+                })->store;
             }
+            if ( $params->{ 'other' }->{ 'due_date_max' } ) {
+                Koha::Illrequestattribute->new({
+                    illrequest_id => $request->illrequest_id,
+                    type          => 'due_date_max',
+                    value         => $params->{ 'other' }->{ 'due_date_max' },
+                })->store;
+            }
+
+            # Set a barcode, if one was supplied
+            my $barcode = $params->{other}->{ill_barcode};
+            if ( $barcode ) {
+                my $item = Koha::Items->find({ 'biblionumber' => $request->biblio_id });
+                if ( $item->barcode ) {
+                    warn "Item already has barcode: " . $item->barcode;
+                } else {
+                    $item->barcode( $barcode );
+                    $item->store;
+                }
+            }
+
+        } else {
+
+            ## This is an article/copy
+
+            if ( $ill_config->{'close_article_request_on_receive'} && $ill_config->{'close_article_request_on_receive'} == 1 ) {
+                # Mark the request as "done"
+                $request->status( 'IN_AVSL' );
+                $request->store;
+                # Close the request (delete record and item, anonymize etc)
+                $request->close();
+            } else {
+                # Mark the request as "received". It will have to be closed later.
+                $request->status( 'IN_ANK' );
+                $request->store;
+
+            }
+
         }
 
         # -> create response.
@@ -685,6 +738,8 @@ sub receive {
         };
 
     } else {
+
+        ## Show the screen for receiving something
 
         my $item = Koha::Items->find({ biblionumber => $request->biblio_id });
 
@@ -730,10 +785,12 @@ sub receive {
             stage   => 'form',
             next    => 'illview',
             illrequest_id => $request->illrequest_id,
+            borrowernumber => $request->borrowernumber,
             title     => $request->illrequestattributes->find({ type => 'title' })->value,
             author    => $request->illrequestattributes->find({ type => 'author' })->value,
             lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value,
             type      => $request->illrequestattributes->find({ type => 'media_type' })->value,
+            active_library => => $request->illrequestattributes->find({ type => 'active_library' })->value,
             letter_code => $letter_code,
             email     => $email,
             sms       => $sms,
@@ -746,7 +803,7 @@ sub receive {
 
 sub get_data_by_mode {
 
-    my ( $mode, $query ) = @_;
+    my ( $ill_config, $mode, $query ) = @_;
 
     if ( $query ) {
         # Add leading questionmark
@@ -756,7 +813,7 @@ sub get_data_by_mode {
         $query = '';
     }
 
-    return get_data( "illrequests/__sigil__/$mode$query" );
+    return get_data( $ill_config, "illrequests/__sigil__/$mode$query" );
 
 }
 
@@ -764,8 +821,8 @@ sub get_data_by_mode {
 
 Takes the sigil of a library as an argument and looks it up in the "libraries"
 endpoint of the Libris API. If a library with that sigil already exists in the
-Koha database, it is updated. If it does not exist, a new library is inserted,
-based on the retrieved data.
+Koha database, and the config variable B<update_library_data> is true, it is updated.
+If it does not exist, a new library is inserted, based on the retrieved data.
 
 The borrowernumber of the library in question is returned, either way.
 
@@ -773,13 +830,12 @@ The borrowernumber of the library in question is returned, either way.
 
 sub upsert_receiving_library {
 
-    my ( $receiver_sigil ) = @_;
+    my ( $ill_config, $receiver_sigil ) = @_;
 
-    my $ill_config = C4::Context->config( 'interlibrary_loans' );
     my $partner_code = $ill_config->{ 'partner_code' };
     my $ill_branch = $ill_config->{ 'ill_branch' };
 
-    my $all_lib_data = get_data( "libraries/__sigil__/$receiver_sigil" );
+    my $all_lib_data = get_data( $ill_config, "libraries/__sigil__/$receiver_sigil" );
     # The API returns a hash with the single key libraries, which contains an
     # array of hashes describing libraries. We should only be getting data about
     # one library back, so we pick out the first one.
@@ -806,7 +862,7 @@ sub upsert_receiving_library {
         zipcode      => $lib_data->{'zip_code'},
     };
 
-    if ( $library ) {
+    if ( $library && $ill_config->{ 'update_library_data' } && $ill_config->{ 'update_library_data' } == 1 ) {
         # say "*** Updating existing library" if $verbose;
         $library->update( $new_library_data );
     } else {
@@ -821,10 +877,10 @@ sub upsert_receiving_library {
 
 sub upsert_record {
 
-    my ( $action, $libris_req, $branchcode, $saved_req ) = @_;
+    my ( $ill_config, $action, $libris_req, $branchcode, $saved_req ) = @_;
 
-    my $ill_config = C4::Context->config( 'interlibrary_loans' );
-    my $ill_itemtype = $ill_config->{ 'ill_itemtype' };
+    my $ill_itemtype   = $ill_config->{ 'ill_itemtype' };
+    my $ill_callnumber = $ill_config->{ 'ill_callnumber' } ? $ill_config->{ 'ill_callnumber' } : '';
 
     # Get the record
     my $record;
@@ -835,6 +891,11 @@ sub upsert_record {
         # Looks like we have a Libris record ID, so get the record and save it
         $record = get_record_from_libris( $libris_req->{ 'bib_id' } );
     }
+
+    # Make sure we have the default itemtype in 942$c
+    $record->insert_fields_ordered(
+        MARC::Field->new('942', '', '', c => $ill_itemtype ),
+    );
 
     # Update or save the record
     my ( $biblionumber, $biblioitemnumber );
@@ -849,9 +910,10 @@ sub upsert_record {
         ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
         say "Added new record with biblionumber=$biblionumber";
         my $item = {
-            'homebranch'    => $branchcode,
-            'holdingbranch' => $branchcode,
-            'itype'         => $ill_itemtype,
+            'homebranch'     => $branchcode,
+            'holdingbranch'  => $branchcode,
+            'itype'          => $ill_itemtype,
+            'itemcallnumber' => $ill_callnumber,
         };
         my $itemnumber;
         ($biblionumber, $biblioitemnumber, $itemnumber ) = AddItem( $item, $biblionumber );
@@ -925,16 +987,15 @@ sub get_record_from_request {
 
 sub get_request_data {
 
-    my ( $orderid ) = @_;
-    return get_data( "illrequests/__sigil__/$orderid" );
+    my ( $ill_config, $orderid ) = @_;
+    return get_data( $ill_config, "illrequests/__sigil__/$orderid" );
 
 }
 
 sub get_data {
 
-    my ( $fragment ) = @_;
+    my ( $ill_config, $fragment ) = @_;
 
-    my $ill_config = C4::Context->config('interlibrary_loans');
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
     my $sigil     = $ill_config->{'libris_sigil'};
     my $libriskey = $ill_config->{'libris_key'};
@@ -1152,15 +1213,25 @@ sub _update_libris {
     my ( $request, $action, $extra_content ) = @_;
 
     my $orderid = $request->orderid;
-    my $ill_config = C4::Context->config('interlibrary_loans');
-    my $sigil = $ill_config->{'libris_sigil'};
     warn "*** orderid: $orderid";
+
+    # Figure out the sigil that the current request is connected to
+    my $sigil = $request->illrequestattributes->find({ type => 'requesting_library' })->value();
+    warn "Handling request on behalf of $sigil";
+
+    # Get the path to, and read in, the Libris ILL config file
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
+
+    # Make sure relevant data for the active sigil/library are easily available
+    $ill_config->{ 'libris_sigil' } = $sigil;
+    $ill_config->{ 'libris_key' } = $ill_config->{ 'libraries' }->{ $sigil }->{ 'libris_key' };
 
     my $status = $request->status;
     $status =~ m/(.*?)_.*/g;
     my $direction = $1;
 
-    my $orig_data = _get_data_from_libris( "illrequests/$sigil/$orderid" );
+    my $orig_data = _get_data_from_libris( $ill_config, "illrequests/$sigil/$orderid" );
 
     # Pick out the timestamp
     my $timestamp = $orig_data->{'ill_requests'}->[0]->{'last_modified'};
@@ -1202,6 +1273,10 @@ sub _update_libris {
         $request->illrequestattributes->find({ type => 'last_modified' })->value( $new_data->{'ill_requests'}->[0]->{'last_modified'} );
         $request->store;
 
+    } else {
+
+        warn "--- ERROR ---";
+
     }
 
     return $res;
@@ -1210,9 +1285,7 @@ sub _update_libris {
 
 sub _get_data_from_libris {
 
-    my ( $fragment ) = @_;
-
-    my $ill_config = C4::Context->config('interlibrary_loans');
+    my ( $ill_config, $fragment ) = @_;
 
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
     my $sigil     = $ill_config->{'libris_sigil'};
@@ -1259,16 +1332,15 @@ sub _get_data_from_libris {
 
 =head3 create
 
-New Libris requests are always created/initiated in Libris itself,
-so this is just a dummy method, because the ILL module expects there
-to be a create subroutine.
-
 =cut
 
 sub create {
 
     # -> initial placement of the request for an ILL order
     my ( $self, $params ) = @_;
+
+warn "In create";
+warn Dumper $params;
 
     my $other = $params->{other};
     my $stage = $other->{stage};
@@ -1311,7 +1383,56 @@ sub create {
             # value   => $request_details,
         };
 
-    } else {
+    } elsif ( $stage && $stage eq 'save' ) {
+
+        my $request = $params->{request};
+        $request->orderid(        $params->{other}->{orderid} );
+        $request->borrowernumber( $params->{other}->{borrowernumber} );
+        $request->biblio_id(      $other->{biblio_id} );
+        $request->branchcode(     'FJARRLAN' ); # FIXME $params->{other}->{branchcode} );
+        $request->status(         'IN_UTEL' );
+        $request->placed(         DateTime->now);
+        $request->medium(         $params->{other}->{medium} );
+        $request->accessurl(      $params->{other}->{accessurl} );
+        $request->cost(           $params->{other}->{cost} );
+        $request->notesopac(      $params->{other}->{notesopac} );
+        $request->notesstaff(     $params->{other}->{notesstaff} );
+        $request->backend(        'Libris' );
+        $request->store;
+        # ...Populate Illrequestattributes
+        # Create a mapping between what the fields in the form are called and
+        # what we want to save in the database. This also specifies which fields
+        # should be saved as attributes.
+        my %attrmap = (
+            'medium'         => 'type',
+            'illtitle'       => 'title',
+            'author'         => 'author',
+            'year'           => 'year',
+            'isbn_issn'      => 'isbn_issn',
+            'message'        => 'message',
+            'active_library' => 'active_library',
+            'medium'         => 'media_type',
+            'due_date_guar'  => 'due_date_guar',
+            'due_date_max'   => 'due_date_max',
+            'volume'         => 'volume_designation',
+            'volume'         => 'volume',
+            'pages'          => 'pages',
+            'arttitle'       => 'title_of_article',
+            'arttitle'       => 'article_title',
+            'artauthor'      => 'author_of_article',
+            'year'           => 'year',
+            'librarian'      => 'operator',
+        );
+        foreach my $type ( keys %attrmap ) {
+            my $save_as_type = $attrmap{ $type };
+            Koha::Illrequestattribute->new({
+                illrequest_id => $request->illrequest_id,
+                type          => $save_as_type,
+                value         => $params->{other}->{ $type },
+            })->store;
+        }
+
+# warn Dumper $params->{other}->{attr};
 
         # -> create response.
         return {
@@ -1319,8 +1440,23 @@ sub create {
             status  => '',
             message => '',
             method  => 'create',
-            stage   => 'msg',
+            stage   => 'commit',
             next    => 'illview',
+            # value   => $request_details,
+        };
+
+    } else {
+
+        # Show the empty form
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => '',
+            method  => 'create',
+            stage   => 'form',
+            next    => 'save',
             # value   => $request_details,
         };
 

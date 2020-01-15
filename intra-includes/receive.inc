@@ -21,10 +21,31 @@
             <li class="illtitle"> <label class="illtitle">Title:</label>      [% whole.title %]</li>
             <li class="author">   <label class="author">Author:</label>       [% whole.author %]</li>
             <li class="lf_number"><label class="lf_number">LF number:</label> [% whole.lf_number %]</li>
-            <li class="type">     <label class="type">Typ:</label>            [% whole.type %]</li>
+            <li class="type">
+                <label class="type">Typ:</label>
+                <select name="type" id="type" >
+                    [% IF whole.type == 'Lån' %]
+                        <option value="Lån" selected="selected">Lån</option>
+                    [% ELSE %]
+                        <option value="Lån">Lån</option>
+                    [% END %]
+                    [% IF whole.type == 'Kopia' %]
+                        <option value="Kopia" selected="selected">Kopia</option>
+                    [% ELSE %]
+                        <option value="Kopia">Kopia</option>
+                    [% END %]
+                </select>
+           </li>
+           <li class="borrowernumber">
+                <label class="borrowernumber">Låntagare:</label>
+                <input type="text" name="borrowernumber" id="borrowernumber" value="[% whole.borrowernumber %]" />
+           </li>
+           <li class="active_library">
+                <label class="active_library">Långivande bibliotek:</label>
+                <input type="text" name="active_library" id="active_library" value="[% whole.active_library %]" />
+           </li>
         </ol>
     </fieldset>
-    [% IF whole.type == 'Lån' %]
     <fieldset class="rows">
         <legend>Lånetid</legend>
         <ol>
@@ -38,7 +59,6 @@
            </li>
         </ol>
     </fieldset>
-    [% END %]
     <fieldset class="rows">
         <legend>Message - email/print</legend>
         <ol>
@@ -75,7 +95,6 @@
            </li>
         </ol>
     </fieldset>
-    [% IF whole.type == 'Lån' %]
     <fieldset class="rows">
         <legend>Streckkod</legend>
         <ol>
@@ -86,7 +105,6 @@
             </li>
         </ol>
     </fieldset>
-    [% END %]
     <fieldset class="action">
         <input name="stage" id="stage" value="receive" type="hidden"/>
         <input name="method" id="method" value="receive" type="hidden"/>

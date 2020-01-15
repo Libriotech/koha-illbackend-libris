@@ -9,6 +9,30 @@ Koha ILL Backend for Libris ILL (used in Sweden).
 The official documentation of the Libris ILL API is available here: 
 L<http://iller.libris.kb.se/librisfjarrlan/api/doc>
 
+See the "docs" directory for more documentation on this ILL backend.
+
+=head1 MAJOR CHANGES
+
+=over 4
+
+=item * 2019-11-21: Add support for empty form.
+
+=item * 2019-11-26: Add support for multiple sigils. PLEASE NOTE: This changes
+the way settings for the Libris backend are stored, from koha-conf.xml to a
+separate YAML file. Please see the F<docs/config.pod> for details on the new config.
+
+=back
+
+=head1 NEW CONFIG VARIABLES
+
+=over 4
+
+=item * 2019-11-29: update_library_data, close_article_request_on_receive
+
+=item * 2019-12-13: ill_callnumber
+
+=back
+
 =head1 AUTHOR
 
 Magnus Enger <magnus@libriotech.no>
