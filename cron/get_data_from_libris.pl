@@ -142,6 +142,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     say "\tXstatus:      $req->{'xstatus'}";
     say "\tMessage:      $req->{'message'}";
     say "\tbib_id:       $req->{'bib_id'}";
+    say "\tUser ID:      $req->{'user_id'}";
     
     my $receiving_library = $req->{'receiving_library'};
     say "\tReceiving library: $receiving_library->{'name'} ($receiving_library->{'library_code'})";
@@ -181,12 +182,15 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             say "Looking for user_id=$userid";
             $borrower = Koha::Illbackends::Libris::Base::userid2borrower( $userid );
         } else {
+            # There is no userid, so use the unknown_patron
             $borrower = Koha::Patrons->find({ 'borrowernumber' => $ill_config->{ 'unknown_patron' } });
         }
         if ( $borrower ) {
             say Dumper $borrower->unblessed if $debug;
         } else {
-            say "Borrower not found";  
+            # There is a user_id, but we could not find a borrower, so use unknown_patron
+            say "Borrower not found, using unknown_patron";
+            $borrower = Koha::Patrons->find({ 'borrowernumber' => $ill_config->{ 'unknown_patron' } });
         }
         # Set the prefix
         $status = 'IN_';
