@@ -63,7 +63,7 @@ STATUS: foreach my $old_status ( keys %statuses ) {
             # Anonymize and clean up if this was a loan that was just returned
             if ( $req->status eq 'IN_RET' && !$on_loan ) {
                 say "Going to anonymize and clean up";
-                $req->close;
+                $req->close();
             }
         }
         say "illrequest_id=" . $req->illrequest_id . " borrowernumber=$borrowernumber biblionumber=$biblionumber new_status=$updated";
