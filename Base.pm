@@ -1044,7 +1044,8 @@ sub get_data {
   my $borrower = userid2borrower( $user_id );
 
 Takes a cardnumber (found in user_id in the Libris API) and returns the
-corresponding borrower, if one exists.
+corresponding borrower, if one exists. If a patron is not found, the
+unknown_patron from the ILL config will be returned.
 
 =cut
 
