@@ -184,8 +184,10 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         } else {
             # There is no userid, so use the unknown_patron
             $borrower = Koha::Patrons->find({ 'borrowernumber' => $ill_config->{ 'unknown_patron' } });
+            say "Borrower not found, using unknown_patron";
         }
         if ( $borrower ) {
+            say "Borrower found:";
             say Dumper $borrower->unblessed if $debug;
         } else {
             # There is a user_id, but we could not find a borrower, so use unknown_patron
@@ -284,9 +286,9 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
                 say "DEBUG: $attr = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
             }
-            # FIXME Special treatment for some metadata elements, to make them show up in the main ILL table
+            # Special treatment for some metadata elements, to make them show up in the main ILL table
             # Only update if we have a mapping from the Libris metadata
-            if ( defined $metadata_map{ $attr } ) {
+            if ( defined $metadata_map{ $attr } && $old_illrequest->illrequestattributes->find({ 'type' => $metadata_map{ $attr } }) ) {
                 $old_illrequest->illrequestattributes->find({ 'type' => $metadata_map{ $attr } })->update({ 'value' => $req->{ $attr } });
             }
         }
