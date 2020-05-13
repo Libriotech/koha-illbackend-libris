@@ -82,6 +82,12 @@ it can either be closed (record and item deleted, request anonymized) immediatel
 (close_article_request_on_receive = 0). In the latter case, the request must be
 manually closed ("Avslutad").
 
+=item * B<patron_id_field> - The default way to identify a patron in Koha is to
+use the user_id from the Libris data to look up patrons based on cardnumber, but
+with this variable the backend can be told to use e.g. userid or borrowernumber.
+If this variable is not included in the config, cardnumber will be used as the
+default.
+
 =back
 
 Example:
@@ -102,6 +108,7 @@ Example:
   ill_callnumber: Fjärrlån
   update_library_data: 0
   close_article_request_on_receive: 0
+  patron_id_field: userid
 
 =head2 Notices
 

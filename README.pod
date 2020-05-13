@@ -21,6 +21,11 @@ See the "docs" directory for more documentation on this ILL backend.
 the way settings for the Libris backend are stored, from koha-conf.xml to a
 separate YAML file. Please see the F<docs/config.pod> for details on the new config.
 
+=item * 2020-05-13: patron_id_field is added as an optional config variable. The
+default remains to use the user_id from the Libris data to look up patrons based
+on cardnumber, but with this variable the backend can be told to use e.g. userid
+or borrowernumber.
+
 =back
 
 =head1 NEW CONFIG VARIABLES
@@ -30,6 +35,8 @@ separate YAML file. Please see the F<docs/config.pod> for details on the new con
 =item * 2019-11-29: update_library_data, close_article_request_on_receive
 
 =item * 2019-12-13: ill_callnumber
+
+=item * 2020-05-13: patron_id_field (optional, default: cardnumber)
 
 =back
 

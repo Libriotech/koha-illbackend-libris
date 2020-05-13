@@ -1043,22 +1043,43 @@ sub get_data {
 
   my $borrower = userid2borrower( $user_id );
 
-Takes a cardnumber (found in user_id in the Libris API) and returns the
+Takes a user ID (found in user_id in the Libris API) and returns the
 corresponding borrower, if one exists. If a patron is not found, the
 unknown_patron from the ILL config will be returned.
+
+By default, "cardnumber" is used as the user ID that is looked for. This can be
+changed with the optional config variable "patron_id_field". Possible values for
+this variable:
+
+=over 4
+
+=item * cardnumber (default)
+
+=item * userid
+
+=item * borrowernumber
+
+=back
 
 =cut
 
 sub userid2borrower {
 
-    my ( $cardnumber ) = @_;
+    my ( $user_id ) = @_;
     my $ill_config = C4::Context->config('interlibrary_loans');
 
-    chomp $cardnumber;
-    return $ill_config->{ 'unknown_patron' } unless $cardnumber;
-    return $ill_config->{ 'unknown_patron' } if $cardnumber eq '';
+    # Make sure we have a user ID to look up
+    chomp $user_id;
+    return $ill_config->{ 'unknown_patron' } unless $user_id;
+    return $ill_config->{ 'unknown_patron' } if $user_id eq '';
 
-    my $patron = Koha::Patrons->find({ 'cardnumber' => $cardnumber });
+    # Look up the patron, based on cardnumber as default, or another identifier
+    # specified in the ILL config
+    my $id_field = 'cardnumber';
+    if ( $ill_config->{ 'patron_id_field' } && $ill_config->{ 'patron_id_field' } ne '' ) {
+        $id_field = $ill_config->{ 'patron_id_field' };
+    }
+    my $patron = Koha::Patrons->find({ $id_field => $user_id });
 
     if ( $patron ) {
         return $patron;
