@@ -1066,7 +1066,8 @@ this variable:
 sub userid2borrower {
 
     my ( $user_id ) = @_;
-    my $ill_config = C4::Context->config('interlibrary_loans');
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
 
     # Make sure we have a user ID to look up
     chomp $user_id;
