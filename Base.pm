@@ -35,6 +35,10 @@ use Koha::Illrequestattribute;
 use Koha::Patrons;
 use utf8;
 
+=pod
+
+=encoding UTF8
+
 =head1 NAME
 
 Koha::Illbackends::Libris::Base - Koha ILL Backend for Libris ILL (used in Sweden)
