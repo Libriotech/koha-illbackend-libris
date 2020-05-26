@@ -1098,6 +1098,12 @@ Takes a record ID (typically found in the 001 MARC field), checks if
 it exists in the database and if it does, returns the corresponding
 biblionumber.
 
+This uses the ExtractValue function to search through all the MARC records in the
+database for the 001 field from the incoming record. This can be a heavy burden
+if the database holds a lot of records. See this Koha bug for a proposed
+enhancement that could alleviate this situation:
+L<https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=25603>
+
 =cut
 
 sub recordid2biblionumber {
