@@ -163,6 +163,10 @@ See "perldoc docs/cron.pod" for details.
 
 =head2 Temporary hacks
 
+=head3 Status graphs
+
+Note: This has been solved as of versions 19.11.00 and 19.05.05!
+
 On around line 526 of Koha/Illrequest.pm change this:
 
     foreach my $backend_status_key ( keys %{$backend_status_graph} ) {
@@ -219,7 +223,7 @@ into this:
         }
     }
 
-This will be solved permanently by "Bug 22280 - The ILL module assumes every status needs a next/previous status"
+"Bug 22280 - The ILL module assumes every status needs a next/previous status"
 L<https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=22280>.
 
 =head2 Tips and tricks
