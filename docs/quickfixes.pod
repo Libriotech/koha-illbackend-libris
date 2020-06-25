@@ -1,0 +1,29 @@
+=pod
+
+=head1 QUICKFIXES
+
+Quick fixes that do not yet have permanent fixes in Koha, but can make the
+ILL module behave better.
+
+=head2 Bug 23391 - Hide finished ILL requests
+
+L<https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=23391>
+
+If a library has a lot of ILL traffic, the list of finished ILL requests on
+display in the main ILL request table will soon make that page forbiddingly
+slow to load. This little fix hides the finished requests:
+
+File: F</usr/share/koha/lib/Koha/REST/V1/Illrequests.pm>
+
+ 57     # Get all requests
+ 58     # If necessary, only get those from a specified patron
+ 59     my @requests = Koha::Illrequests->search({
+ 60         ( status => { 'not in' => 'IN_AVSL' } ),
+ 61         $args->{borrowernumber}
+ 62         ? ( borrowernumber => $args->{borrowernumber} )
+ 63         : ()
+ 64     })->as_list;
+
+Line 60 has been added to hide the finished requests.
+
+=cut
