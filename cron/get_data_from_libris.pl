@@ -187,7 +187,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             say "Borrower not found, using unknown_patron";
         }
         if ( $borrower ) {
-            say "Borrower found:";
+            say "Borrower found:" if $debug;
             say Dumper $borrower->unblessed if $debug;
         } else {
             # There is a user_id, but we could not find a borrower, so use unknown_patron
@@ -261,37 +261,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->store;
         say "Connected to biblionumber=$biblionumber";
         # Update the attributes
-        foreach my $attr ( keys %{ $req } ) {
-            # "recipients" is an array of hashes, so we need to flatten it out
-            if ( $attr eq 'recipients' ) { 
-                my @recipients = @{ $req->{ 'recipients' } };
-                my $recip_count = 1;
-                foreach my $recip ( @recipients ) { 
-                    foreach my $key ( keys %{ $recip } ) { 
-                        $old_illrequest->illrequestattributes->find({ 'type' => $attr . "_$recip_count" . "_$key" })->update({ 'value' => $recip->{ $key } });
-                    }
-                    $recip_count++;
-                } 
-            } elsif ( $attr eq 'receiving_library' || $attr eq 'end_user' ) {
-                my $hashref = $req->{ $attr };
-                foreach my $data ( keys %{ $hashref } ) {
-                    $old_illrequest->illrequestattributes->find({ 'type' => $attr . "_$data" })->update({ 'value' => $req->{ $attr }->{ $data } });
-                }
-            } else {
-                # Add lf_number (Libris ILL request ID) at the end of the title. This is a workaround while we wait for
-                # Koha Bug 21834 - Display illrequests.orderid in the table of ILL requests
-                if ( $attr eq 'title' ) {
-                    $req->{ 'title' } .= ' [' . $req->{ 'lf_number' } . ']';
-                }
-                $old_illrequest->illrequestattributes->find({ 'type' => $attr })->update({ 'value' => $req->{ $attr } });
-                say "DEBUG: $attr = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
-            }
-            # Special treatment for some metadata elements, to make them show up in the main ILL table
-            # Only update if we have a mapping from the Libris metadata
-            if ( defined $metadata_map{ $attr } && $old_illrequest->illrequestattributes->find({ 'type' => $metadata_map{ $attr } }) ) {
-                $old_illrequest->illrequestattributes->find({ 'type' => $metadata_map{ $attr } })->update({ 'value' => $req->{ $attr } });
-            }
-        }
+	insert_or_update_attributes($old_illrequest, $req);
         # Check if there is a reserve, if not add one (only for Inlån and loans, not copies)
         if ( ( $is_inlan && $is_inlan == 1 ) && $req->{'media_type'} eq 'Lån' ) {
             my $res = Koha::Holds->find({ borrowernumber => $borrower->borrowernumber, biblionumber => $biblionumber });
@@ -335,55 +305,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         say Dumper $backend_result; # FIXME Check for no errors
         say "Created new request with illrequest_id = " . $illrequest->illrequest_id if $verbose;
         # Add attributes
-        foreach my $attr ( keys %{ $req } ) {
-            # "recipients" is an array of hashes, so we need to flatten it out
-            if ( $attr eq 'recipients' ) {
-                my @recipients = @{ $req->{ 'recipients' } };
-                my $recip_count = 1;
-                foreach my $recip ( @recipients ) {
-                    foreach my $key ( keys %{ $recip } ) { 
-                        Koha::Illrequestattribute->new({
-                            illrequest_id => $illrequest->illrequest_id,
-                            type          => $attr . "_$recip_count" . "_$key",
-                            value         => $recip->{ $key },
-                        })->store;
-                    }
-                    $recip_count++;
-                }
-            # receiving_library and end_user are hashes, so we need to flatten them out
-            } elsif ( $attr eq 'receiving_library' || $attr eq 'end_user' ) {
-                my $end_user = $req->{ $attr };
-                foreach my $data ( keys %{ $end_user } ) {
-                    Koha::Illrequestattribute->new({
-                        illrequest_id => $illrequest->illrequest_id,
-                        type          => $attr . "_$data",
-                        value         => $req->{ $attr }->{ $data },
-                    })->store;
-                }
-            } else {
-                # Add lf_number (Libris ILL request ID) at the end of the title. This is a workaround while we wait for
-                # Koha Bug 21834 - Display illrequests.orderid in the table of ILL requests
-                if ( $attr eq 'title' ) {
-                    $req->{ 'title' } .= ' [' . $req->{ 'lf_number' } . ']';
-                }
-                Koha::Illrequestattribute->new({
-                    illrequest_id => $illrequest->illrequest_id,
-                    type          => $attr,
-                    value         => $req->{ $attr },
-                })->store;
-                say "DEBUG: $attr = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
-            }
-            # Special treatment for some metadata elements, to make them show up in the main ILL table
-            # Only add if we have a mapping from the Libris metadata
-            if ( defined $metadata_map{ $attr } ) {
-                Koha::Illrequestattribute->new({
-                    illrequest_id => $illrequest->illrequest_id,
-                    type          => $metadata_map{ $attr },
-                    value         => $req->{ $attr },
-                })->store;
-                say "DEBUG: ", $metadata_map{ $attr }, " = ", $req->{ $attr } if ( defined $req->{ $attr } && $debug );
-            }
-        }
+	insert_or_update_attributes($illrequest, $req);
         # Add a hold, but only for Inlån and for loans, not copies
         if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
             my $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
@@ -391,6 +313,106 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         }
     }
 
+}
+
+sub insert_or_update_attributes {
+    my $illrequest = shift;
+    my $req = shift;
+
+    my %existing = ();
+
+    say "DEBUG: insert_or_update_attributes " . $req->{ 'lf_number' } if $debug;
+
+    my $a = $illrequest->illrequestattributes;
+    while (my $attr = $a->next) {
+	$existing{$attr->type} = 0;
+    }
+
+    foreach my $attr ( keys %{ $req } ) {
+	if ( $attr eq 'recipients' ) {
+	    my @recipients = @{ $req->{ 'recipients' } };
+	    my $recip_count = 1;
+	    foreach my $recip ( @recipients ) {
+		foreach my $key ( keys %{ $recip } ) {
+		    $existing{$attr . "_$recip_count" . "_$key"} = 1;
+		    insert_or_update_attribute(
+			$illrequest,
+			$attr . "_$recip_count" . "_$key",
+			$recip->{ $key });
+		}
+		$recip_count++;
+	    }
+            # receiving_library and end_user are hashes, so we need to flatten them out
+	} elsif ( $attr eq 'receiving_library' || $attr eq 'end_user' ) {
+	    my $end_user = $req->{ $attr };
+	    foreach my $data ( keys %{ $end_user } ) {
+		$existing{$attr . "_$data"} = 1;
+		insert_or_update_attribute(
+		    $illrequest,
+		    $attr . "_$data",
+		    $req->{ $attr }->{ $data });
+	    }
+	} else {
+	    # Add lf_number (Libris ILL request ID) at the end of the title. This is a workaround while we wait for
+	    # Koha Bug 21834 - Display illrequests.orderid in the table of ILL requests
+	    if ( $attr eq 'title' ) {
+		$illrequest->{ 'title' } .= ' [' . $req->{ 'lf_number' } . ']';
+	    }
+	    $existing{$attr} = 1;
+	    insert_or_update_attribute(
+		$illrequest,
+		$attr,
+		$req->{ $attr });
+	}
+	# Special treatment for some metadata elements, to make them show up in the main ILL table
+	# Only add if we have a mapping from the Libris metadata
+	if ( defined $metadata_map{ $attr } ) {
+	    $existing{$metadata_map{ $attr }} = 1;
+	    insert_or_update_attribute(
+		$illrequest,
+		$metadata_map{ $attr },
+		$req->{ $attr });
+	}
+    }
+
+    foreach my $attr (keys %existing) {
+	if (!$existing{$attr}) {
+	    insert_or_update_attribute($illrequest, $attr, undef);
+	}
+    }
+}
+
+sub insert_or_update_attribute {
+    my ($illrequest, $attribute, $value) = @_;
+
+
+    my $existing = $illrequest->illrequestattributes->find(
+	{
+	    illrequest_id => $illrequest->illrequest_id,
+	    type => $attribute
+	});
+
+    if (defined $existing) {
+	if (!defined $value) {
+	    say "DEBUG: $attribute is null deleting " if  $debug;
+	    $existing->delete;
+	} else {
+	    say "DEBUG: updating $attribute = ", $value if $debug;
+	    $existing->value($value)->store;
+	}
+    } else {
+	if (!defined $value) {
+	    say "DEBUG: $attribute is null ignoring " if  $debug;
+	} else {
+	    say "DEBUG: inserting $attribute = ", $value if $debug;
+	    Koha::Illrequestattribute->new(
+		{
+		    illrequest_id => $illrequest->illrequest_id,
+		    type => $attribute,
+		    value => $value
+		})->store;
+	}
+    }
 }
 
 =head1 OPTIONS
