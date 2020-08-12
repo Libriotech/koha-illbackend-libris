@@ -32,6 +32,8 @@ my %statuses = (
 # Loop over old statuses
 STATUS: foreach my $old_status ( keys %statuses ) {
 
+    say "Looking at $old_status";
+
     my $new_status = $statuses{ $old_status };
     my $old_status_name = $sg->{ $old_status }->{ 'name' };
     my $new_status_name = $sg->{ $new_status }->{ 'name' };
@@ -39,8 +41,12 @@ STATUS: foreach my $old_status ( keys %statuses ) {
     my $old_requests = Koha::Illrequests->search({ status => $old_status });
     REQUEST: while ( my $req = $old_requests->next ) {
 
+        say "Looking at request";
+
         my $borrowernumber = $req->borrowernumber;
+        say "borrowernumber = $borrowernumber";
         my $biblionumber   = $req->biblio_id;
+        say "biblionumber = $biblionumber";
 
         # Check if the item is still on loan. This should catch both loans that have been
         # returned but not yet anonymized, as well as loans that have been returned and
@@ -49,8 +55,10 @@ STATUS: foreach my $old_status ( keys %statuses ) {
         say Dumper $on_loan;
         my $updated = '';
         if ( ( $old_status eq 'IN_ANK' && $on_loan ) || ( $old_status eq 'IN_UTL' && !$on_loan ) ) {
+            say "Going to update status";
             # Do the actual update
             $req->status( $new_status );
+            say "FROM $old_status to $new_status";
             $req->store;
             $updated = $new_status;
             # Add a comment
@@ -63,8 +71,14 @@ STATUS: foreach my $old_status ( keys %statuses ) {
             # Anonymize and clean up if this was a loan that was just returned
             if ( $req->status eq 'IN_RET' && !$on_loan ) {
                 say "Going to anonymize and clean up";
-                $req->close();
+                my $params = {
+                    'other'   => { 'stage' => 'commit' },
+                    'request' => $req,
+                };
+                Koha::Illbackends::Libris::Base::close( $params );
             }
+        } else {
+            say "NOT going to update status";
         }
         say "illrequest_id=" . $req->illrequest_id . " borrowernumber=$borrowernumber biblionumber=$biblionumber new_status=$updated";
 
