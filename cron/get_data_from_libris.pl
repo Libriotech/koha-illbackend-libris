@@ -77,7 +77,7 @@ if ( $refresh || $refresh_all ) {
     my $old_requests;
     if ( $refresh ) {
         # Only refresh requests with certain statuses
-        $old_requests = Koha::Illrequests->search([ { status => 'IN_LAST' }, { status => 'IN_KANRES' } ]);
+        $old_requests = Koha::Illrequests->search([ { status => 'IN_LAST' }, { status => 'IN_KANRES' }, { status => 'IN_UTEL' } ]);
     } else {
         # Refresh all requests in the DB with fresh data
         $old_requests = Koha::Illrequests->search({ 'backend' => 'Libris' });
