@@ -244,6 +244,7 @@ sub translate_status {
         'Uteliggande'    => 'UTEL',   # Waiting
         'Remitterad'     => 'REM',
         'Avbeställd'     => 'AVBEST', # Cancelled
+        'Makulerad'      => 'MAK',    # Maculated?
     );
     return $map{ $raw_status };
 
@@ -418,10 +419,10 @@ sub status_graph {
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
         },
-        "Makulerad" => {
+        "IN_MAK" => {
             prev_actions => [ ],                           # Actions containing buttons
                                                            # leading to this status
-            id             => 'Makulerad',                   # ID of this status
+            id             => 'IN_MAK',                   # ID of this status
             name           => 'Makulerad',                   # UI name of this status
             ui_method_name => 'Makulerad',                   # UI name of method leading
                                                            # to this status
