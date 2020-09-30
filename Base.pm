@@ -886,6 +886,7 @@ sub upsert_record {
 
     my $ill_itemtype   = $ill_config->{ 'ill_itemtype' };
     my $ill_callnumber = $ill_config->{ 'ill_callnumber' } ? $ill_config->{ 'ill_callnumber' } : '';
+    my $ill_notforloan = defined($ill_config->{ 'ill_notforloan' }) ? $ill_config->{ 'ill_notforloan' } : 0;
 
     # Get the record
     my $record;
@@ -919,6 +920,7 @@ sub upsert_record {
             'holdingbranch'  => $branchcode,
             'itype'          => $ill_itemtype,
             'itemcallnumber' => $ill_callnumber,
+            'notforloan'     => $ill_notforloan
         };
         my $itemnumber;
         ($biblionumber, $biblioitemnumber, $itemnumber ) = AddItem( $item, $biblionumber );

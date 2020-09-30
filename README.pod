@@ -38,6 +38,8 @@ or borrowernumber.
 
 =item * 2020-05-13: patron_id_field (optional, default: cardnumber)
 
+=item * 2020-09-30: ill_notforloan (optional, default: 0)
+
 =back
 
 =head1 AUTHOR
