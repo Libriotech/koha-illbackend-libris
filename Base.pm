@@ -28,11 +28,12 @@ use Data::Dumper;
 
 use C4::Biblio;
 use C4::Context;
-use C4::Items;
 use C4::Letters;
 use C4::Message;
 use Koha::Illrequestattribute;
 use Koha::Patrons;
+use Koha::Item;
+use Koha::Items;
 use utf8;
 
 =pod
@@ -915,24 +916,26 @@ sub upsert_record {
         # Add a new record
         ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
         say "Added new record with biblionumber=$biblionumber";
-        my $item = {
+        my $item_hash = {
+            'biblionumber'   => $biblionumber,
+            'biblioitemnumber' => $biblioitemnumber,
             'homebranch'     => $branchcode,
             'holdingbranch'  => $branchcode,
             'itype'          => $ill_itemtype,
             'itemcallnumber' => $ill_callnumber,
             'notforloan'     => $ill_notforloan
         };
-        my $itemnumber;
-        ($biblionumber, $biblioitemnumber, $itemnumber ) = AddItem( $item, $biblionumber );
-        if ( $itemnumber ) {
-            say "Added new item with itemnumber=$itemnumber";
+        my $item = Koha::Item->new( $item_hash );
+        if ( defined $item ) {
+            $item->store;
+            my $itemnumber = $item->itemnumber;
+            say "Added new item with itemnumber=$itemnumber and notforloan: " . $item->notforloan;
         } else {
             say "No item added";
         }
     }
 
     return $biblionumber;
-
 }
 
 sub get_record_from_libris {
