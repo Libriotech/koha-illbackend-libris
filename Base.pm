@@ -883,7 +883,7 @@ sub upsert_receiving_library {
 
 sub upsert_record {
 
-    my ( $ill_config, $action, $libris_req, $branchcode, $saved_req ) = @_;
+    my ( $ill_config, $action, $libris_req, $homebranch, $holdingbranch, $saved_req ) = @_;
 
     my $ill_itemtype   = $ill_config->{ 'ill_itemtype' };
     my $ill_callnumber = $ill_config->{ 'ill_callnumber' } ? $ill_config->{ 'ill_callnumber' } : '';
@@ -919,8 +919,8 @@ sub upsert_record {
         my $item_hash = {
             'biblionumber'   => $biblionumber,
             'biblioitemnumber' => $biblioitemnumber,
-            'homebranch'     => $branchcode,
-            'holdingbranch'  => $branchcode,
+            'homebranch'     => $homebranch,
+            'holdingbranch'  => $holdingbranch,
             'itype'          => $ill_itemtype,
             'itemcallnumber' => $ill_callnumber,
             'notforloan'     => $ill_notforloan
