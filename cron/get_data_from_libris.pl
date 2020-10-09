@@ -269,7 +269,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 say "Found an old reserve with reserve_id=", $res->reserve_id;
             } else {
                 say "Reserve NOT FOUND! Going to add one for branchcode=", $borrower->branchcode, " borrowernumber=", $borrower->borrowernumber, " biblionumber=$biblionumber";
-                my $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+                my $reserve_id;
+                if (C4::Context->preference("Version") > 20) {
+                    $reserve_id = AddReserve( {
+                        branchcode => $borrower->branchcode,
+                        borrowernumber => $borrower->borrowernumber,
+                        biblionumber => $biblionumber
+                    } );
+                } else {
+                    $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+                }
                 say "Reserve added with reserve_id=$reserve_id";
             }
         }
@@ -308,7 +317,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 	insert_or_update_attributes($illrequest, $req);
         # Add a hold, but only for Inlån and for loans, not copies
         if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
-            my $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+            my $reserve_id;
+            if (C4::Context->preference("Version") > 20) {
+                $reserve_id = AddReserve( {
+                    branchcode => $borrower->branchcode,
+                    borrowernumber => $borrower->borrowernumber,
+                    biblionumber => $biblionumber
+                } );
+            } else {
+                $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+            }
             say "Reserve added with reserve_id=$reserve_id";
         }
     }
