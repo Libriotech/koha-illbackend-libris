@@ -225,6 +225,9 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
 ## Save or update the request in Koha
 
+    # Home branch of created items
+    my $homebranch = defined $ill_config->{ill_branch} ? $ill_config->{ill_branch} : $borrower->branchcode;
+    my $holdingbranch = $borrower->branchcode;
     # Look for the Libris order number
     my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'lf_number'} });
     # We have an old request, so we update it
@@ -236,7 +239,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             next REQUEST;
         }
         # Update the record
-        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $ill_config, 'update', $req, $borrower->branchcode, $old_illrequest );
+        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $ill_config, 'update', $req, $homebranch, $holdingbranch, $old_illrequest );
         # Make a comment if the status changed
         if ( $status ne $old_illrequest->status ) {
             my $sg = Koha::Illbackends::Libris::Base::status_graph();
@@ -269,7 +272,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 say "Found an old reserve with reserve_id=", $res->reserve_id;
             } else {
                 say "Reserve NOT FOUND! Going to add one for branchcode=", $borrower->branchcode, " borrowernumber=", $borrower->borrowernumber, " biblionumber=$biblionumber";
-                my $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+                my $reserve_id;
+                if (C4::Context->preference("Version") > 20) {
+                    $reserve_id = AddReserve( {
+                        branchcode => $borrower->branchcode,
+                        borrowernumber => $borrower->borrowernumber,
+                        biblionumber => $biblionumber
+                    } );
+                } else {
+                    $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+                }
                 say "Reserve added with reserve_id=$reserve_id";
             }
         }
@@ -280,7 +292,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         if ( $borrower ) {
             $borrower_branchcode = $borrower->branchcode;
         }
-        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $ill_config, 'insert', $req, $borrower_branchcode );
+        $biblionumber = Koha::Illbackends::Libris::Base::upsert_record( $ill_config, 'insert', $req, $homebranch, $holdingbranch );
         # Create the request
         say "Going to create a new request" if $verbose;
         my $illrequest = Koha::Illrequest->new;
@@ -308,7 +320,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 	insert_or_update_attributes($illrequest, $req);
         # Add a hold, but only for Inlån and for loans, not copies
         if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
-            my $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+            my $reserve_id;
+            if (C4::Context->preference("Version") > 20) {
+                $reserve_id = AddReserve( {
+                    branchcode => $borrower->branchcode,
+                    borrowernumber => $borrower->borrowernumber,
+                    biblionumber => $biblionumber
+                } );
+            } else {
+                $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
+            }
             say "Reserve added with reserve_id=$reserve_id";
         }
     }

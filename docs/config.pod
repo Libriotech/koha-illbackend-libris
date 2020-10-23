@@ -70,6 +70,9 @@ automatic ILL comments.
 =item * B<ill_callnumber> - A standard callnumber that will be added to all
 items created by the ILL processes.
 
+=item * B<ill_notforloan> - A notforloan code that will be set on all
+items created by the ILL processes. (Default 0.)
+
 =item * B<update_library_data> - Data about ILL partner libraries is retrieved
 from Libris. If a library has not been seen before, its data is saved as a new
 patron in Koha. If update_library_data = 0, saved libraries are B<not> updated
