@@ -30,6 +30,7 @@ use C4::Biblio;
 use C4::Context;
 use C4::Letters;
 use C4::Message;
+use C4::Items;
 use Koha::Illrequestattribute;
 use Koha::Patrons;
 use Koha::Item;
