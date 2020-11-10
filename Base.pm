@@ -613,7 +613,9 @@ sub close {
             $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
             1;
         };
-        warn if $@;
+        # I dont want to add to the excess warnings of perl
+        # so if anyone want to debug then enable the following:
+        # warn if $@;
     }
 
     # Return to illview
