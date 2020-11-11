@@ -562,7 +562,7 @@ sub close {
         # Save the changes
         $item->store;
         # Delete the item
-        DelItemCheck( $item->biblionumber, $item->itemnumber);
+        $item->delete;
     }
     # Delete the record
     my $error = DelBiblio( $request->biblio_id );
