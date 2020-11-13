@@ -26,4 +26,6 @@ File: F</usr/share/koha/lib/Koha/REST/V1/Illrequests.pm>
 
 Line 60 has been added to hide the finished requests.
 
+The fix for this has been incorporated into Koha 20.11.00.
+
 =cut
