@@ -608,10 +608,12 @@ sub close {
         user_id
     );
     foreach my $field ( @anon_fields ) {
-        eval {
-          $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
-          1;
+        val {
+            $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+            1;
         };
+        # dont want to add to koha excessive warnings, but if someone need to debug.
+        warn if $@;
     }
 
     # Return to illview
