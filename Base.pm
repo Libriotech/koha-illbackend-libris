@@ -588,7 +588,6 @@ sub close {
 
     # Ill request attributes that should be anonymized
     my @anon_fields = qw(
-        end_user_library_card
         end_user_address
         end_user_approved_by
         end_user_city
@@ -609,8 +608,14 @@ sub close {
         user_id
     );
     foreach my $field ( @anon_fields ) {
-        $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+        eval {
+            $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+            1;
+        };
+        #I dont want to add to the excess logging of koha, but if someone want to debug
+        #warn if $@;
     }
+
 
     # Return to illview
     return {
