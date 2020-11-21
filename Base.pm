@@ -598,7 +598,6 @@ sub close {
         end_user_institution_delivery
         end_user_institution_phone
         end_user_last_name
-        end_user_library_card
         end_user_mobile
         end_user_phone
         end_user_user_id
@@ -609,7 +608,10 @@ sub close {
         user_id
     );
     foreach my $field ( @anon_fields ) {
-        $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+        eval {
+          $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+          1;
+        }
     }
 
     # Return to illview
