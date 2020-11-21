@@ -611,7 +611,7 @@ sub close {
         eval {
           $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
           1;
-        }
+        };
     }
 
     # Return to illview
