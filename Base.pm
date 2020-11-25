@@ -609,7 +609,9 @@ sub close {
         user_id
     );
     foreach my $field ( @anon_fields ) {
-        $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+        if ( $request->illrequestattributes->find({ 'type' => $field }) ) {
+            $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+        }
     }
 
     # Return to illview
@@ -750,7 +752,7 @@ sub receive {
         my $item = Koha::Items->find({ biblionumber => $request->biblio_id });
 
         my $letter_code = 'ILL_ANK_LAN';
-        if ( $request->illrequestattributes->find({type => 'media_type'})->value eq 'Kopia' ) {
+        if ( $request->illrequestattributes->find({type => 'media_type'}) && $request->illrequestattributes->find({type => 'media_type'})->value eq 'Kopia' ) {
             $letter_code = 'ILL_ANK_KOPIA';
         }
 
