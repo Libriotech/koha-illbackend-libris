@@ -91,6 +91,13 @@ with this variable the backend can be told to use e.g. userid or borrowernumber.
 If this variable is not included in the config, cardnumber will be used as the
 default.
 
+=item * B<recordid_limit> - If the script that imports requests from Libris
+fails somewhere between creating a record and recording the request in the DB,
+a new copy of the same record might be added once every time F<get_data_from_libris.pl>
+is run, resulting in possibly hundreds of copies of the same record. The script
+will by default die if there are more than 100 copies of the record it is trying
+to add. The threshold can be changed with this parameter.
+
 =back
 
 Example:
@@ -112,6 +119,7 @@ Example:
   update_library_data: 0
   close_article_request_on_receive: 0
   patron_id_field: userid
+  recordid_limit: 25
 
 =head2 Notices
 

@@ -40,6 +40,8 @@ or borrowernumber.
 
 =item * 2020-09-30: ill_notforloan (optional, default: 0)
 
+=item * 2020-11-25: recordid_limit (optional, default: 100)
+
 =back
 
 =head1 AUTHOR

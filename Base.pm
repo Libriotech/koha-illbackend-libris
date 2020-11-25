@@ -896,6 +896,27 @@ sub upsert_record {
         $record = get_record_from_request( $libris_req );
     } else {
         # Looks like we have a Libris record ID, so get the record and save it
+        #
+        # But first, check if the Libris record ID is already present in the
+        # database. There could be a good reason why the record is already there
+        # and we have to create a new one. So if there is one record in the db
+        # already, that is not considered a problem. But if there are "a lot"
+        # of copies, this might indicate this script is failing somewhere between
+        # importing and adding the record, and creating the ILL request in the
+        # database. So we check for the number and bail out loudly if we are above
+        # it.
+        my $count_recordid = count_recordid( $libris_req->{ 'bib_id' } );
+        say "Found $count_recordid occurrences of recordid=" . $libris_req->{ 'bib_id' };
+        my $recordid_limit = 100; # Default
+        if ( defined $ill_config->{ 'recordid_limit' } ) {
+            # Use the limit from the config
+            $recordid_limit = $ill_config->{ 'recordid_limit' };
+        }
+        if ( $count_recordid >= $recordid_limit ) {
+            # Bail out if we are over the limit
+            die "Too many copies of recordid=" . $libris_req->{ 'bib_id' };
+        }
+        # Now get the actual record
         $record = get_record_from_libris( $libris_req->{ 'bib_id' } );
     }
 
@@ -1125,6 +1146,29 @@ sub recordid2biblionumber {
     my $biblionumber = $hits->{'biblionumber'};
 
     return $biblionumber;
+
+}
+
+=head3 count_recordid
+
+  my $count = count_recordid( $recordid );
+
+Takes a record ID (typically found in the 001 MARC field), and returns the
+number of times it occurs in the database.
+
+See above for notes on the use of ExtractValue.
+
+=cut
+
+sub count_recordid {
+
+    my ( $recordid ) = @_;
+
+    my $dbh = C4::Context->dbh;
+    my $hits = $dbh->selectrow_hashref( 'SELECT COUNT(*) AS count FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $recordid ) );
+    my $count = $hits->{'count'};
+
+    return $count;
 
 }
 
