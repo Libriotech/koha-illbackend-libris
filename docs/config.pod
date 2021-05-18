@@ -8,12 +8,39 @@ Some tips on how to configure the Libris ILL backend.
 
 =head2 System preferences
 
-=over 4
+=head3 ILLModule
 
-=item * B<ILLModule> = Enable
+This must be set to "Enable" for the ILL module to work at all.
 
-=item * Use B<OpacHiddenItems> to hide the itemtypes given in B<ill_itemtype> and
+=head3 OpacHiddenItems
+
+Use B<OpacHiddenItems> to hide the itemtypes given in B<ill_itemtype> and
 B<ill_closed_itemtype> below from the OPAC. E.g.: "itype: [FJARRLAN, FJARRLANX]".
+
+=head3 ILLHiddenRequestStatuses
+
+Libraries that have a lot of ILL requests will soon get a very long table of
+all requests, old and new, on the ILL main page. To work around this, closed
+requests can be hidden with this syspref. Below is a list of all status codes.
+IN_AVSL is probably the one you want to hide.
+
+        IN_REM ........ Remitterad
+        IN_UTEL ....... Uteliggande
+        IN_LEV ........ Levererad
+        IN_ANK ........ Ankomstregistrera
+        IN_LAST ....... Läst
+        IN_KANRES ..... Kan reserveras
+        IN_MAK ........ Makulerad
+        IN_NEG ........ Negativt svar
+        IN_RES ........ Reservation
+        IN_RESAD ...... Reserverad
+        IN_RESPONSE ... Respondera
+        IN_UTL ........ Utlånad
+        IN_RET ........ Innleverad
+        IN_AVBEST ..... Avbeställd
+        IN_AVSL ....... Avsluta
+
+(ILLHiddenRequestStatuses was added in version 20.11.00, bug 23391.)
 
 =back
 
