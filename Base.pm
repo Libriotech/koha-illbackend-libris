@@ -1122,7 +1122,7 @@ sub userid2borrower {
         my @cond;
         my @needles;
         # Build the WHERE part of the query
-        foreach my $attr ( @{ $config->{'patron_id_attributes'} } ) {
+        foreach my $attr ( @{ $ill_config->{'patron_id_attributes'} } ) {
             push @cond, "(code = '$attr' AND attribute = ?)";
             push @needles, $user_id;
         }
