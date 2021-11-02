@@ -1130,7 +1130,7 @@ sub userid2borrower {
 
         # Execute the query
         my $query = "SELECT borrowernumber FROM borrower_attributes WHERE $where;";
-        say $query;
+        my $dbh = C4::Context->dbh;
         my $sth = $dbh->prepare($query);
         $sth->execute( @needles );
         my $borrowernumber = $sth->fetchrow_array;
