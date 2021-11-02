@@ -1115,6 +1115,33 @@ sub userid2borrower {
     }
     my $patron = Koha::Patrons->find({ $id_field => $user_id });
 
+    # If we do not have a patron yet, and patron_id_attributes is set, use the
+    # attributes to look for the patron.
+    if ( !$patron && defined $ill_config->{ 'patron_id_attributes' } ) {
+
+        my @cond;
+        my @needles;
+        # Build the WHERE part of the query
+        foreach my $attr ( @{ $config->{'patron_id_attributes'} } ) {
+            push @cond, "(code = '$attr' AND attribute = ?)";
+            push @needles, $user_id;
+        }
+        my $where = join( " OR ", @cond );
+
+        # Execute the query
+        my $query = "SELECT borrowernumber FROM borrower_attributes WHERE $where;";
+        say $query;
+        my $sth = $dbh->prepare($query);
+        $sth->execute( @needles );
+        my $borrowernumber = $sth->fetchrow_array;
+
+        # Find the borrower
+        if ( $borrowernumber ) {
+            $patron = Koha::Patrons->find({ 'borrowernumber' => $borrowernumber });
+        }
+
+    }
+
     if ( $patron ) {
         return $patron;
     } else {

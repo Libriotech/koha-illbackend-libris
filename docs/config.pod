@@ -118,6 +118,13 @@ with this variable the backend can be told to use e.g. userid or borrowernumber.
 If this variable is not included in the config, cardnumber will be used as the
 default.
 
+=item * B<patron_id_attributes> - I patron identifiers (like extra cardnumbers)
+are stored as "extended patron attributes", a list of attribute codes can be
+listed in this config variable, and patrons will be looked up based on these
+attributes too, if a patron has not been found using the field in the 
+patron_id_field. If this variable is not included in the config, only the field
+specified by patron_id_field will be used to identify patrons.
+
 =item * B<recordid_limit> - If the script that imports requests from Libris
 fails somewhere between creating a record and recording the request in the DB,
 a new copy of the same record might be added once every time F<get_data_from_libris.pl>
