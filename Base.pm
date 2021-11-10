@@ -1501,7 +1501,7 @@ warn Dumper $params;
         $request->orderid(        $params->{other}->{orderid} );
         $request->borrowernumber( $params->{other}->{borrowernumber} );
         $request->biblio_id(      $other->{biblio_id} );
-        $request->branchcode(     'FJARRLAN' ); # FIXME $params->{other}->{branchcode} );
+        $request->branchcode(     $params->{other}->{branchcode} );
         $request->status(         'IN_UTEL' );
         $request->placed(         DateTime->now);
         $request->medium(         $params->{other}->{medium} );
