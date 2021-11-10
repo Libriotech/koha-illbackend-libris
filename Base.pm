@@ -1451,6 +1451,9 @@ sub create {
     # -> initial placement of the request for an ILL order
     my ( $self, $params ) = @_;
 
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
+
 warn "In create";
 warn Dumper $params;
 
@@ -1463,7 +1466,7 @@ warn Dumper $params;
         $request->orderid(        $params->{other}->{orderid} );
         $request->borrowernumber( $params->{other}->{borrowernumber} );
         $request->biblio_id(      $other->{biblio_id} );
-        $request->branchcode(     $params->{other}->{branchcode} );
+        $request->branchcode(     $ill_config->{ 'ill_library' } );
         $request->status(         $params->{other}->{status} );
         $request->placed(         DateTime->now);
         $request->replied(        );
