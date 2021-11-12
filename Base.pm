@@ -949,8 +949,8 @@ sub upsert_record {
     $record->insert_fields_ordered( $field_942 );
 
     # If this is an article request, add the article title to 245$a
-    if ( defined $libris_req->{ 'media_type' } && $libris_req->{ 'media_type' } eq 'Kopia' && defined $libris_req->{ 'article_title' } && $libris_req->{ 'article_title' } ne '' ) {
-        $record = _append_to_field( $record, '245', 'a', $libris_req->{ 'article_title' } );
+    if ( defined $libris_req->{ 'media_type' } && $libris_req->{ 'media_type' } eq 'Kopia' && defined $libris_req->{ 'title_of_article' } && $libris_req->{ 'title_of_article' } ne '' ) {
+        $record = _append_to_field( $record, '245', 'a', $libris_req->{ 'title_of_article' } );
     }
 
     # Update or save the record
