@@ -19,6 +19,7 @@ use YAML::Syck;
 use Scalar::Util qw( reftype );
 use Getopt::Long;
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
 use Template;
 use DateTime;
 use Pod::Usage;
