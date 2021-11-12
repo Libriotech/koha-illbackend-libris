@@ -213,7 +213,11 @@ sub metadata {
             = $attrs->find({type => 'volume_designation'})
             ? $attrs->find({type => 'volume_designation'})->value
             : '';
-
+        # Add title_of_article to the existing Title
+        $return->{'Title'}
+            = $attrs->find({type => 'title_of_article'})
+            ? $return->{'Title'} . ' [ ' . $attrs->find({type => 'title_of_article'})->value . ' ]'
+            : $return->{'Title'};
     }
 
     return $return;
