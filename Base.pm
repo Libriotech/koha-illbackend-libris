@@ -1006,7 +1006,7 @@ sub get_record_from_libris {
        $record->delete_fields( $record->field( $tag ) );
     }
 
-    say $record->as_xml();
+    say $record->as_formatted();
 
     return $record;
 
