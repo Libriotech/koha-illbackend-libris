@@ -948,6 +948,11 @@ sub upsert_record {
     # Add the field to the record
     $record->insert_fields_ordered( $field_942 );
 
+    # If this is an article request, add the article title to 245$a
+    if ( defined $libris_req->{ 'media_type' } && $libris_req->{ 'media_type' } eq 'Kopia' && defined $libris_req->{ 'article_title' } && $libris_req->{ 'article_title' } ne '' ) {
+        $record = _append_to_field( $record, '245', 'a', $libris_req->{ 'article_title' } );
+    }
+
     # Update or save the record
     my ( $biblionumber, $biblioitemnumber, $itemnumber );
     if ( $action eq 'update' ) { 
@@ -1090,6 +1095,30 @@ sub get_data {
     # say Dumper $data if $debug;
 
     return $data;
+
+}
+
+=head3 _append_to_field
+
+  $record = _append_to_field( $record, '245', 'a', 'Some text' );
+
+Takes a record, a field, a subfield and a string. Returns the record, with the
+given string appended to the given subfield in the given field. The string is
+enclosed in "[]". The field and the subfield is assumed to occur only once.
+
+=cut
+
+sub _append_to_field {
+
+    my ( $record, $field, $subfield, $string ) = @_;
+
+    my $this_field = $record->field( $field );
+    my $old_text = $this_field->subfield( $subfield );
+    my $new_text = "$old_text [ $string ]";
+
+    $this_field->update( $subfield => $new_text );
+
+    return $record;
 
 }
 
