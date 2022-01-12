@@ -226,7 +226,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 ## Save or update the request in Koha
 
     # Home branch of created items
-    my $homebranch = defined $ill_config->{ill_branch} ? $ill_config->{ill_branch} : $borrower->branchcode;
+    my $homebranch = $borrower->branchcode;
     my $holdingbranch = $borrower->branchcode;
     # Look for the Libris order number
     my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'lf_number'} });
