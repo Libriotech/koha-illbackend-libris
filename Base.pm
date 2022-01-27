@@ -1499,7 +1499,7 @@ warn Dumper $params;
         $request->orderid(        $params->{other}->{orderid} );
         $request->borrowernumber( $params->{other}->{borrowernumber} );
         $request->biblio_id(      $other->{biblio_id} );
-        $request->branchcode(     $ill_config->{ 'ill_branch' } );
+        $request->branchcode(     $params->{other}->{branchcode} );
         $request->status(         $params->{other}->{status} );
         $request->placed(         DateTime->now);
         $request->replied(        );
