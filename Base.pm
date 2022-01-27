@@ -807,6 +807,7 @@ sub receive {
             next    => 'illview',
             illrequest_id => $request->illrequest_id,
             borrowernumber => $request->borrowernumber,
+            categorycode   => $patron->categorycode,
             title     => $request->illrequestattributes->find({ type => 'title' })->value,
             author    => $request->illrequestattributes->find({ type => 'author' })->value,
             lf_number => $request->orderid,

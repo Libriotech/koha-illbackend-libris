@@ -1,3 +1,5 @@
+[% USE Categories %]
+
 <!-- Error Handling -->
 [% IF whole.error %]
     <!-- Dispatch on Status -->
@@ -39,6 +41,10 @@
            <li class="borrowernumber">
                 <label class="borrowernumber">Låntagare:</label>
                 <input type="text" name="borrowernumber" id="borrowernumber" value="[% whole.borrowernumber %]" />
+           </li>
+           <li class="categorycode">
+                <label class="categorycode">Kategori:</label>
+                <span id="categorycode">[% Categories.GetName( whole.categorycode ) | html %] ([% whole.categorycode %])</span>
            </li>
            <li class="active_library">
                 <label class="active_library">Långivande bibliotek:</label>
