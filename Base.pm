@@ -1504,7 +1504,7 @@ warn Dumper $params;
         $request->orderid(        $params->{other}->{orderid} );
         $request->borrowernumber( $params->{other}->{borrowernumber} );
         $request->biblio_id(      $other->{biblio_id} );
-        $request->branchcode(     $ill_config->{ 'ill_library' } );
+        $request->branchcode(     $ill_config->{ 'ill_branch' } );
         $request->status(         'IN_UTEL' );
         $request->placed(         DateTime->now);
         $request->medium(         $params->{other}->{medium} );
