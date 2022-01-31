@@ -132,6 +132,11 @@ is run, resulting in possibly hundreds of copies of the same record. The script
 will by default die if there are more than 100 copies of the record it is trying
 to add. The threshold can be changed with this parameter.
 
+=item * B<item_level_holds> - When a new request is added, a record and an item
+is also added, and a hold is placed on the record for the requesting patron. If
+this variable is set to 0 (or not set at all), the hold will be on the record
+level. If this variable is set to 1, the hold will be an item level hold.
+
 =back
 
 Example:
@@ -154,6 +159,7 @@ Example:
   close_article_request_on_receive: 0
   patron_id_field: userid
   recordid_limit: 25
+  item_level_holds: 1
 
 =head2 Notices
 
