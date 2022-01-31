@@ -949,7 +949,7 @@ sub upsert_record {
     $record->insert_fields_ordered( $field_942 );
 
     # Update or save the record
-    my ( $biblionumber, $biblioitemnumber );
+    my ( $biblionumber, $biblioitemnumber, $itemnumber );
     if ( $action eq 'update' ) { 
         # Find the record connected to the saved request
         $biblionumber = $saved_req->biblio_id;
@@ -972,14 +972,14 @@ sub upsert_record {
         my $item = Koha::Item->new( $item_hash );
         if ( defined $item ) {
             $item->store;
-            my $itemnumber = $item->itemnumber;
+            $itemnumber = $item->itemnumber;
             say "Added new item with itemnumber=$itemnumber and notforloan: " . $item->notforloan;
         } else {
             say "No item added";
         }
     }
 
-    return $biblionumber;
+    return ( $biblionumber, $itemnumber );
 }
 
 sub get_record_from_libris {
