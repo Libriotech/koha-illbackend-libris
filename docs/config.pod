@@ -171,9 +171,12 @@ Example:
   patron_id_field: userid
   patron_id_field_alt: borrowernumber
   recordid_limit: 25
+<<<<<<< HEAD
   subfields_for_942:
     n: 1
     x: y
+=======
+>>>>>>> 9dcb409 (Make item level holds configurable)
   item_level_holds: 1
 
 =head2 Notices
