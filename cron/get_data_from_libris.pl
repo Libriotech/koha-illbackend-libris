@@ -276,7 +276,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
                 say "Reserve NOT FOUND! Going to add one for branchcode=", $borrower->branchcode, " borrowernumber=", $borrower->borrowernumber, " biblionumber=$biblionumber";
                 my $reserve_id;
                 if (C4::Context->preference("Version") > 20) {
-                    if ( defined $ill_config->{ 'item_level_holds' } && $ill_config->{ 'libris_sigil' } == 1 ) {
+                    if ( defined $ill_config->{ 'item_level_holds' } && $ill_config->{ 'item_level_holds' } == 1 ) {
                         $reserve_id = AddReserve( {
                             branchcode => $borrower->branchcode,
                             borrowernumber => $borrower->borrowernumber,
@@ -333,7 +333,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
             my $reserve_id;
             if (C4::Context->preference("Version") > 20) {
-                if ( defined $ill_config->{ 'item_level_holds' } && $ill_config->{ 'libris_sigil' } == 1 ) {
+                if ( defined $ill_config->{ 'item_level_holds' } && $ill_config->{ 'item_level_holds' } == 1 ) {
                     $reserve_id = AddReserve( {
                         branchcode => $borrower->branchcode,
                         borrowernumber => $borrower->borrowernumber,
