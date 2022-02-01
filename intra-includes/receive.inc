@@ -40,7 +40,8 @@
            </li>
            <li class="borrowernumber">
                 <label class="borrowernumber">Låntagare:</label>
-                <input type="text" name="borrowernumber" id="borrowernumber" value="[% whole.borrowernumber %]" />
+                [% whole.patron.firstname %] [% whole.patron.surname %]
+                <input type="text" name="borrowernumber" id="borrowernumber" size="7" value="[% whole.borrowernumber %]" />
            </li>
            <li class="categorycode">
                 <label class="categorycode">Kategori:</label>
