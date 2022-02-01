@@ -266,7 +266,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         $old_illrequest->store;
         say "Connected to biblionumber=$biblionumber";
         # Update the attributes
-	insert_or_update_attributes($old_illrequest, $req);
+        insert_or_update_attributes($old_illrequest, $req);
         # Check if there is a reserve, if not add one (only for Inlån and loans, not copies)
         if ( ( $is_inlan && $is_inlan == 1 ) && $req->{'media_type'} eq 'Lån' ) {
             my $res = Koha::Holds->find({ borrowernumber => $borrower->borrowernumber, biblionumber => $biblionumber });
@@ -333,11 +333,20 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         if ( $is_inlan && $is_inlan == 1 && $req->{'media_type'} eq 'Lån' ) {
             my $reserve_id;
             if (C4::Context->preference("Version") > 20) {
-                $reserve_id = AddReserve( {
-                    branchcode => $borrower->branchcode,
-                    borrowernumber => $borrower->borrowernumber,
-                    biblionumber => $biblionumber,
-                } );
+                if ( defined $ill_config->{ 'item_level_holds' } && $ill_config->{ 'libris_sigil' } == 1 ) {
+                    $reserve_id = AddReserve( {
+                        branchcode => $borrower->branchcode,
+                        borrowernumber => $borrower->borrowernumber,
+                        biblionumber => $biblionumber,
+                        itemnumber => $itemnumber,
+                    } );
+                } else {
+                    $reserve_id = AddReserve( {
+                        branchcode => $borrower->branchcode,
+                        borrowernumber => $borrower->borrowernumber,
+                        biblionumber => $biblionumber,
+                    } );
+                }
             } else {
                 $reserve_id = AddReserve( $borrower->branchcode, $borrower->borrowernumber, $biblionumber );
             }
