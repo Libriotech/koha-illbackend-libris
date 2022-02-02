@@ -26,7 +26,7 @@ use LWP::Simple;
 use HTTP::Request;
 use Data::Dumper;
 
-use C4::Biblio qw( AddBiblio ModBiblio );
+use C4::Biblio qw( AddBiblio ModBiblio DelBiblio );
 use C4::Context;
 use C4::Letters;
 use C4::Message;
