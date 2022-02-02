@@ -67,6 +67,27 @@
         </ol>
     </fieldset>
     <fieldset class="rows">
+        <legend>Fee</legend>
+        <ol>
+            <li class="ill_charge">
+                <label class="ill_charge">Fee:</label>
+                <input type="text" name="ill_charge" id="ill_charge" value="[% whole.ill_charge %]" />
+            </li>
+            <li class="ill_charge_type">
+                <label class="ill_charge_type">Type:</label>
+                <select name="ill_charge_type">
+                    [% FOREACH charge_type IN whole.ill_charge_types %]
+                    <option value="[% charge_type.code %]">[% charge_type.description %]</option>
+                    [% END %]
+                </select>
+            </li>
+            <li class="ill_charge_description">
+                <label class="ill_charge_description">Fee description:</label>
+                <input type="text" name="ill_charge_description" id="ill_charge_description" value="[% whole.ill_charge_description %]" />
+            </li>
+        </ol>
+    </fieldset>
+    <fieldset class="rows">
         <legend>Message - email/print</legend>
         <ol>
             <li class="email_title">
