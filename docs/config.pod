@@ -171,13 +171,25 @@ Example:
   patron_id_field: userid
   patron_id_field_alt: borrowernumber
   recordid_limit: 25
-<<<<<<< HEAD
   subfields_for_942:
     n: 1
     x: y
-=======
->>>>>>> 9dcb409 (Make item level holds configurable)
   item_level_holds: 1
+  reminders:
+    Lån:
+      - days_after: 0
+        letter_code: ILL_ANK_L1
+      - days_after: 14
+        letter_code: ILL_ANK_L2
+      - days_after: 21
+        letter_code: ILL_ANK_L3
+    Kopia:
+      - days_after: 0
+        letter_code: ILL_ANK_K1
+      - days_after: 14
+        letter_code: ILL_ANK_K2
+      - days_after: 21
+        letter_code: ILL_ANK_K3
 
 =head2 Notices
 
@@ -187,7 +199,15 @@ Add notices with the following codes under Tools > Notices and slips:
 
 =item * B<ILL_ANK_LAN> - For books and other media that are borrowed and returned.
 
+=item * B<ILL_ANK_LAN_REMINDERn> - For books and other media that patron has not yet retrieved,
+n represents config.yaml reminders.Lån array index + 1 so that it is possible
+to define any amount of reminders. Example: ILL_ANK_LAN_REMINDER1
+
 =item * B<ILL_ANK_KOPIA> - For article copies that are not returned.
+
+=item * B<ILL_ANK_KOPIA_REMINDERn> - For article copies that are not yet retrieved,
+n represents config.yaml reminders.Kopia array index + 1 so that it is possible
+to define any amount of reminders. Example: ILL_ANK_KOPIA_REMINDER1
 
 =back
 
@@ -215,6 +235,17 @@ The following settings should apply to all notices:
   Vänliga hälsningar
   Biblioteket
 
+=head3 ILL_ANK_KOPIA_REMINDERn  - Email and print
+
+  Hej, <<borrowers.firstname>> <<borrowers.surname>>!
+
+  Din artikelkopia har ankommit till biblioteket:
+
+  <<biblio.title>> av <<biblio.author>>
+
+  Vänliga hälsningar
+  Biblioteket
+
 =head3 ILL_ANK_LAN - Email and print
 
   Hej, <<borrowers.firstname>> <<borrowers.surname>>!
@@ -223,6 +254,17 @@ The following settings should apply to all notices:
   
   <<biblio.title>> av <<biblio.author>>
   
+  Vänliga hälsningar
+  Biblioteket
+
+=head3 ILL_ANK_LAN_REMINDERn - Email and print
+
+  Hej, <<borrowers.firstname>> <<borrowers.surname>>!
+
+  Ditt fjärrlån har ankommit till biblioteket:
+
+  <<biblio.title>> av <<biblio.author>>
+
   Vänliga hälsningar
   Biblioteket
 

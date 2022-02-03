@@ -758,6 +758,22 @@ sub receive {
                 }
             }
 
+            # Store date_received
+            my $date_received = Koha::Illrequestattributes->find({
+                illrequest_id => $request->illrequest_id,
+                type          => 'date_received',
+            });
+            unless ( $date_received ) {
+                $date_received = Koha::Illrequestattribute->new({
+                    illrequest_id => $request->illrequest_id,
+                    type          => 'date_received',
+                    value         => DateTime->today,
+                })->store;
+            }
+            else {
+                $date_received->value(DateTime->today)->store;
+            }
+
         } else {
 
             ## This is an article/copy
