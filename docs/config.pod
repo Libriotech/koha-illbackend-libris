@@ -137,6 +137,13 @@ is also added, and a hold is placed on the record for the requesting patron. If
 this variable is set to 0 (or not set at all), the hold will be on the record
 level. If this variable is set to 1, the hold will be an item level hold.
 
+=item * B<date_due_period> - When an inter library loan is received, a guaranteed
+loan period and maximum loan period is given. When the arrived copy is lent out,
+the guaranteed, alternatively maximal loan period date shall automatically become
+the due date/return date. Whether it is the guaranteed period or maximum loan period
+that regulates the date of return can be decided in this configuration.
+Valid values are I<due_date_guar> and I<due_date_max>.
+
 =back
 
 Example:
@@ -160,6 +167,7 @@ Example:
   patron_id_field: userid
   recordid_limit: 25
   item_level_holds: 1
+  date_due_period: due_date_guar
 
 =head2 Notices
 
