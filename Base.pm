@@ -495,9 +495,21 @@ sub status_graph {
             ui_method_name => 'Utlånad',                   # UI name of method leading
                                                            # to this status
             method         => 'respond',                    # method to this status
-            next_actions   => [ 'IN_AVSL' ], # buttons to add to all
+            next_actions   => [ 'IN_AVSL', 'IN_UTL_RENEW' ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-send-o',                   # UI Style class
+        },
+        "IN_UTL_RENEW" => {
+            prev_actions => [ 'IN_AVSL' ],                   # Actions containing buttons
+                                                             # leading to this status
+            id             => 'IN_UTL',                      # ID of this status
+            name           => 'Inlån Utlånad',               # UI name of this status
+            ui_method_name => 'Renew',                       # UI name of method leading
+                                                             # to this status
+            method         => 'renew',                       # method to this status
+            next_actions   => [ 'IN_AVSL', 'IN_UTL_RENEW' ], # buttons to add to all
+                                                             # requests with this status
+            ui_method_icon => 'fa-recycle',                  # UI Style class
         },
         "IN_RET" => {
             prev_actions => [ ],                           # Actions containing buttons
@@ -1770,6 +1782,8 @@ Illrequest.  $other may be supplied using templates.
 sub renew {
     # -> request a currently borrowed ILL be renewed in the backend
     my ( $self, $params ) = @_;
+    my $stage = $params->{other}->{stage};
+
     # Turn Illrequestattributes into a plain hashref
     my $value = {};
     my $attributes = $params->{request}->illrequestattributes;
@@ -1782,19 +1796,147 @@ sub renew {
         $error = 1;
         $status = 'not_renewed';
         $message = 'Order not yet delivered.';
-    } else {
-        $value->{status} = "Renewed";
     }
-    # ...then return our result:
-    return {
-        error   => $error,
-        status  => $status,
-        message => $message,
-        method  => 'renew',
-        stage   => 'commit',
-        value   => $value,
-        next    => 'illview',
-    };
+
+    if ( $error ) {
+        return {
+            error   => $error,
+            status  => $status,
+            message => $message,
+            method  => 'renew',
+            stage   => 'commit',
+            value   => $value,
+            next    => 'illview',
+        };
+    }
+
+    my $request = $params->{request};
+
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
+
+    my $patron = Koha::Patrons->find({ borrowernumber => $request->borrowernumber });
+
+    # Prepare charge types
+    my $ill_charge_types = Koha::Account::DebitTypes->search_with_library_limits(
+          { archived => 0 }, {}, $request->branchcode
+    );
+
+    if ( $stage && $stage eq 'renew' ) {
+        # Charge patron, if requested
+        if ( $params->{ 'other' }->{ 'ill_charge' } && length( $params->{ 'other' }->{ 'ill_charge' } ) > 0 ) {
+            my $fee = $params->{ 'other' }->{ 'ill_charge' };
+            $fee =~ /([\d,.]+)/s;
+
+            my $debit_type_code = $params->{ 'other' }->{ 'ill_charge_type' };
+
+            my $userenv = C4::Context->userenv;
+            my $manager_id = $userenv ? $userenv->{number} : undef;
+            $fee = Koha::Account::Line->new({
+                amount            => $fee,
+                borrowernumber    => $request->borrowernumber,
+                debit_type_code   => $debit_type_code,
+                amountoutstanding => $fee,
+                note              => $request->illrequest_id,
+                description       => $params->{ 'other' }->{ 'ill_charge_description' },
+                manager_id        => $manager_id,
+                interface         => 'intranet',
+                branchcode        => $request->branchcode,
+                date              => dt_from_string
+            })->store();
+        }
+
+        my $due_date;
+        my $due_date_var;
+        # Save the two due dates
+        if ( $params->{ 'other' }->{ 'due_date_guar' } ) {
+            $due_date = $params->{ 'other' }->{ 'due_date_guar' };
+            $due_date_var = $params->{ 'other' }->{ 'due_date_guar' }
+
+        }
+        elsif ( $params->{ 'other' }->{ 'due_date_max' } ) {
+            $due_date = $params->{ 'other' }->{ 'due_date_max' };
+            $due_date_var = $params->{ 'other' }->{ 'due_date_max' }
+        }
+
+        if ( $due_date_var ) {
+            my $prev_due_date = Koha::Illrequestattributes->find({
+                illrequest_id => $request->illrequest_id,
+                type          => $due_date_var,
+            });
+            if ( $prev_due_date ) {
+                $prev_due_date->value( $due_date )->store;
+            } else {
+                Koha::Illrequestattribute->new({
+                    illrequest_id => $request->illrequest_id,
+                    type          => $due_date_var,
+                    value         => $due_date,
+                })->store;
+            }
+            $request->date_due( $due_date );
+        }
+
+        # Save comment
+        if ( $params->{ 'other' }->{ 'comment' } ) {
+            my $comment = Koha::Illcomment->new({
+                illrequest_id  => $request->illrequest_id,
+                borrowernumber => C4::Context->userenv->{'number'},
+                comment        => $params->{ 'other' }->{ 'comment' },
+            })->store();
+        }
+
+        $request->store;
+
+        # Find checkout
+        my $item = Koha::Items->find({ biblionumber => $request->biblio_id });
+        my $checkout = Koha::Checkouts->search({
+            borrowernumber => $request->borrowernumber,
+            itemnumber => $item->itemnumber
+        })->next;
+
+        $due_date = dt_from_string( $due_date );
+        $due_date->set_hour(23);
+        $due_date->set_minute(59);
+
+        # Add renew
+        C4::Circulation::AddRenewal(
+            $request->borrowernumber, $checkout->itemnumber,
+            $checkout->branchcode, $due_date
+        );
+
+        # ...then return our result:
+        return {
+            error   => $error,
+            status  => $status,
+            message => $message,
+            method  => 'renew',
+            stage   => 'commit',
+            value   => $value,
+            next    => 'illview',
+        };
+
+    } else {
+
+        # -> create response.
+        return {
+            error   => 0,
+            status  => '',
+            message => '',
+            method  => 'renew',
+            stage   => 'form',
+            next    => 'illview',
+            illrequest_id => $request->illrequest_id,
+            borrowernumber => $request->borrowernumber,
+            patron         => $patron,
+            categorycode   => $patron->categorycode,
+            ill_charge_types => $ill_charge_types,
+            title     => $request->illrequestattributes->find({ type => 'title' })->value,
+            author    => $request->illrequestattributes->find({ type => 'author' })->value,
+            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value,
+            type      => $request->illrequestattributes->find({ type => 'media_type' })->value,
+            active_library => => $request->illrequestattributes->find({ type => 'active_library' })->value,
+        };
+    }
 }
 
 =head3 cancel
