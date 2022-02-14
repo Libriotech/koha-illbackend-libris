@@ -228,11 +228,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
 ## Save or update the request in Koha
 
+    # Look for the Libris order number
+    my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'lf_number'} });
+    if ( $old_illrequest and defined $old_illrequest->borrowernumber ) {
+        # Patron is already connected to an old ill request
+        $borrower = Koha::Patrons->find( $old_illrequest->borrowernumber )
+    }
+
     # Home branch of created items
     my $homebranch = $borrower->branchcode;
     my $holdingbranch = $borrower->branchcode;
-    # Look for the Libris order number
-    my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'lf_number'} });
     # We have an old request, so we update it
     if ( $old_illrequest ) {
         say "Found an existing request with illrequest_id = " . $old_illrequest->illrequest_id if $verbose;
