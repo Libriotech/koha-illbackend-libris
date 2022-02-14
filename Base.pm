@@ -733,6 +733,12 @@ sub receive {
                 })->store;
             }
 
+            if ( $ill_config->{'date_due_period'} eq 'due_date_guar' ) {
+                $request->date_due( $params->{ 'other' }->{ 'due_date_guar' } )->store;
+            } elsif ( $ill_config->{'date_due_period'} eq 'due_date_max' ) {
+                $request->date_due( $params->{ 'other' }->{ 'due_date_max' } )->store;
+            }
+
             # Set a barcode, if one was supplied
             my $barcode = $params->{other}->{ill_barcode};
             if ( $barcode ) {
