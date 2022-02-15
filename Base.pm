@@ -672,7 +672,7 @@ sub receive {
 
             my $userenv = C4::Context->userenv;
             my $manager_id = $userenv ? $userenv->{number} : undef;
-            my $fee = Koha::Account::Line->new({
+            $fee = Koha::Account::Line->new({
                 amount            => $fee,
                 borrowernumber    => $request->borrowernumber,
                 debit_type_code   => $debit_type_code,
