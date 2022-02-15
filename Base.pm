@@ -1853,14 +1853,14 @@ sub renew {
              and $params->{ 'other' }->{ 'due_date_guar' } )
         {
             $due_date = $params->{ 'other' }->{ 'due_date_guar' };
-            $due_date_var = $params->{ 'other' }->{ 'due_date_guar' }
+            $due_date_var = 'due_date_guar';
 
         }
         elsif ( $ill_config->{'date_due_period'} eq 'due_date_max'
                 and $params->{ 'other' }->{ 'due_date_max' } )
         {
             $due_date = $params->{ 'other' }->{ 'due_date_max' };
-            $due_date_var = $params->{ 'other' }->{ 'due_date_max' }
+            $due_date_var = 'due_date_max';
         }
 
         if ( $due_date_var ) {
