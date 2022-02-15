@@ -1803,12 +1803,16 @@ sub renew {
         my $due_date;
         my $due_date_var;
         # Save the two due dates
-        if ( $params->{ 'other' }->{ 'due_date_guar' } ) {
+        if ( $ill_config->{'date_due_period'} eq 'due_date_guar'
+             and $params->{ 'other' }->{ 'due_date_guar' } )
+        {
             $due_date = $params->{ 'other' }->{ 'due_date_guar' };
             $due_date_var = $params->{ 'other' }->{ 'due_date_guar' }
 
         }
-        elsif ( $params->{ 'other' }->{ 'due_date_max' } ) {
+        elsif ( $ill_config->{'date_due_period'} eq 'due_date_max'
+                and $params->{ 'other' }->{ 'due_date_max' } )
+        {
             $due_date = $params->{ 'other' }->{ 'due_date_max' };
             $due_date_var = $params->{ 'other' }->{ 'due_date_max' }
         }
