@@ -1416,7 +1416,7 @@ sub _save_due_date {
             })->store;
         }
         if ( $ill_config->{'date_due_period'} eq $due_date_var ) {
-            $request->date_due( $due_date->ymd() );
+            $request->date_due( $due_date->ymd() )->store;
             return $due_date;
         }
     }
