@@ -730,26 +730,14 @@ sub receive {
             $request->store;
 
             # Save the two due dates
-            if ( $params->{ 'other' }->{ 'due_date_guar' } ) {
-                Koha::Illrequestattribute->new({
-                    illrequest_id => $request->illrequest_id,
-                    type          => 'due_date_guar',
-                    value         => $params->{ 'other' }->{ 'due_date_guar' },
-                })->store;
-            }
-            if ( $params->{ 'other' }->{ 'due_date_max' } ) {
-                Koha::Illrequestattribute->new({
-                    illrequest_id => $request->illrequest_id,
-                    type          => 'due_date_max',
-                    value         => $params->{ 'other' }->{ 'due_date_max' },
-                })->store;
-            }
-
-            if ( $ill_config->{'date_due_period'} eq 'due_date_guar' ) {
-                $request->date_due( $params->{ 'other' }->{ 'due_date_guar' } )->store;
-            } elsif ( $ill_config->{'date_due_period'} eq 'due_date_max' ) {
-                $request->date_due( $params->{ 'other' }->{ 'due_date_max' } )->store;
-            }
+            _save_due_date(
+                $request, $ill_config, 'due_date_guar',
+                $params->{ 'other' }->{ 'due_date_guar' }
+            );
+            _save_due_date(
+                $request, $ill_config, 'due_date_max',
+                $params->{ 'other' }->{ 'due_date_max' }
+            );
 
             # Set a barcode, if one was supplied
             my $barcode = $params->{other}->{ill_barcode};
@@ -1405,6 +1393,32 @@ sub respond {
 
 }
 
+sub _save_due_date {
+    my ( $request, $ill_config, $due_date_var, $due_date ) = @_;
+
+    if ( $due_date_var and defined $due_date ) {
+        my $prev_due_date = Koha::Illrequestattributes->find({
+            illrequest_id => $request->illrequest_id,
+            type          => $due_date_var,
+        });
+        if ( $prev_due_date ) {
+            $prev_due_date->value( $due_date )->store;
+        } else {
+            Koha::Illrequestattribute->new({
+                illrequest_id => $request->illrequest_id,
+                type          => $due_date_var,
+                value         => $due_date,
+            })->store;
+        }
+        if ( $ill_config->{'date_due_period'} eq $due_date_var ) {
+            $request->date_due( $due_date );
+            return $due_date;
+        }
+    }
+
+    return;
+}
+
 sub _update_libris {
 
     my ( $request, $action, $extra_content ) = @_;
@@ -1800,39 +1814,16 @@ sub renew {
             })->store();
         }
 
-        my $due_date;
-        my $due_date_var;
         # Save the two due dates
-        if ( $ill_config->{'date_due_period'} eq 'due_date_guar'
-             and $params->{ 'other' }->{ 'due_date_guar' } )
-        {
-            $due_date = $params->{ 'other' }->{ 'due_date_guar' };
-            $due_date_var = 'due_date_guar';
-
-        }
-        elsif ( $ill_config->{'date_due_period'} eq 'due_date_max'
-                and $params->{ 'other' }->{ 'due_date_max' } )
-        {
-            $due_date = $params->{ 'other' }->{ 'due_date_max' };
-            $due_date_var = 'due_date_max';
-        }
-
-        if ( $due_date_var ) {
-            my $prev_due_date = Koha::Illrequestattributes->find({
-                illrequest_id => $request->illrequest_id,
-                type          => $due_date_var,
-            });
-            if ( $prev_due_date ) {
-                $prev_due_date->value( $due_date )->store;
-            } else {
-                Koha::Illrequestattribute->new({
-                    illrequest_id => $request->illrequest_id,
-                    type          => $due_date_var,
-                    value         => $due_date,
-                })->store;
-            }
-            $request->date_due( $due_date );
-        }
+        my $due_date_guar = _save_due_date(
+            $request, $ill_config, 'due_date_guar',
+            $params->{ 'other' }->{ 'due_date_guar' }
+        );
+        my $due_date_max = _save_due_date(
+            $request, $ill_config, 'due_date_max',
+            $params->{ 'other' }->{ 'due_date_max' }
+        );
+        my $due_date = $due_date_guar ? $due_date_guar : $due_date_max;
 
         # Save comment
         if ( $params->{ 'other' }->{ 'comment' } ) {
@@ -1851,10 +1842,6 @@ sub renew {
             borrowernumber => $request->borrowernumber,
             itemnumber => $item->itemnumber
         })->next;
-
-        $due_date = dt_from_string( $due_date );
-        $due_date->set_hour(23);
-        $due_date->set_minute(59);
 
         # Add renew
         C4::Circulation::AddRenewal(
