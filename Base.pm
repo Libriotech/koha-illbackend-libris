@@ -1443,21 +1443,26 @@ sub _save_due_date {
     my ( $request, $ill_config, $due_date_var, $due_date ) = @_;
 
     if ( $due_date_var and defined $due_date ) {
+        # format due date
+        if ( ref( $due_date ) ne 'DateTime' ) {
+            $due_date = dt_from_string( $due_date );
+        }
+
         my $prev_due_date = Koha::Illrequestattributes->find({
             illrequest_id => $request->illrequest_id,
             type          => $due_date_var,
         });
         if ( $prev_due_date ) {
-            $prev_due_date->value( $due_date )->store;
+            $prev_due_date->value( $due_date->ymd() )->store;
         } else {
             Koha::Illrequestattribute->new({
                 illrequest_id => $request->illrequest_id,
                 type          => $due_date_var,
-                value         => $due_date,
+                value         => $due_date->ymd(),
             })->store;
         }
         if ( $ill_config->{'date_due_period'} eq $due_date_var ) {
-            $request->date_due( $due_date );
+            $request->date_due( $due_date->ymd() );
             return $due_date;
         }
     }
