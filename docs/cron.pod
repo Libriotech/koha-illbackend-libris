@@ -23,6 +23,7 @@ This is where the interesting stuff happens:
  DATETIME=$(date +"%FT%H%M")
  GET_DATA="/path/to/koha-illbackend-libris/cron/get_data_from_libris.pl"
  CIRCSTAT="/path/to/koha-illbackend-libris/cron/circstatus2illstatus.pl"
+ REMINDER="/path/to/koha-illbackend-libris/cron/reminder_notice.pl"
  LOGDIR="/path/to/ill-libris-logdir"
  
  # Get outgoing requests
@@ -33,7 +34,7 @@ This is where the interesting stuff happens:
  
  # Do updates based on local circ statuses
  /usr/sbin/koha-shell -c "/usr/bin/perl $CIRCSTAT > $LOGDIR/ill-libris-$DATETIME-circstat.log 2>&1" <instance>
- 
+
  # Delete logs older than 30 days
  cd $LOGDIR
  find . -mtime +28 -exec rm {} \;
@@ -44,5 +45,16 @@ and the place you want your logs to live.
 Replace <instance> with the actual name of you instance (as given by koha-list).
 
 Adjust the "+30" in the last line if you want to keep logs for longer or shorter time.
+
+=head2 Less frequent cronjobs
+
+Append the file you created in /etc/cron.d, or create a new one with following contents
+
+ DATETIME=date +"%FT%H%M"
+ REMINDER="/path/to/koha-illbackend-libris/cron/reminder_notice.pl"
+ LOGDIR="/path/to/ill-libris-logdir"
+
+ # Send reminder notifications to patrons that have not yet retrieved the material
+ 0 8 * * * root /usr/sbin/koha-shell -c "/usr/bin/perl $REMINDER --verbose > $LOGDIR/ill-libris-$(DATETIME)-reminder.log 2>&1" <instance>
 
 =cut
