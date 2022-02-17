@@ -246,6 +246,7 @@ sub translate_status {
         'Remitterad'     => 'REM',
         'Avbeställd'     => 'AVBEST', # Cancelled
         'Makulerad'      => 'MAK',    # Maculated?
+        'Ej avbeställd!' => 'EJAVB',  # Not cancelled
     );
     return $map{ $raw_status };
 
@@ -524,6 +525,18 @@ sub status_graph {
             ui_method_name => 'Avsluta',                   # UI name of method leading
                                                            # to this status
             method         => 'close',                    # method to this status
+            next_actions   => [ ], # buttons to add to all
+                                                           # requests with this status
+            ui_method_icon => 'fa-stop',                   # UI Style class
+        },
+        "IN_EJAVB" => {
+            prev_actions => [ ],                           # Actions containing buttons
+                                                           # leading to this status
+            id             => 'IN_EJAVB',                  # ID of this status
+            name           => 'Inlån Ej avbeställd',       # UI name of this status
+            ui_method_name => 'Ej avbeställd',             # UI name of method leading
+                                                           # to this status
+            method         => '',                    # method to this status
             next_actions   => [ ], # buttons to add to all
                                                            # requests with this status
             ui_method_icon => 'fa-stop',                   # UI Style class
