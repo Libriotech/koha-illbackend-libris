@@ -936,9 +936,16 @@ sub upsert_record {
     }
 
     # Make sure we have the default itemtype in 942$c
-    $record->insert_fields_ordered(
-        MARC::Field->new('942', '', '', c => $ill_itemtype ),
-    );
+    my $field_942 = MARC::Field->new('942', '', '', c => $ill_itemtype );
+    # Add more subfields to 942, if configured
+    if ( defined $ill_config->{ 'subfields_for_942' } ) {
+        my $subfields = $ill_config->{ 'subfields_for_942' };
+        foreach my $key ( sort keys %{ $subfields } ) {
+            $field_942->add_subfields( $key, $subfields->{ $key } );
+        }
+    }
+    # Add the field to the record
+    $record->insert_fields_ordered( $field_942 );
 
     # Update or save the record
     my ( $biblionumber, $biblioitemnumber );

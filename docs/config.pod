@@ -132,6 +132,11 @@ is run, resulting in possibly hundreds of copies of the same record. The script
 will by default die if there are more than 100 copies of the record it is trying
 to add. The threshold can be changed with this parameter.
 
+=item * B<subfields_for_942> - The value from B<ill_itemtype> will automatically
+be added as 942$c. With this config option you can add any given value to any
+other subfield of field 942. This config variable was added to make it possible
+to always set 942$n = 1 (suppress in opac).
+
 =back
 
 Example:
@@ -154,6 +159,9 @@ Example:
   close_article_request_on_receive: 0
   patron_id_field: userid
   recordid_limit: 25
+  subfields_for_942:
+    n: 1
+    x: y
 
 =head2 Notices
 
