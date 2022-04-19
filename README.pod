@@ -46,6 +46,8 @@ or borrowernumber.
 
 =item * 2022-02-21: subfields_for_942 (optional)
 
+=item * 2022-04-19: patron_id_field_alt (optional)
+
 =back
 
 =head1 AUTHOR

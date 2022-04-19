@@ -1135,6 +1135,12 @@ sub userid2borrower {
     }
     my $patron = Koha::Patrons->find({ $id_field => $user_id });
 
+    # Check one more identifier, if configured
+    if ( !$patron && defined $ill_config->{ 'patron_id_field_alt' } ) {
+        $id_field = $ill_config->{ 'patron_id_field_alt' };
+        $patron = Koha::Patrons->find({ $id_field => $user_id });
+    }
+
     # If we do not have a patron yet, and patron_id_attributes is set, use the
     # attributes to look for the patron.
     if ( !$patron && defined $ill_config->{ 'patron_id_attributes' } ) {

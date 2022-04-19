@@ -118,6 +118,12 @@ with this variable the backend can be told to use e.g. userid or borrowernumber.
 If this variable is not included in the config, cardnumber will be used as the
 default.
 
+=item * B<patron_id_field_alt> - This adds an extra field to look for the user_id
+in, in addition to the one given by "patron_id_field". If a patron is found based
+on the ID in "patron_id_field", that is used. If a patron is not found after
+checking "patron_id_field", another check is done on the field given by
+"patron_id_field_alt".
+
 =item * B<patron_id_attributes> - I patron identifiers (like extra cardnumbers)
 are stored as "extended patron attributes", a list of attribute codes can be
 listed in this config variable, and patrons will be looked up based on these
@@ -158,6 +164,7 @@ Example:
   update_library_data: 0
   close_article_request_on_receive: 0
   patron_id_field: userid
+  patron_id_field_alt: borrowernumber
   recordid_limit: 25
   subfields_for_942:
     n: 1
