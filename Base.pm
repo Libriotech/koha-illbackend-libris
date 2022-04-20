@@ -809,7 +809,7 @@ sub receive {
             borrowernumber => $request->borrowernumber,
             title     => $request->illrequestattributes->find({ type => 'title' })->value,
             author    => $request->illrequestattributes->find({ type => 'author' })->value,
-            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value,
+            lf_number => $request->orderid,
             type      => $request->illrequestattributes->find({ type => 'media_type' })->value,
             active_library => => $request->illrequestattributes->find({ type => 'active_library' })->value,
             letter_code => $letter_code,
