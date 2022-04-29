@@ -28,7 +28,7 @@ binmode STDOUT, ":utf8";
 $| = 1; # Don't buffer output
 
 use C4::Context;
-use C4::Reserves;
+use C4::Reserves qw( AddReserve );
 use Koha::Illcomment;
 use Koha::Illrequests;
 use Koha::Illrequest::Config;
