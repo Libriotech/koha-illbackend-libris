@@ -6,7 +6,7 @@ Koha ILL Backend for Libris ILL (used in Sweden).
 
 =head1 DOCUMENTATION
 
-The official documentation of the Libris ILL API is available here: 
+The official documentation of the Libris ILL API is available here:
 L<http://iller.libris.kb.se/librisfjarrlan/api/doc>
 
 See the "docs" directory for more documentation on this ILL backend.
@@ -53,6 +53,99 @@ or borrowernumber.
 =item * 2022-05-02: subfields_for_942 (optional)
 
 =back
+
+=head1 DEVELOPMENT BRANCH (waiting)
+
+A group of Swedish libraries have sponsored a set of ILL-related developments.
+Developments that only affect koha-illbackend-libris have been incoroprated into
+the master branch. Some developments only affect Koha, and these can be found in
+Bugzilla, undergoing Koha QA as usual.
+
+But some developments affect both koha-illbackend-libris and Koha itself. The Koha
+parts of these developments are undergoing Koha QA and will make it into some
+future version of Koha. Until that happens, we have not incorporated the parts
+that affect koha-illbackend-libris into the master branch. If we did this, libraries
+would run standard Koha and upgrade koha-illbackend-libris, and things would not
+work.
+
+Instead, those developments that affect koha-illbackend-libris and that rely on
+changes to Koha that are not yet in a stable version of Koha, have been collected
+in a separate branch, called B<waiting>. In order to benefit from the these
+developments before the changes to Koha are in Koha, a library must do the
+following:
+
+=over 4
+
+=item * Update koha-illbackend-libris and check out the "waiting" branch
+
+=item * Apply the relevant Koha patches to the Koha code running on the server
+
+=back
+
+We would like to stress that the changes to Koha are still in the QA process,
+and as a result of this they might be changed before they make it into a stable
+version of Koha. Applying these patches/changes to a production system is the
+responsibility of the library or other organization running the server.
+
+Here are details of the patches in the waiting-branch and the Koha-patches they
+rely on:
+
+=head2 Koha bug 24239 - Let the ILL module set ad hoc hard due dates
+
+This adds a new database field illrequests.date_due. Two sets of changes to
+koha-illbackend-libris rely on this:
+
+=head3 Add configuration for choosing due date period setting
+
+This is one patch that can be found in PR 112: L<https://github.com/Libriotech/koha-illbackend-libris/pull/112>
+
+=over 4
+
+=item * Add configuration for choosing due date period setting
+
+=back
+
+=head3 Add support for renewals
+
+This is a set of patches found in PR 114: L<https://github.com/Libriotech/koha-illbackend-libris/pull/114>
+
+=over 4
+
+=item * Add support for renewals
+
+=item * Make renew respect due_date_period configuration
+
+=item * Fix illrequestattributes type due_date_guar/max not updating at renew
+
+=item * Fix due date not saving both guar and max values
+
+=item * Format illrequest.date_due and due_date_guar/max due date
+
+=item * Add missing store() when saving date_due
+
+=back
+
+=head2 Koha bug 22321 - Make it possible to edit illrequests.borrowernumber
+
+One change to koha-illbackend-libris relies on this Koha enhancement.
+
+=head3 Don't update borrowernumber if old illrequest exists
+
+It is found in PR 115: L<https://github.com/Libriotech/koha-illbackend-libris/pull/115>:
+
+=over 4
+
+=item * Don't update borrowernumber if old illrequest exists
+
+=back
+
+=head2 Following up
+
+As the Koha-changes listed above make it into stable versions of Koha (in their
+present form, or with changes from the QA process), the related changes to
+koha-illbackend-libris will be moved from the "waiting" branch to the "master"
+branch, so they will be available to libraries runing Koha and koha-illbackend-libris
+"out of the box".
 
 =head1 AUTHOR
 
