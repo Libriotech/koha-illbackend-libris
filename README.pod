@@ -4,6 +4,16 @@
 
 Koha ILL Backend for Libris ILL (used in Sweden).
 
+=head1 DEVELOPMENT BRANCH!
+
+You are now looking at the "waiting" branch of koha-illbackend-libris. This
+branch contains changes that rely on changes to Koha that are not yet in a
+stable version of Koha.
+
+This development branch will not work without the related changes to Koha!
+
+See the section "DEVELOPMENT BRANCH" of the README in the master branch for details.
+
 =head1 DOCUMENTATION
 
 The official documentation of the Libris ILL API is available here:
