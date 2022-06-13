@@ -27,7 +27,7 @@ my $orig_data = get_data( "illrequests/__sigil__/$orderid" );
 say Dumper $orig_data;
 
 # FIXME Pick out the timestamp
-my $timestamp = $orig_data->{'ill_requests'}->[0]->{'last_modified'};
+my $timestamp = $orig_data->{ 'ill_requests' }->[0]->{ 'last_modified' };
 say Dumper $timestamp;
 die unless $timestamp;
 
@@ -41,7 +41,7 @@ $ua->agent("Koha ILL");
 my $url = "http://iller.libris.kb.se/librisfjarrlan/api/illrequests/Hig/$orderid";
 say "POSTing to $url";
 my $request = HTTP::Request->new( 'POST', $url );
-$request->header( 'api-key' => $ill_config->{'libris_key'} );
+$request->header( 'api-key' => $ill_config->{ 'libris_key' } );
 $request->header( 'Content-Type' => 'application/x-www-form-urlencoded' );
 $request->content( "action=response&timestamp=$timestamp&response_id=2&added_response=Test&may_reserve=0" );
 
@@ -68,8 +68,8 @@ sub get_data {
     my ( $fragment ) = @_;
 
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
-    my $sigil     = $ill_config->{'libris_sigil'};
-    my $libriskey = $ill_config->{'libris_key'};
+    my $sigil     = $ill_config->{ 'libris_sigil' };
+    my $libriskey = $ill_config->{ 'libris_key' };
 
     # Create a user agent object
     my $ua = LWP::UserAgent->new;

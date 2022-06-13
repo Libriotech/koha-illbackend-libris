@@ -778,7 +778,7 @@ sub receive {
 
             ## This is an article/copy
 
-            if ( $ill_config->{'close_article_request_on_receive'} && $ill_config->{'close_article_request_on_receive'} == 1 ) {
+            if ( $ill_config->{ 'close_article_request_on_receive' } && $ill_config->{ 'close_article_request_on_receive' } == 1 ) {
                 # Mark the request as "done"
                 $request->status( 'IN_AVSL' );
                 $request->store;
@@ -1109,8 +1109,8 @@ sub get_data {
     my ( $ill_config, $fragment ) = @_;
 
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
-    my $sigil     = $ill_config->{'libris_sigil'};
-    my $libriskey = $ill_config->{'libris_key'};
+    my $sigil     = $ill_config->{ 'libris_sigil' };
+    my $libriskey = $ill_config->{ 'libris_key' };
 
     # Create a user agent object
     my $ua = LWP::UserAgent->new;
@@ -1231,7 +1231,7 @@ sub userid2borrower {
         my @cond;
         my @needles;
         # Build the WHERE part of the query
-        foreach my $attr ( @{ $ill_config->{'patron_id_attributes'} } ) {
+        foreach my $attr ( @{ $ill_config->{ 'patron_id_attributes' } } ) {
             push @cond, "(code = '$attr' AND attribute = ?)";
             push @needles, $user_id;
         }
@@ -1468,8 +1468,8 @@ sub _update_libris {
     my $url = "http://iller.libris.kb.se/librisfjarrlan/api/illrequests/$sigil/$orderid";
     warn "POSTing to $url";
     my $req = HTTP::Request->new( 'POST', $url );
-    warn "*** libris_key: " . $ill_config->{'libris_key'};
-    $req->header( 'api-key' => $ill_config->{'libris_key'} );
+    warn "*** libris_key: " . $ill_config->{ 'libris_key' };
+    $req->header( 'api-key' => $ill_config->{ 'libris_key' } );
     $req->header( 'Content-Type' => 'application/x-www-form-urlencoded' );
     $req->content( "action=$action&timestamp=$timestamp$extra_content" );
 
@@ -1509,8 +1509,8 @@ sub _get_data_from_libris {
     my ( $ill_config, $fragment ) = @_;
 
     my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
-    my $sigil     = $ill_config->{'libris_sigil'};
-    my $libriskey = $ill_config->{'libris_key'};
+    my $sigil     = $ill_config->{ 'libris_sigil' };
+    my $libriskey = $ill_config->{ 'libris_key' };
 
     # Create a user agent object
     my $ua = LWP::UserAgent->new;
