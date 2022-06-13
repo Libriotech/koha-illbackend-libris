@@ -44,8 +44,6 @@ or borrowernumber.
 
 =item * 2021-22-02: patron_id_attributes (optional)
 
-=item * 2022-01-31: item_level_holds (optional, default: off)
-
 =item * 2022-04-19: patron_id_field_alt (optional)
 
 =item * 2022-05-02: item_level_holds (optional, default: off)
