@@ -148,6 +148,11 @@ is also added, and a hold is placed on the record for the requesting patron. If
 this variable is set to 0 (or not set at all), the hold will be on the record
 level. If this variable is set to 1, the hold will be an item level hold.
 
+=item * B<reminders> - This is a complex config option that specified when reminders
+should be sent out by the F<cron/reminder_notice.pl> script. I can specify the
+number of days to wait and the corresponding letter code to send, for both "loans"
+and "copies". See the example below for how to set this up.
+
 =back
 
 Example:
