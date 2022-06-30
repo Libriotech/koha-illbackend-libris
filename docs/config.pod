@@ -42,8 +42,6 @@ IN_AVSL is probably the one you want to hide.
 
 (ILLHiddenRequestStatuses was added in version 20.11.00, bug 23391.)
 
-=back
-
 =head2 koha-conf.xml
 
 In this file you need to make sure you have set up a section called 
