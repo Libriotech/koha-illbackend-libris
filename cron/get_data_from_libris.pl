@@ -61,7 +61,7 @@ if ( $libris_sigil ) {
     # Check for a complete ILL config 
     foreach my $key ( qw( libris_sigil libris_key unknown_patron unknown_biblio ) ) {
         unless ( $ill_config->{ $key } ) {
-            die "You need to define '$key' in koha-conf.xml! See 'docs/config.pod' for details.\n"
+            die "You need to define '$key' in the YAML config-file! See 'docs/config.pod' for details.\n"
         }
     }
 
