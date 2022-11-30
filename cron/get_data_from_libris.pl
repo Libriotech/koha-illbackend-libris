@@ -49,6 +49,7 @@ my ( $libris_sigil, $mode, $start_date, $end_date, $limit, $refresh, $refresh_al
 # Get the path to, and read in, the Libris ILL config file
 my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
 my $ill_config = LoadFile( $ill_config_file );
+say Dumper $ill_config if $debug;
 
 # $libris_sigil will only be set if we are using $mode. If we are doing a refresh,
 # it will not be set.
