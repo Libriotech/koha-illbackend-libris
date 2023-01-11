@@ -85,6 +85,11 @@ and as a result of this they might be changed before they make it into a stable
 version of Koha. Applying these patches/changes to a production system is the
 responsibility of the library or other organization running the server.
 
+B<(NOTE: Both bugs described below have been incorporated into Koha version
+22.11.00. The changes to koha-illbackend-libris that rely on these will be
+merged into the master branch some time after 22.11 is considered stabe
+enough for use in production.)>
+
 Here are details of the patches in the waiting-branch and the Koha-patches they
 rely on:
 
