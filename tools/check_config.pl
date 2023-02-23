@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+# TODO Tip about:
+# INSERT INTO borrowers SELECT * FROM deletedborrowers WHERE borrowernumber = 12886;
+# DELETE FROM deletedborrowers WHERE borrowernumber = 12886;
+
 use Modern::Perl;
 use YAML::Syck qw( LoadFile );
 use Data::Dumper;
