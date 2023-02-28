@@ -828,19 +828,22 @@ sub receive {
             },
         );
 
-        # Prepare SMS
-        my $sms =  C4::Letters::GetPreparedLetter (
-            module => 'circulation',
-            letter_code => $letter_code,
-            message_transport_type => 'sms',
-            branchcode => $patron->branchcode,
-            lang => $patron->lang,
-            tables => {
-                'biblio', $item->biblionumber,
-                'biblioitems', $item->biblionumber,
-                'borrowers', $patron->borrowernumber,
-            },
-        );
+        # Prepare SMS, if SMS is enabled
+        my $sms;
+        if ( C4::Context->preference( 'SMSSendDriver' ) != '' ) {
+            $sms =  C4::Letters::GetPreparedLetter (
+                module => 'circulation',
+                letter_code => $letter_code,
+                message_transport_type => 'sms',
+                branchcode => $patron->branchcode,
+                lang => $patron->lang,
+                tables => {
+                    'biblio', $item->biblionumber,
+                    'biblioitems', $item->biblionumber,
+                    'borrowers', $patron->borrowernumber,
+                },
+            );
+        }
 
         # Prepare charge types
         my $ill_charge_types =

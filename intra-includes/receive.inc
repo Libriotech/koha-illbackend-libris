@@ -105,24 +105,26 @@
            </li>
         </ol>
     </fieldset>
-    <fieldset class="rows">
-        <legend>Message - SMS</legend>
-        <ol>
-            <li class="sms_title">
-                <label class="sms_title">Title:</label>
-                <input type="text" name="sms_title" id="sms_title" value="[% whole.sms.title %]" />
-           </li>
-            <li class="sms_content">
-                <label class="sms_content">Message:</label>
-                <textarea name="sms_content" id="sms_content" rows="10" cols="50">[% whole.sms.content %]</textarea>
-           </li>
-           <li class="send_sms">
-                <label class="send_sms">Send message:</label>
-                <input type="radio" name="send_sms" value="0" checked> Nei
-                <input type="radio" name="send_sms" value="1"> Ja
-           </li>
-        </ol>
-    </fieldset>
+    [% IF Koha.Preference('SMSSendDriver') %]
+        <fieldset class="rows">
+            <legend>Message - SMS</legend>
+            <ol>
+                <li class="sms_title">
+                    <label class="sms_title">Title:</label>
+                    <input type="text" name="sms_title" id="sms_title" value="[% whole.sms.title %]" />
+               </li>
+                <li class="sms_content">
+                    <label class="sms_content">Message:</label>
+                    <textarea name="sms_content" id="sms_content" rows="10" cols="50">[% whole.sms.content %]</textarea>
+               </li>
+               <li class="send_sms">
+                    <label class="send_sms">Send message:</label>
+                    <input type="radio" name="send_sms" value="0" checked> Nei
+                    <input type="radio" name="send_sms" value="1"> Ja
+               </li>
+            </ol>
+        </fieldset>
+    [% END %]
     <fieldset class="rows">
         <legend>Streckkod</legend>
         <ol>
