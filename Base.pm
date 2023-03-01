@@ -830,7 +830,7 @@ sub receive {
 
         # Prepare SMS, if SMS is enabled
         my $sms;
-        if ( C4::Context->preference( 'SMSSendDriver' ) != '' ) {
+        if ( C4::Context->preference( 'SMSSendDriver' ) ) {
             $sms =  C4::Letters::GetPreparedLetter (
                 module => 'circulation',
                 letter_code => $letter_code,
