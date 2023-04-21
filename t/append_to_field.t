@@ -9,6 +9,7 @@ Tests for Koha::Illbackends::Libris::Base::_append_to_field
 =cut
 
 use Modern::Perl;
+use MARC::Record;
 
 use Test::More tests => 3;
 use lib ".";
