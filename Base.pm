@@ -1074,6 +1074,7 @@ sub get_record_from_request {
 
     # Create a new record
     my $record = MARC::Record->new();
+    $record->encoding( 'UTF-8' );
 
     my $f001 = MARC::Field->new( '001', $req->{ 'bib_id' } );
     $record->insert_fields_ordered( $f001 );
