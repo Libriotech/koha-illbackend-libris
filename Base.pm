@@ -601,20 +601,27 @@ sub close {
     # (There should only be one item, but we do a loop to be on the safe side)
     my $ill_closed_itemtype = $ill_config->{ 'ill_closed_itemtype' };
     my $items = Koha::Items->search({ biblionumber => $request->biblio_id });
+    my $all_deleted = 1;
     while ( my $item = $items->next ) {
-        # Change the itemtype to something that says e.g. "Closed ILL"
-        $item->itype( $ill_closed_itemtype );
-        # Set the item to "not for loan"
-        $item->notforloan( 1 );
-        # Remove the barcode (we might ILL the same item with the same barcode later)
-        $item->barcode( undef );
-        # Save the changes
-        $item->store;
-        # Delete the item
-        $item->delete;
+        if ($item->itype eq $ill_config->{ 'ill_itemtype' }) {
+            # Change the itemtype to something that says e.g. "Closed ILL"
+            $item->itype( $ill_closed_itemtype );
+            # Set the item to "not for loan"
+            $item->notforloan( 1 );
+            # Remove the barcode (we might ILL the same item with the same barcode later)
+            $item->barcode( undef );
+            # Save the changes
+            $item->store;
+            # Delete the item
+            $item->delete;
+        } else {
+            $all_deleted = 0;
+        }
     }
     # Delete the record
-    my $error = DelBiblio( $request->biblio_id );
+    if ($all_deleted) {
+        my $error = C4::Biblio::DelBiblio( $request->biblio_id );
+    }
 
     # Update the illrequest
     # The status given to requests here should result in the requests being hidden
