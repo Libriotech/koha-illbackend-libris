@@ -38,7 +38,7 @@ my $ua = LWP::UserAgent->new;
 $ua->agent("Koha ILL");
 
 # Create a request
-my $url = "http://iller.libris.kb.se/librisfjarrlan/api/illrequests/Hig/$orderid";
+my $url = "https://iller.libris.kb.se/librisfjarrlan/api/illrequests/Hig/$orderid";
 say "POSTing to $url";
 my $request = HTTP::Request->new( 'POST', $url );
 $request->header( 'api-key' => $ill_config->{ 'libris_key' } );
@@ -67,7 +67,7 @@ sub get_data {
 
     my ( $fragment ) = @_;
 
-    my $base_url  = 'http://iller.libris.kb.se/librisfjarrlan/api';
+    my $base_url  = 'https://iller.libris.kb.se/librisfjarrlan/api';
     my $sigil     = $ill_config->{ 'libris_sigil' };
     my $libriskey = $ill_config->{ 'libris_key' };
 

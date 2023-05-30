@@ -7,7 +7,7 @@ Koha ILL Backend for Libris ILL (used in Sweden).
 =head1 DOCUMENTATION
 
 The official documentation of the Libris ILL API is available here:
-L<http://iller.libris.kb.se/librisfjarrlan/api/doc>
+L<https://iller.libris.kb.se/librisfjarrlan/api/doc>
 
 See the "docs" directory for more documentation on this ILL backend.
 
