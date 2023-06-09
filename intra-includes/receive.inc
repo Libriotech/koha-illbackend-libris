@@ -58,11 +58,11 @@
         <ol>
             <li class="due_date_guar">
                 <label class="due_date_guar">Lånetid, garanterad:</label>
-                <input type="text" name="due_date_guar" id="due_date_guar" value="[% whole.due_date_guar %]" />
+                <input type="text" name="due_date_guar" id="due_date_guar" class="noEnterSubmit flatpickr" value="[% whole.due_date_guar %]" />
            </li>
             <li class="due_date_max">
                 <label class="due_date_max">Lånetid, max:</label>
-                <input type="text" name="due_date_max" id="due_date_max" value="[% whole.due_date_max %]" />
+                <input type="text" name="due_date_max" id="due_date_max" class="noEnterSubmit flatpickr" value="[% whole.due_date_max %]" />
            </li>
         </ol>
     </fieldset>
