@@ -1445,7 +1445,7 @@ sub _save_due_date {
     if ( $due_date_var and defined $due_date ) {
         # format due date
         if ( ref( $due_date ) ne 'DateTime' ) {
-            $due_date = dt_from_string( $due_date );
+            $due_date = dt_from_string( "$due_date 23:59" );
         }
 
         my $prev_due_date = Koha::Illrequestattributes->find({
