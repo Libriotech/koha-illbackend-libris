@@ -1147,12 +1147,12 @@ sub get_data {
     }
 
     unless ( $json ) {
-        die "No JSON!\n";
+        warn "No JSON!\n";
     }
 
     my $data = decode_json( $json );
     if ( $data->{'count'} == 0 ) {
-        die "No data!\n";
+        warn "No data!\n";
     }
 
     # say Dumper $data if $debug;
