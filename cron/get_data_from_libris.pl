@@ -90,6 +90,7 @@ if ( $refresh || $refresh_all ) {
         say "Going to refresh request with illrequest_id=", $req->illrequest_id;
         # Find the sigil of the library that requested the ILL this is stoed as
         # ILL request attribute "requesting_library"
+        next unless $req->illrequestattributes->find({ type => 'requesting_library' });
         my $sigil = $req->illrequestattributes->find({ type => 'requesting_library' })->value();
         # Use this to set the active sigil and key in the config
         $ill_config->{ 'libris_sigil' } = $sigil;
@@ -130,6 +131,8 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         my $old_stat = Koha::Illrequests->find({ orderid => $req->{'lf_number'} })->status;
         next REQUEST if ( $old_stat && $old_stat eq 'IN_UTL' || $old_stat eq 'IN_RET' || $old_stat eq 'IN_AVSL' );
     }
+
+    next REQUEST unless $req->{'request_id'};
 
 ## Output details about the request
 
