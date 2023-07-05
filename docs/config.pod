@@ -180,6 +180,9 @@ Example:
   close_article_request_on_receive: 0
   patron_id_field: userid
   patron_id_field_alt: borrowernumber
+  patron_id_attributes:
+    - userid2
+    - userid3
   recordid_limit: 25
   subfields_for_942:
     n: 1
