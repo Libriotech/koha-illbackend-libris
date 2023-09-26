@@ -11,6 +11,38 @@ L<https://iller.libris.kb.se/librisfjarrlan/api/doc>
 
 See the "docs" directory for more documentation on this ILL backend.
 
+=head1 PROBLEM WITH SENDING MESSAGES IN KOHA 23.05.00,22.11.06,22.05.13 AND NEWER
+
+Recent versions of Koha have changed how messages are enqued, which means it is
+no longer possible to use the Libris backend to send out messages when receiving
+ILLs. In practice, this means that if you choose to send either email or SMS
+when an item is received, you will get a "500 Internal Server Error", and no
+messages are queued.
+
+This problem is present in the following versions of Koha, and in newer minor
+versions of the affected major versions (so e.g. 22.11.06, 22.11.07, 22.11.08
+etc are affected):
+
+=over 4
+
+=item * 23.05.00
+
+=item * 22.11.06
+
+=item * 22.05.13
+
+=back
+
+A fix has been made in the git branch called B<fix-enqueue>, so if your Koha is
+affected by this problem, do not use the code from the B<master> branch, but
+use the B<fix-enqueue> branch: 
+
+  $ git checkout fix-enqueue
+
+The same fix will be applied to the master branch in due time, but it is
+considered to be too early yet, to avoid problems for sites that run versions of
+Koha that are not yet affected.
+
 =head1 MAJOR CHANGES
 
 =over 4
