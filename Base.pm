@@ -765,7 +765,7 @@ sub receive {
             }
 
             # Store date_received
-            my $date_received = Koha::Extended_Attributes->find({
+            my $date_received = Koha::Illrequestattributes->find({
                 illrequest_id => $request->illrequest_id,
                 type          => 'date_received',
             });
@@ -1449,7 +1449,7 @@ sub _save_due_date {
             $due_date = dt_from_string( "$due_date 23:59" );
         }
 
-        my $prev_due_date = Koha::Extended_Attributes->find({
+        my $prev_due_date = Koha::Illrequestattributes->find({
             illrequest_id => $request->illrequest_id,
             type          => $due_date_var,
         });
@@ -1629,7 +1629,7 @@ warn Dumper $params;
         $request->notesstaff(     );
         $request->backend(        $params->{other}->{backend} );
         $request->store;
-        # ...Populate Extended_Attributes
+        # ...Populate Illrequestattribute
         while ( my ( $type, $value ) = each %{$params->{other}->{attr}} ) {
             Koha::Illrequestattribute->new({
                 illrequest_id => $request->illrequest_id,
@@ -1804,7 +1804,7 @@ sub renew {
     my ( $self, $params ) = @_;
     my $stage = $params->{other}->{stage};
 
-    # Turn Extended_Attributes into a plain hashref
+    # Turn extended_attributes into a plain hashref
     my $value = {};
     my $attributes = $params->{request}->extended_attributes;
     foreach my $attr (@{$attributes->as_list}) {
@@ -1953,7 +1953,7 @@ Illrequest.  $other may be supplied using templates.
 sub cancel {
     # -> request an already 'confirm'ed ILL order be cancelled
     my ( $self, $params ) = @_;
-    # Turn Extended_Attributes into a plain hashref
+    # Turn extended_attributes into a plain hashref
     my $value = {};
     my $attributes = $params->{request}->extended_attributes;
     foreach my $attr (@{$attributes->as_list}) {
