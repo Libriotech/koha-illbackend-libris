@@ -1,5 +1,17 @@
 #!/usr/bin/perl
 
+# Use a lockfile to make sure only one instance of this script is run at a time,
+# per instance. The lockfile will be created in the directory pointed to by
+# the "lockdir" setting in koha-conf.xml.
+use Koha::Script -cron;
+use Try::Tiny;
+my $script = Koha::Script->new({ script => $0 });
+try {
+    $script->lock_exec;
+} catch {
+    die "$0 is already running\n";
+};
+
 use Modern::Perl;
 use YAML::Syck;
 use Data::Dumper;
