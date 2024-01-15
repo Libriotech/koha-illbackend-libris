@@ -1442,7 +1442,7 @@ sub respond {
 sub _save_due_date {
     my ( $request, $ill_config, $due_date_var, $due_date ) = @_;
 
-    if ( $due_date_var and defined $due_date ) {
+    if ( $due_date_var and $due_date && $due_date ne '' ) {
         # format due date
         if ( ref( $due_date ) ne 'DateTime' ) {
             $due_date = dt_from_string( "$due_date 23:59" );
