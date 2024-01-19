@@ -138,7 +138,7 @@ illrequestattributes store.
 
 sub metadata {
     my ( $self, $request ) = @_;
-    my $attrs = $request->illrequestattributes;
+    my $attrs = $request->extended_attributes;
 
     my $return;
     $return->{'Title'}
@@ -640,8 +640,8 @@ sub close {
         user_id
     );
     foreach my $field ( @anon_fields ) {
-        if ( $request->illrequestattributes->find({ 'type' => $field }) ) {
-            $request->illrequestattributes->find({ 'type' => $field })->update({ 'value' => '' });
+        if ( $request->extended_attributes->find({ 'type' => $field }) ) {
+            $request->extended_attributes->find({ 'type' => $field })->update({ 'value' => '' });
         }
     }
 
@@ -675,9 +675,9 @@ sub receive {
         # Possibly update parts of the request and the attributes
         $request->medium(         $params->{ 'other' }->{ 'type' } );
         $request->borrowernumber( $params->{ 'other' }->{ 'borrowernumber' } );
-        $request->illrequestattributes->find({ 'type' => 'media_type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
-        if ( $request->illrequestattributes->find({ type => 'type' }) && $request->illrequestattributes->find({ type => 'type' })->value ) {
-            $request->illrequestattributes->find({ 'type' => 'type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+        $request->extended_attributes->find({ 'type' => 'media_type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
+        if ( $request->extended_attributes->find({ type => 'type' }) && $request->extended_attributes->find({ type => 'type' })->value ) {
+            $request->extended_attributes->find({ 'type' => 'type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
         } else {
             Koha::Illrequestattribute->new({
                 illrequest_id => $request->illrequest_id,
@@ -685,7 +685,7 @@ sub receive {
                 value         => $params->{ 'other' }->{ 'type' },
             })->store;
         }
-        $request->illrequestattributes->find({ 'type' => 'active_library' })->update({ 'value' => $params->{ 'other' }->{ 'active_library' } });
+        $request->extended_attributes->find({ 'type' => 'active_library' })->update({ 'value' => $params->{ 'other' }->{ 'active_library' } });
         $request->store;
 
         # Charge patron, if requested
@@ -734,7 +734,7 @@ sub receive {
         }
 
         # Change the status of the request
-        if ( $request->illrequestattributes->find({ type => 'media_type' })->value eq 'Lån' ) {
+        if ( $request->extended_attributes->find({ type => 'media_type' })->value eq 'Lån' ) {
 
             ## This is a loan
 
@@ -816,7 +816,7 @@ sub receive {
         my $item = Koha::Items->find({ biblionumber => $request->biblio_id });
 
         my $letter_code = 'ILL_ANK_LAN';
-        if ( $request->illrequestattributes->find({type => 'media_type'}) && $request->illrequestattributes->find({type => 'media_type'})->value eq 'Kopia' ) {
+        if ( $request->extended_attributes->find({type => 'media_type'}) && $request->extended_attributes->find({type => 'media_type'})->value eq 'Kopia' ) {
             $letter_code = 'ILL_ANK_KOPIA';
         }
 
@@ -870,11 +870,11 @@ sub receive {
             patron         => $patron,
             categorycode   => $patron->categorycode,
             ill_charge_types => $ill_charge_types,
-            title     => $request->illrequestattributes->find({ type => 'title' })->value,
-            author    => $request->illrequestattributes->find({ type => 'author' })->value,
+            title     => $request->extended_attributes->find({ type => 'title' })->value,
+            author    => $request->extended_attributes->find({ type => 'author' })->value,
             lf_number => $request->orderid,
-            type      => $request->illrequestattributes->find({ type => 'media_type' })->value,
-            active_library => => $request->illrequestattributes->find({ type => 'active_library' })->value,
+            type      => $request->extended_attributes->find({ type => 'media_type' })->value,
+            active_library => => $request->extended_attributes->find({ type => 'active_library' })->value,
             letter_code => $letter_code,
             email     => $email,
             sms       => $sms,
@@ -983,7 +983,7 @@ sub upsert_record {
         # importing and adding the record, and creating the ILL request in the
         # database. So we check for the number and bail out loudly if we are above
         # it.
-        my $count_recordid = count_recordid( $libris_req->{ 'bib_id' } );
+        my $count_recordid = count_recordid( $libris_req->{ 'bib_id' }, $ill_config );
         say "Found $count_recordid occurrences of recordid=" . $libris_req->{ 'bib_id' };
         my $recordid_limit = 100; # Default
         if ( defined $ill_config->{ 'recordid_limit' } ) {
@@ -1287,7 +1287,8 @@ L<https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=25603>
 
 sub recordid2biblionumber {
 
-    my ( $recordid ) = @_;
+    my ( $recordid, $config ) = @_;
+
 
     my $dbh = C4::Context->dbh;
     my $hits = $dbh->selectrow_hashref( 'SELECT biblionumber FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $recordid ) );
@@ -1310,7 +1311,7 @@ See above for notes on the use of ExtractValue.
 
 sub count_recordid {
 
-    my ( $recordid ) = @_;
+    my ( $recordid, $config ) = @_;
 
     my $dbh = C4::Context->dbh;
     my $hits = $dbh->selectrow_hashref( 'SELECT COUNT(*) AS count FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $recordid ) );
@@ -1429,9 +1430,9 @@ sub respond {
             stage   => 'form',
             next    => 'illview',
             illrequest_id => $request->illrequest_id,
-            title     => $request->illrequestattributes->find({ type => 'title' })->value,
-            author    => $request->illrequestattributes->find({ type => 'author' })->value,
-            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value
+            title     => $request->extended_attributes->find({ type => 'title' })->value,
+            author    => $request->extended_attributes->find({ type => 'author' })->value,
+            lf_number => $request->extended_attributes->find({ type => 'lf_number' })->value
             # value   => $request_details,
         };
 
@@ -1478,7 +1479,7 @@ sub _update_libris {
     warn "*** orderid: $orderid";
 
     # Figure out the sigil that the current request is connected to
-    my $sigil = $request->illrequestattributes->find({ type => 'requesting_library' })->value();
+    my $sigil = $request->extended_attributes->find({ type => 'requesting_library' })->value();
     warn "Handling request on behalf of $sigil";
 
     # Get the path to, and read in, the Libris ILL config file
@@ -1532,7 +1533,7 @@ sub _update_libris {
         # Update the request in the database
         # FIXME Create a proper sub for updating data
         $request->status( $direction . '_' . translate_status( $new_data->{'ill_requests'}->[0]->{'status'} ) );
-        $request->illrequestattributes->find({ type => 'last_modified' })->value( $new_data->{'ill_requests'}->[0]->{'last_modified'} );
+        $request->extended_attributes->find({ type => 'last_modified' })->value( $new_data->{'ill_requests'}->[0]->{'last_modified'} );
         $request->store;
 
     } else {
@@ -1628,7 +1629,7 @@ warn Dumper $params;
         $request->notesstaff(     );
         $request->backend(        $params->{other}->{backend} );
         $request->store;
-        # ...Populate Illrequestattributes
+        # ...Populate Illrequestattribute
         while ( my ( $type, $value ) = each %{$params->{other}->{attr}} ) {
             Koha::Illrequestattribute->new({
                 illrequest_id => $request->illrequest_id,
@@ -1664,7 +1665,7 @@ warn Dumper $params;
         $request->notesstaff(     $params->{other}->{notesstaff} );
         $request->backend(        'Libris' );
         $request->store;
-        # ...Populate Illrequestattributes
+        # ...Populate Extended_Attributes
         # Create a mapping between what the fields in the form are called and
         # what we want to save in the database. This also specifies which fields
         # should be saved as attributes.
@@ -1803,9 +1804,9 @@ sub renew {
     my ( $self, $params ) = @_;
     my $stage = $params->{other}->{stage};
 
-    # Turn Illrequestattributes into a plain hashref
+    # Turn extended_attributes into a plain hashref
     my $value = {};
-    my $attributes = $params->{request}->illrequestattributes;
+    my $attributes = $params->{request}->extended_attributes;
     foreach my $attr (@{$attributes->as_list}) {
         $value->{$attr->type} = $attr->value;
     };
@@ -1926,11 +1927,11 @@ sub renew {
             patron         => $patron,
             categorycode   => $patron->categorycode,
             ill_charge_types => $ill_charge_types,
-            title     => $request->illrequestattributes->find({ type => 'title' })->value,
-            author    => $request->illrequestattributes->find({ type => 'author' })->value,
-            lf_number => $request->illrequestattributes->find({ type => 'lf_number' })->value,
-            type      => $request->illrequestattributes->find({ type => 'media_type' })->value,
-            active_library => => $request->illrequestattributes->find({ type => 'active_library' })->value,
+            title     => $request->extended_attributes->find({ type => 'title' })->value,
+            author    => $request->extended_attributes->find({ type => 'author' })->value,
+            lf_number => $request->extended_attributes->find({ type => 'lf_number' })->value,
+            type      => $request->extended_attributes->find({ type => 'media_type' })->value,
+            active_library => => $request->extended_attributes->find({ type => 'active_library' })->value,
         };
     }
 }
@@ -1952,9 +1953,9 @@ Illrequest.  $other may be supplied using templates.
 sub cancel {
     # -> request an already 'confirm'ed ILL order be cancelled
     my ( $self, $params ) = @_;
-    # Turn Illrequestattributes into a plain hashref
+    # Turn extended_attributes into a plain hashref
     my $value = {};
-    my $attributes = $params->{request}->illrequestattributes;
+    my $attributes = $params->{request}->extended_attributes;
     foreach my $attr (@{$attributes->as_list}) {
         $value->{$attr->type} = $attr->value;
     };
@@ -2004,8 +2005,8 @@ sub status {
     my ( $error, $status, $message ) = (0, '', '');
     if ( !$stage || $stage eq 'init' ) {
         # Generate status result
-        # Turn Illrequestattributes into a plain hashref
-        my $attributes = $params->{request}->illrequestattributes;
+        # Turn extended_attributes into a plain hashref
+        my $attributes = $params->{request}->extended_attributes;
         foreach my $attr (@{$attributes->as_list}) {
             $value->{$attr->type} = $attr->value;
         }

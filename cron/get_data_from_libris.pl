@@ -102,8 +102,8 @@ if ( $refresh || $refresh_all ) {
         say "Going to refresh request with illrequest_id=", $req->illrequest_id;
         # Find the sigil of the library that requested the ILL this is stoed as
         # ILL request attribute "requesting_library"
-        next unless $req->illrequestattributes->find({ type => 'requesting_library' });
-        my $sigil = $req->illrequestattributes->find({ type => 'requesting_library' })->value();
+        next unless $req->extended_attributes->find({ type => 'requesting_library' });
+        my $sigil = $req->extended_attributes->find({ type => 'requesting_library' })->value();
         # Use this to set the active sigil and key in the config
         $ill_config->{ 'libris_sigil' } = $sigil;
         $ill_config->{ 'libris_key' } = $ill_config->{ 'libraries' }->{ $sigil }->{ 'libris_key' };
@@ -385,7 +385,7 @@ sub insert_or_update_attributes {
 
     say "DEBUG: insert_or_update_attributes " . $req->{ 'lf_number' } if $debug;
 
-    my $a = $illrequest->illrequestattributes;
+    my $a = $illrequest->extended_attributes;
     while (my $attr = $a->next) {
 	$existing{$attr->type} = 0;
     }
@@ -448,7 +448,7 @@ sub insert_or_update_attribute {
     my ($illrequest, $attribute, $value) = @_;
 
 
-    my $existing = $illrequest->illrequestattributes->find(
+    my $existing = $illrequest->extended_attributes->find(
 	{
 	    illrequest_id => $illrequest->illrequest_id,
 	    type => $attribute
