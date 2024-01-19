@@ -37,6 +37,7 @@ use Koha::Patrons;
 use Koha::Item;
 use Koha::Items;
 use utf8;
+require Koha::SearchEngine::Search;
 
 =pod
 
@@ -1290,11 +1291,13 @@ sub recordid2biblionumber {
     my ( $recordid, $config ) = @_;
 
 
-    my $dbh = C4::Context->dbh;
-    my $hits = $dbh->selectrow_hashref( 'SELECT biblionumber FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $recordid ) );
-    my $biblionumber = $hits->{'biblionumber'};
+    my $engine = Koha::SearchEngine::Search->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
+    my ( $error, $results, $total_hits ) = $engine->simple_search_compat( 'Control-number='.$recordid, 0, 1 );
 
-    return $biblionumber;
+    if ($total_hits > 0) {
+        return $engine->extract_biblionumber( $results->[0] );
+    }
+    return undef;
 
 }
 
@@ -1313,11 +1316,10 @@ sub count_recordid {
 
     my ( $recordid, $config ) = @_;
 
-    my $dbh = C4::Context->dbh;
-    my $hits = $dbh->selectrow_hashref( 'SELECT COUNT(*) AS count FROM biblio_metadata WHERE ExtractValue( metadata,\'//controlfield[@tag="001"]\' ) = ?', undef, ( $recordid ) );
-    my $count = $hits->{'count'};
+    my $engine = Koha::SearchEngine::Search->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
+    my ( $error, $results, $total_hits ) = $engine->simple_search_compat( 'Control-number='.$recordid, 0, 0 );
 
-    return $count;
+    return $total_hits;
 
 }
 
