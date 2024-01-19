@@ -130,6 +130,23 @@ sub name {
     return "Libris";
 }
 
+=head3 capabilities
+
+Query for optional capabilities.
+
+The parameter $name is the name of the capability.
+
+The return value should be the subroutine that implements the capability, or
+false to indicate that capability is not implemented.
+
+=cut
+
+sub capabilities {
+    my $name = shift;
+
+    return 0;
+}
+
 =head3 metadata
 
 Return a hashref containing canonical values from the key/value
