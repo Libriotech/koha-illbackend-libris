@@ -82,6 +82,8 @@ or borrowernumber.
 
 =item * 2022-05-02: subfields_for_942 (optional)
 
+=item * 2024-02-13: item_homebranch_equals_ill_branch (optional)
+
 =back
 
 =head1 DEVELOPMENT BRANCH (waiting)

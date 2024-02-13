@@ -158,6 +158,13 @@ the due date/return date. Whether it is the guaranteed period or maximum loan pe
 that regulates the date of return can be decided in this configuration.
 Valid values are I<due_date_guar> and I<due_date_max>.
 
+=item * B<item_homebranch_equals_ill_branch> - Items are created when a new ILL
+request is added to Koha. If this variable is set to "1", the homebranch and
+holdingbranch of these items are set to the value of the B<ill_branch> config
+variable. If it is set to "0", or not set at all, the homebranch and holdingbranch
+are set to the library of the patron connected with the ILL request
+(from borrowers.branchcode).
+
 =back
 
 Example:
@@ -188,6 +195,7 @@ Example:
     n: 1
     x: y
   item_level_holds: 1
+  item_homebranch_equals_ill_branch: 1
   reminders:
     Lån:
       - days_after: 0

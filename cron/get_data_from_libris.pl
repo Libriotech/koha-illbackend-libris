@@ -251,8 +251,16 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
     }
 
     # Home branch of created items
-    my $homebranch = $borrower->branchcode;
-    my $holdingbranch = $borrower->branchcode;
+    my $homebranch;
+    my $holdingbranch;
+    if ( defined $ill_config->{ 'item_homebranch_equals_ill_branch' } && $ill_config->{ 'item_homebranch_equals_ill_branch' } == 1 ) {
+        $homebranch    = defined $ill_config->{ 'ill_branch' } ? $ill_config->{ 'ill_branch' } : $borrower->branchcode;
+        $holdingbranch = defined $ill_config->{ 'ill_branch' } ? $ill_config->{ 'ill_branch' } : $borrower->branchcode;
+    } else {
+        $homebranch    = $borrower->branchcode;
+        $holdingbranch = $borrower->branchcode;
+    }
+
     # We have an old request, so we update it
     if ( $old_illrequest ) {
         say "Found an existing request with illrequest_id = " . $old_illrequest->illrequest_id if $verbose;
