@@ -84,6 +84,8 @@ or borrowernumber.
 
 =item * 2024-02-13: item_homebranch_equals_ill_branch (optional)
 
+=item * 2024-03-27: close_article_request_on_receive (optional)
+
 =back
 
 =head1 DEVELOPMENT BRANCH (waiting)

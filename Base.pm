@@ -623,51 +623,70 @@ sub close {
         my $error = C4::Biblio::DelBiblio( $request->biblio_id );
     }
 
-    # Update the illrequest
-    # The status given to requests here should result in the requests being hidden
-    # from the regular view in the staff client
-    my $old_status_name = $sg->{ $request->status }->{ 'name' };
-    my $new_status_name = $sg->{ 'IN_AVSL' }->{ 'name' };
-    $request->status( 'IN_AVSL' );
-    # Anonymize (replace actual borrowernumber with that of anonymous patron)
-    my $anon = C4::Context->preference( 'AnonymousPatron' );
-    $request->borrowernumber( $anon );
-    # Save the changes
-    $request->store;
-    # Add a comment
-    my $comment = Koha::Illcomment->new({
-        illrequest_id  => $request->illrequest_id,
-        borrowernumber => $ill_config->{ 'libris_borrowernumber' },
-        comment        => "Status ändrad från $old_status_name till $new_status_name.",
-    });
-    $comment->store();
+    # Update or delete the illrequest
+    if ( $request->medium && $request->medium eq 'Kopia' && defined $ill_config->{ 'delete_article_request_on_close' } && $ill_config->{ 'delete_article_request_on_close' } == 1 ) {
 
-    # Ill request attributes that should be anonymized
-    my @anon_fields = qw(
-        end_user_library_card
-        end_user_address
-        end_user_approved_by
-        end_user_city
-        end_user_email
-        end_user_first_name
-        end_user_institution
-        end_user_institution_delivery
-        end_user_institution_phone
-        end_user_last_name
-        end_user_library_card
-        end_user_mobile
-        end_user_phone
-        end_user_user_id
-        end_user_zip_code
-        enduser_id
-        libris_enduser_request_id
-        user
-        user_id
-    );
-    foreach my $field ( @anon_fields ) {
-        if ( $request->extended_attributes->find({ 'type' => $field }) ) {
-            $request->extended_attributes->find({ 'type' => $field })->update({ 'value' => '' });
+        # Delete the request
+        $request->delete;
+
+        # Return to the list of ILLs
+        return {
+            error   => 0,
+            status  => '',
+            message => '',
+            method  => 'receive',
+            stage   => 'commit',
+            next    => 'illlist',
+        };
+
+    } else {
+
+        # The status given to requests here should result in the requests being hidden
+        # from the regular view in the staff client
+        my $old_status_name = $sg->{ $request->status }->{ 'name' };
+        my $new_status_name = $sg->{ 'IN_AVSL' }->{ 'name' };
+        $request->status( 'IN_AVSL' );
+        # Anonymize (replace actual borrowernumber with that of anonymous patron)
+        my $anon = C4::Context->preference( 'AnonymousPatron' );
+        $request->borrowernumber( $anon );
+        # Save the changes
+        $request->store;
+        # Add a comment
+        my $comment = Koha::Illcomment->new({
+            illrequest_id  => $request->illrequest_id,
+            borrowernumber => $ill_config->{ 'libris_borrowernumber' },
+            comment        => "Status ändrad från $old_status_name till $new_status_name.",
+        });
+        $comment->store();
+
+        # Ill request attributes that should be anonymized
+        my @anon_fields = qw(
+            end_user_library_card
+            end_user_address
+            end_user_approved_by
+            end_user_city
+            end_user_email
+            end_user_first_name
+            end_user_institution
+            end_user_institution_delivery
+            end_user_institution_phone
+            end_user_last_name
+            end_user_library_card
+            end_user_mobile
+            end_user_phone
+            end_user_user_id
+            end_user_zip_code
+            enduser_id
+            libris_enduser_request_id
+            user
+            user_id
+        );
+        foreach my $field ( @anon_fields ) {
+            if ( $request->extended_attributes->find({ 'type' => $field }) ) {
+                $request->extended_attributes->find({ 'type' => $field })->update({ 'value' => '' });
+            }
         }
+
     }
 
     # Return to illview

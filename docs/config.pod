@@ -165,6 +165,11 @@ variable. If it is set to "0", or not set at all, the homebranch and holdingbran
 are set to the library of the patron connected with the ILL request
 (from borrowers.branchcode).
 
+=item * B<delete_article_request_on_close> - If this is set to 1, the whole ILL
+request will be completely deleted when a request is closed. This applies to
+requests where illrequests.medium = "Kopia". NOTE: Resquests that have been
+deleted in this way are gone forever and can not be ressurected. Use with caution! 
+
 =back
 
 Example:
@@ -185,6 +190,7 @@ Example:
   ill_callnumber: Fjärrlån
   update_library_data: 0
   close_article_request_on_receive: 0
+  delete_article_request_on_close: 0
   patron_id_field: userid
   patron_id_field_alt: borrowernumber
   patron_id_attributes:
