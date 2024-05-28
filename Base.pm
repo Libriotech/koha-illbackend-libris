@@ -763,7 +763,7 @@ sub receive {
                 'title' => $params->{ 'other' }->{ 'email_title' },
                 'content' => $params->{ 'other' }->{ 'email_content' },
             };
-            C4::Message->enqueue($email, $patron->unblessed, 'email');
+            C4::Message->enqueue($email, $patron, 'email');
         }
 
         # Send an sms, if requested
@@ -774,7 +774,7 @@ sub receive {
                 'title' => $params->{ 'other' }->{ 'sms_title' },
                 'content' => $params->{ 'other' }->{ 'sms_content' },
             };
-            C4::Message->enqueue($sms, $patron->unblessed, 'sms');
+            C4::Message->enqueue($sms, $patron, 'sms');
         }
 
         # Change the status of the request
