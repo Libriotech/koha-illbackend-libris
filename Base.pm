@@ -875,6 +875,7 @@ sub receive {
                 'biblio', $item->biblionumber,
                 'biblioitems', $item->biblionumber,
                 'borrowers', $patron->borrowernumber,
+                'branches', $patron->branchcode,
             },
         );
 
@@ -891,6 +892,7 @@ sub receive {
                     'biblio', $item->biblionumber,
                     'biblioitems', $item->biblionumber,
                     'borrowers', $patron->borrowernumber,
+                    'branches', $patron->branchcode,
                 },
             );
         }
