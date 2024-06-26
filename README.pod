@@ -86,6 +86,8 @@ or borrowernumber.
 
 =item * 2024-03-27: delete_article_request_on_close (optional)
 
+=item * 2024-06-26: update_lastseen_for_articlecopies (optional)
+
 =back
 
 =head1 DEVELOPMENT BRANCH (waiting)

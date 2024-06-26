@@ -170,6 +170,12 @@ request will be completely deleted when a request is closed. This applies to
 requests where illrequests.medium = "Kopia". NOTE: Resquests that have been
 deleted in this way are gone forever and can not be ressurected. Use with caution! 
 
+=item * B<update_lastseen_for_articlecopies> - If a library is tracking the last
+activity of patrons, a patron might be actively requesting article copies thorugh
+ILL, and that activitiy will not be recorded anywhere. By enabling this config
+variable, the "lastseen" property of a patron will be updated when an article
+ILL is received for that patron.
+
 =back
 
 Example:

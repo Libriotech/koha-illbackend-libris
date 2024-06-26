@@ -828,6 +828,11 @@ sub receive {
 
             ## This is an article/copy
 
+            # Update the "lastseen" property of the patron
+            if ( $ill_config->{ 'update_lastseen_for_articlecopies' } && $ill_config->{ 'update_lastseen_for_articlecopies' } == 1 ) {
+                $patron->update_lastseen('article');
+            }
+
             if ( $ill_config->{ 'close_article_request_on_receive' } && $ill_config->{ 'close_article_request_on_receive' } == 1 ) {
                 # Mark the request as "done"
                 $request->status( 'IN_AVSL' );
