@@ -1943,10 +1943,12 @@ sub renew {
         })->next;
 
         # Add renew
-        C4::Circulation::AddRenewal(
-            $request->borrowernumber, $checkout->itemnumber,
-            $checkout->branchcode, $due_date
-        );
+        C4::Circulation::AddRenewal({
+            'borrowernumber' => $request->borrowernumber,
+            'itemnumber'     => $checkout->itemnumber,
+            'branch'         => $checkout->branchcode,
+            'datedue'        => $due_date
+        });
 
         # ...then return our result:
         return {
