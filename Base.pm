@@ -524,6 +524,20 @@ sub status_graph {
             name           => 'Inlån Utlånad',               # UI name of this status
             ui_method_name => 'Renew',                       # UI name of method leading
                                                              # to this status
+            needs_all => [
+                sub {
+                    my $r = shift;
+                    my $item     = Koha::Items->find( { biblionumber => $r->biblio_id } );
+                    my $checkout = Koha::Checkouts->search(
+                        {
+                            borrowernumber => $r->borrowernumber,
+                            itemnumber     => $item->itemnumber
+                        }
+                    )->next;
+
+                    return $checkout;
+                }
+                ],
             method         => 'renew',                       # method to this status
             next_actions   => [ 'IN_AVSL', 'IN_UTL_RENEW' ], # buttons to add to all
                                                              # requests with this status
