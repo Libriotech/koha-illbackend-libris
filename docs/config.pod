@@ -64,8 +64,9 @@ A config file in YAML format that should contain the following data:
 =over 4
 
 =item * B<libraries> - A hash of hashes, where the "Libris sigil" (The sigil or
-identifier used to identify the library in Libris.) acts as the key, and the
-following values should be present for each entry:
+identifier used to identify the library in Libris.) acts as the key. Please note
+that the sigil is case sensitive, so if the sigil is "Abc", "abc" will not work.
+The following values should be present for each entry:
 
 =over 4
 
