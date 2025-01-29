@@ -1056,6 +1056,12 @@ sub upsert_record {
         }
         # Now get the actual record
         $record = get_record_from_libris( $libris_req->{ 'bib_id' } );
+        # Usually, we should now have a record from Libris. But e.g. if this is an old
+        # request, the record might have been deleted. So we need to check, and create
+        # a minimal record if necessary.
+        unless ( $record ) {
+            $record = get_record_from_request( $libris_req );
+        }
     }
 
     # Make sure we have the default itemtype in 942$c
