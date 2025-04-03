@@ -13,7 +13,7 @@ $| = 1; # Don't buffer output
 use Koha::Checkouts;
 use Koha::DateUtils qw( dt_from_string );
 use Koha::Illrequests;
-use Koha::Illrequestattributes;
+use Koha::ILL::Request::Attributes;
 use Koha::Illbackends::Libris::Base;
 use Koha::Items;
 use Koha::Notice::Messages;
@@ -41,7 +41,7 @@ my $receiveds = Koha::Illrequests->search({
 my $now = DateTime->now;
 
 foreach my $received ( $receiveds->as_list ) {
-    my $type = Koha::Illrequestattributes->find({
+    my $type = Koha::ILL::Request::Attributes->find({
         illrequest_id => $received->illrequest_id,
         type => 'type'
     });
@@ -62,7 +62,7 @@ foreach my $received ( $receiveds->as_list ) {
 
     # When was the request received? Letters configured in $illconfig->{'reminders}
     # will be based on this date
-    my $date_received = Koha::Illrequestattributes->search({
+    my $date_received = Koha::ILL::Request::Attributes->search({
         illrequest_id => $received->illrequest_id,
         type => 'date_received'
     })->next;
@@ -72,7 +72,7 @@ foreach my $received ( $receiveds->as_list ) {
 
     # How many reminders have we sent so far? This will determine which letter
     # will be used.
-    my $reminder_count = Koha::Illrequestattributes->find({
+    my $reminder_count = Koha::ILL::Request::Attributes->find({
         illrequest_id => $received->illrequest_id,
         type => 'notified_reminder_count'
     });
@@ -137,17 +137,17 @@ foreach my $received ( $receiveds->as_list ) {
         }
     }
     if ( $sent_reminder ) {
-        my $notified_reminder_count = Koha::Illrequestattributes->find({
+        my $notified_reminder_count = Koha::ILL::Request::Attributes->find({
                 illrequest_id => $received->illrequest_id,
                 type => 'notified_reminder_count'
             });
         if ( $notified_reminder_count ) {
-            Koha::Illrequestattributes->find({
+            Koha::ILL::Request::Attributes->find({
                 illrequest_id => $received->illrequest_id,
                 type => 'notified_reminder_count'
             })->update({ value => ++$reminder_count })->store
         } else {
-            Koha::Illrequestattribute->new({
+            Koha::ILL::Request::Attribute->new({
                 illrequest_id => $received->illrequest_id,
                 type => 'notified_reminder_count',
                 value => ++$reminder_count
