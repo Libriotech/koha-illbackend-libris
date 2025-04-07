@@ -15,6 +15,7 @@
 [% ELSIF whole.stage == "form" %]
     <h3>Respond to incoming request number [% whole.illrequest_id %].</h3>
     <form method="POST" action="/cgi-bin/koha/ill/ill-requests.pl?method=respond&illrequest_id=[% whole.illrequest_id %]">
+    [% INCLUDE 'csrf-token.inc' %]
     <fieldset class="rows">
         <legend>Request:</legend>
         <ol>
