@@ -2,6 +2,7 @@
 <p><a href="/cgi-bin/koha/ill/ill-requests.pl">Back to existing requests</a>.</p>
 
 <form method="POST" action="/cgi-bin/koha/ill/ill-requests.pl?method=create">
+[% INCLUDE 'csrf-token.inc' %]
 <fieldset class="rows">
   <legend>Beskrivning</legend>
   <ol>

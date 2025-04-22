@@ -17,6 +17,7 @@
 [% ELSIF whole.stage == "form" %]
     <h3>Renew request number [% whole.illrequest_id %].</h3>
     <form method="POST" action="/cgi-bin/koha/ill/ill-requests.pl?method=renew&illrequest_id=[% whole.illrequest_id %]">
+    [% INCLUDE 'csrf-token.inc' %]
     <fieldset class="rows">
         <legend>Request details</legend>
         <ol>

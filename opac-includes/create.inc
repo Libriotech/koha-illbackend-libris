@@ -11,6 +11,7 @@
 [% IF whole.stage == "search_form" %]
     <h2>Search a dummy request</h2>
     <form class="validated" method="post" action="/cgi-bin/koha/opac-illrequests.pl">
+    [% INCLUDE 'csrf-token.inc' %]
         <input type="hidden" name="stage" value="[% whole.stage %]"/>
         <input type="hidden" name="method" value="[% whole.method %]"/>
         <input type="hidden" name="op" value="[% whole.method %]"/>
