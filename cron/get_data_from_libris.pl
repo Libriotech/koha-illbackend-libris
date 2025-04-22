@@ -475,7 +475,7 @@ sub insert_or_update_attribute {
 	    say "DEBUG: $attribute is null ignoring " if  $debug;
 	} else {
 	    say "DEBUG: inserting $attribute = ", $value if $debug;
-	    Koha::Illrequestattribute->new(
+	    Koha::ILL::Request::Attribute->new(
 		{
 		    illrequest_id => $illrequest->illrequest_id,
 		    type => $attribute,

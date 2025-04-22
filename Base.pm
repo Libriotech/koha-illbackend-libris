@@ -32,7 +32,7 @@ use C4::Letters;
 use C4::Message;
 use Koha::Account::DebitTypes;
 use Koha::DateUtils qw( dt_from_string );
-use Koha::Illrequestattribute;
+use Koha::ILL::Request::Attribute;
 use Koha::Patrons;
 use Koha::Item;
 use Koha::Items;
@@ -76,7 +76,7 @@ Illrequest.pm:
 where:
 
 - $REQUEST is the Illrequest object in Koha.  It's associated
-  Illrequestattributes can be accessed through the `illrequestattributes`
+  ILL::Request::Attributes can be accessed through the `illrequestattributes`
   method.
 - $OTHER is any further data, generally provided through templates .INCs
 
@@ -737,7 +737,7 @@ sub receive {
         if ( $request->extended_attributes->find({ type => 'type' }) && $request->extended_attributes->find({ type => 'type' })->value ) {
             $request->extended_attributes->find({ 'type' => 'type' })->update({ 'value' => $params->{ 'other' }->{ 'type' } });
         } else {
-            Koha::Illrequestattribute->new({
+            Koha::ILL::Request::Attribute->new({
                 illrequest_id => $request->illrequest_id,
                 type          => 'type',
                 value         => $params->{ 'other' }->{ 'type' },
@@ -823,12 +823,12 @@ sub receive {
             }
 
             # Store date_received
-            my $date_received = Koha::Illrequestattributes->find({
+            my $date_received = Koha::ILL::Request::Attributes->find({
                 illrequest_id => $request->illrequest_id,
                 type          => 'date_received',
             });
             unless ( $date_received ) {
-                $date_received = Koha::Illrequestattribute->new({
+                $date_received = Koha::ILL::Request::Attribute->new({
                     illrequest_id => $request->illrequest_id,
                     type          => 'date_received',
                     value         => DateTime->today,
@@ -1516,14 +1516,14 @@ sub _save_due_date {
             $due_date = dt_from_string( "$due_date 23:59" );
         }
 
-        my $prev_due_date = Koha::Illrequestattributes->find({
+        my $prev_due_date = Koha::ILL::Request::Attributes->find({
             illrequest_id => $request->illrequest_id,
             type          => $due_date_var,
         });
         if ( $prev_due_date ) {
             $prev_due_date->value( $due_date->ymd() )->store;
         } else {
-            Koha::Illrequestattribute->new({
+            Koha::ILL::Request::Attribute->new({
                 illrequest_id => $request->illrequest_id,
                 type          => $due_date_var,
                 value         => $due_date->ymd(),
@@ -1696,9 +1696,9 @@ warn Dumper $params;
         $request->notesstaff(     );
         $request->backend(        $params->{other}->{backend} );
         $request->store;
-        # ...Populate Illrequestattribute
+        # ...Populate ILL::Request::Attribute
         while ( my ( $type, $value ) = each %{$params->{other}->{attr}} ) {
-            Koha::Illrequestattribute->new({
+            Koha::ILL::Request::Attribute->new({
                 illrequest_id => $request->illrequest_id,
                 type          => $type,
                 value         => $value,
@@ -1758,7 +1758,7 @@ warn Dumper $params;
         );
         foreach my $type ( keys %attrmap ) {
             my $save_as_type = $attrmap{ $type };
-            Koha::Illrequestattribute->new({
+            Koha::ILL::Request::Attribute->new({
                 illrequest_id => $request->illrequest_id,
                 type          => $save_as_type,
                 value         => $params->{other}->{ $type },
