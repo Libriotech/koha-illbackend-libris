@@ -666,7 +666,7 @@ sub close {
         # Save the changes
         $request->store;
         # Add a comment
-        my $comment = Koha::Illcomment->new({
+        my $comment = Koha::ILL::Comment->new({
             illrequest_id  => $request->illrequest_id,
             borrowernumber => $ill_config->{ 'libris_borrowernumber' },
             comment        => "Status ändrad från $old_status_name till $new_status_name.",
@@ -1946,7 +1946,7 @@ sub renew {
 
         # Save comment
         if ( $params->{ 'other' }->{ 'comment' } ) {
-            my $comment = Koha::Illcomment->new({
+            my $comment = Koha::ILL::Comment->new({
                 illrequest_id  => $request->illrequest_id,
                 borrowernumber => C4::Context->userenv->{'number'},
                 comment        => $params->{ 'other' }->{ 'comment' },
