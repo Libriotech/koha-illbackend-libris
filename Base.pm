@@ -66,7 +66,7 @@ following methods:
 - status_graph  -> return a hashref of additional statuses
 
 Each of the above methods will receive the following parameter from
-Illrequest.pm:
+ILL::Request.pm:
 
   {
       request    => $request,
@@ -97,7 +97,7 @@ Each of the above methods should return a hashref of the following format:
         stage   => 'commit',
         # ^------- The current stage of this method
         #          Used by INCLUDE to determine HTML to generate.
-        #          'commit' will result in final processing by Illrequest.pm.
+        #          'commit' will result in final processing by ILL::Request.pm.
         next    => 'illview'|'illlist',
         # ^------- When stage is 'commit', should we move on to ILLVIEW the
         #          current request or ILLLIST all requests.

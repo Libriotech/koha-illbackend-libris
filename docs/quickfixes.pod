@@ -17,7 +17,7 @@ File: F</usr/share/koha/lib/Koha/REST/V1/Illrequests.pm>
 
  57     # Get all requests
  58     # If necessary, only get those from a specified patron
- 59     my @requests = Koha::Illrequests->search({
+ 59     my @requests = Koha::ILL::Requests->search({
  60         ( status => { 'not in' => 'IN_AVSL' } ),
  61         $args->{borrowernumber}
  62         ? ( borrowernumber => $args->{borrowernumber} )

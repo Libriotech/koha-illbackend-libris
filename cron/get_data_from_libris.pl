@@ -42,9 +42,9 @@ $| = 1; # Don't buffer output
 
 use C4::Context;
 use C4::Reserves qw( AddReserve );
-use Koha::Illcomment;
-use Koha::Illrequests;
-use Koha::Illrequest::Config;
+use Koha::ILL::Comment;
+use Koha::ILL::Requests;
+use Koha::ILL::Request::Config;
 use Koha::Illbackends::Libris::Base;
 
 # Special treatment for some metadata elements, to make them show up in the main ILL table
@@ -91,10 +91,10 @@ if ( $refresh || $refresh_all ) {
     my $old_requests;
     if ( $refresh ) {
         # Only refresh requests with certain statuses
-        $old_requests = Koha::Illrequests->search([ { status => 'IN_LAST' }, { status => 'IN_KANRES' }, { status => 'IN_UTEL' } ]);
+        $old_requests = Koha::ILL::Requests->search([ { status => 'IN_LAST' }, { status => 'IN_KANRES' }, { status => 'IN_UTEL' } ]);
     } else {
         # Refresh all requests in the DB with fresh data
-        $old_requests = Koha::Illrequests->search({ 'backend' => 'Libris' });
+        $old_requests = Koha::ILL::Requests->search({ 'backend' => 'Libris' });
     }
     my $refresh_count = 0;
     while ( my $req = $old_requests->next ) {
@@ -139,8 +139,8 @@ say "Found $data->{'count'} requests" if $verbose;
 REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 
     # If this request is marked with a "local" status we skip to the next request
-    if ( Koha::Illrequests->find({ orderid => $req->{'lf_number'} }) ) {
-        my $old_stat = Koha::Illrequests->find({ orderid => $req->{'lf_number'} })->status;
+    if ( Koha::ILL::Requests->find({ orderid => $req->{'lf_number'} }) ) {
+        my $old_stat = Koha::ILL::Requests->find({ orderid => $req->{'lf_number'} })->status;
         next REQUEST if ( $old_stat && $old_stat eq 'IN_UTL' || $old_stat eq 'IN_RET' || $old_stat eq 'IN_AVSL' );
     }
 
@@ -244,7 +244,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
 ## Save or update the request in Koha
 
     # Look for the Libris order number
-    my $old_illrequest = Koha::Illrequests->find({ orderid => $req->{'lf_number'} });
+    my $old_illrequest = Koha::ILL::Requests->find( { orderid => $req->{'lf_number'} } );
     if ( $old_illrequest and defined $old_illrequest->borrowernumber ) {
         # Patron is already connected to an old ill request
         $borrower = Koha::Patrons->find( $old_illrequest->borrowernumber )
@@ -276,7 +276,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
             my $sg = Koha::Illbackends::Libris::Base::status_graph();
             my $old_status = $sg->{ $old_illrequest->status }->{ 'name' };
             my $new_status = $sg->{ $status                 }->{ 'name' };
-            my $comment = Koha::Illcomment->new({
+            my $comment = Koha::ILL::Comment->new({
                 illrequest_id  => $old_illrequest->illrequest_id,
                 borrowernumber => $ill_config->{ 'libris_borrowernumber' },
                 comment        => "Status ändrad från $old_status till $new_status.",
@@ -335,7 +335,7 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         ( $biblionumber, $itemnumber ) = Koha::Illbackends::Libris::Base::upsert_record( $ill_config, 'insert', $req, $homebranch, $holdingbranch );
         # Create the request
         say "Going to create a new request" if $verbose;
-        my $illrequest = Koha::Illrequest->new;
+        my $illrequest = Koha::ILL::Request->new;
         $illrequest->load_backend( 'Libris' );
         my $backend_result = $illrequest->backend_create({
             'orderid'        => $req->{'lf_number'},
