@@ -12,7 +12,7 @@ $| = 1; # Don't buffer output
 
 use Koha::Checkouts;
 use Koha::DateUtils qw( dt_from_string );
-use Koha::Illrequests;
+use Koha::ILL::Requests;
 use Koha::ILL::Request::Attributes;
 use Koha::Illbackends::Libris::Base;
 use Koha::Items;
@@ -34,7 +34,7 @@ my $ill_config = LoadFile( $ill_config_file );
 my $reminders = $ill_config->{ 'reminders' };
 
 # find received inter library loans
-my $receiveds = Koha::Illrequests->search({
+my $receiveds = Koha::ILL::Requests->search({
     status => 'IN_ANK'
 });
 

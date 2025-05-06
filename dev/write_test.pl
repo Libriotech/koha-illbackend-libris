@@ -14,8 +14,8 @@ use Modern::Perl;
 binmode STDOUT, ":utf8";
 
 use C4::Context;
-use Koha::Illrequests;
-use Koha::Illrequest::Config;
+use Koha::ILL::Requests;
+use Koha::ILL::Request::Config;
 
 my $ill_config = C4::Context->config('interlibrary_loans');
 my $dbh = C4::Context->dbh;

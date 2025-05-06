@@ -19,7 +19,7 @@ use utf8;
 binmode STDOUT, ":utf8";
 $| = 1; # Don't buffer output
 
-use Koha::Illrequests;
+use Koha::ILL::Requests;
 use Koha::Illbackends::Libris::Base;
 use C4::Context;
 
@@ -50,7 +50,7 @@ STATUS: foreach my $old_status ( keys %statuses ) {
     my $old_status_name = $sg->{ $old_status }->{ 'name' };
     my $new_status_name = $sg->{ $new_status }->{ 'name' };
 
-    my $old_requests = Koha::Illrequests->search({ status => $old_status });
+    my $old_requests = Koha::ILL::Requests->search({ status => $old_status });
     REQUEST: while ( my $req = $old_requests->next ) {
 
         say "Looking at request";
@@ -74,7 +74,7 @@ STATUS: foreach my $old_status ( keys %statuses ) {
             $req->store;
             $updated = $new_status;
             # Add a comment
-            my $comment = Koha::Illcomment->new({
+            my $comment = Koha::ILL::Comment->new({
                 illrequest_id  => $req->illrequest_id,
                 borrowernumber => $ill_config->{ 'libris_borrowernumber' },
                 comment        => "Status ändrad från $old_status_name till $new_status_name.",

@@ -307,7 +307,7 @@ See "perldoc docs/cron.pod" for details.
 
 Note: This has been solved as of versions 19.11.00 and 19.05.05!
 
-On around line 526 of Koha/Illrequest.pm change this:
+On around line 526 of Koha/ILL::Request.pm change this:
 
     foreach my $backend_status_key ( keys %{$backend_status_graph} ) {
         my $backend_status = $backend_status_graph->{$backend_status_key};
