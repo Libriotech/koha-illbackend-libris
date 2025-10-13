@@ -63,6 +63,14 @@ my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config
 my $ill_config = LoadFile( $ill_config_file );
 say Dumper $ill_config if $debug;
 
+# Update the config, if there are sigil specific settings
+for my $config_item (qw( ill_branch ill_itemtype ill_closed_itemtype ill_callnumber )) {
+    if ( $ill_config->{ 'libraries' }->{ $libris_sigil }->{ $config_item } ) {
+        # Copy the sigil specific setting to the top level of the config
+        $ill_config->{ $config_item } = $ill_config->{ 'libraries' }->{ $libris_sigil }->{ $config_item };
+    }
+}
+
 # $libris_sigil will only be set if we are using $mode. If we are doing a refresh,
 # it will not be set.
 if ( $libris_sigil ) {
