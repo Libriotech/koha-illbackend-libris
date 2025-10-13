@@ -1675,9 +1675,6 @@ sub create {
 
     my $ill_config = _get_config();
 
-warn "In create";
-warn Dumper $params;
-
     my $other = $params->{other};
     my $stage = $other->{stage};
 
