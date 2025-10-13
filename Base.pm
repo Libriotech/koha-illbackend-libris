@@ -599,8 +599,7 @@ sub close {
     my ( $self, $params ) = @_;
     my $stage = $params->{other}->{stage};
     my $request = $params->{request};
-    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
-    my $ill_config = LoadFile( $ill_config_file );
+    my $ill_config = _get_config();
     my $sg = Koha::Illbackends::Libris::Base::status_graph();
 
     # Remove any holds (If we are clsoing a request that was never picked up there
@@ -721,8 +720,7 @@ sub receive {
     my $stage = $params->{other}->{stage};
     my $request = $params->{request};
 
-    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
-    my $ill_config = LoadFile( $ill_config_file );
+    my $ill_config = _get_config();
 
     my $patron = Koha::Patrons->find({ borrowernumber => $request->borrowernumber });
 
@@ -1278,8 +1276,7 @@ this variable:
 sub userid2borrower {
 
     my ( $user_id ) = @_;
-    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
-    my $ill_config = LoadFile( $ill_config_file );
+    my $ill_config = _get_config();
 
     # Cardnumber is default field to look in
     my $id_field = 'cardnumber';
@@ -1558,8 +1555,7 @@ sub _update_libris {
     warn "Handling request on behalf of $sigil";
 
     # Get the path to, and read in, the Libris ILL config file
-    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
-    my $ill_config = LoadFile( $ill_config_file );
+    my $ill_config = _get_config();
 
     # Make sure relevant data for the active sigil/library are easily available
     $ill_config->{ 'libris_sigil' } = $sigil;
@@ -1677,8 +1673,7 @@ sub create {
     # -> initial placement of the request for an ILL order
     my ( $self, $params ) = @_;
 
-    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
-    my $ill_config = LoadFile( $ill_config_file );
+    my $ill_config = _get_config();
 
 warn "In create";
 warn Dumper $params;
@@ -1907,8 +1902,7 @@ sub renew {
 
     my $request = $params->{request};
 
-    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
-    my $ill_config = LoadFile( $ill_config_file );
+    my $ill_config = _get_config();
 
     my $patron = Koha::Patrons->find({ borrowernumber => $request->borrowernumber });
 
@@ -2126,6 +2120,12 @@ sub status {
             value   => {},
         };
     }
+}
+
+sub _get_config {
+    my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
+    my $ill_config = LoadFile( $ill_config_file );
+    return $ill_config;
 }
 
 =head1 AUTHOR
