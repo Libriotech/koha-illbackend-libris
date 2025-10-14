@@ -144,19 +144,28 @@ if ( $refresh || $refresh_all ) {
 
 say "Found $data->{'count'} requests" if $verbose;
 
+my $count_requests = 0;
 REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
+
+    $count_requests++;
 
     # If this request is marked with a "local" status we skip to the next request
     if ( Koha::ILL::Requests->find({ orderid => $req->{'lf_number'} }) ) {
         my $old_stat = Koha::ILL::Requests->find({ orderid => $req->{'lf_number'} })->status;
-        next REQUEST if ( $old_stat && $old_stat eq 'IN_UTL' || $old_stat eq 'IN_RET' || $old_stat eq 'IN_AVSL' );
+        if ( $old_stat && $old_stat eq 'IN_UTL' || $old_stat eq 'IN_RET' || $old_stat eq 'IN_AVSL' ) {
+            say "Request $count_requests: Local status, skipping" if $verbose;
+            next REQUEST;
+        }
     }
 
-    next REQUEST unless $req->{'request_id'};
+    unless ( $req->{'request_id'} ) {
+        say "Request $count_requests: No request_id, skipping" if $verbose;
+        next REQUEST;
+    }
 
 ## Output details about the request
 
-    say "-----------------------------------------------------------------";
+    say "--- Request $count_requests --------------------------------------------------------------";
     say "* $req->{'request_id'} / $req->{'lf_number'}:  $req->{'title'} ($req->{'year'})";
     say "\tAuthor:       $req->{'author'} / $req->{'imprint'} / $req->{'place_of_publication'}";
     say "\tISBN/ISSN:    $req->{'isbn_issn'}";
