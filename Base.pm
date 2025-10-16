@@ -599,7 +599,12 @@ sub close {
     my ( $self, $params ) = @_;
     my $stage = $params->{other}->{stage};
     my $request = $params->{request};
-    my $ill_config = _get_config();
+    # FIXME Check if there is a sigil in the attributes and send it to _get_config()
+    my $sigil;
+    if ( $request->extended_attributes->find({ 'type' => 'libris_sigil' }) ) {
+        $sigil = $request->extended_attributes->find({ 'type' => 'libris_sigil' })->value;
+    }
+    my $ill_config = _get_config( $sigil );
     my $sg = Koha::Illbackends::Libris::Base::status_graph();
 
     # Remove any holds (If we are clsoing a request that was never picked up there
@@ -2121,9 +2126,26 @@ sub status {
 }
 
 sub _get_config {
+
+    my ( $libris_sigil ) = @_;
+
     my $ill_config_file = C4::Context->config('interlibrary_loans')->{'libris_config'};
     my $ill_config = LoadFile( $ill_config_file );
+
+    if ( $sigil ) {
+
+        # Update the config, if there are sigil specific settings
+        for my $config_item (qw( ill_branch ill_itemtype ill_closed_itemtype ill_callnumber )) {
+            if ( defined $ill_config->{ 'libraries' }->{ $libris_sigil }->{ $config_item } ) {
+                # Copy the sigil specific setting to the top level of the config
+                $ill_config->{ $config_item } = $ill_config->{ 'libraries' }->{ $libris_sigil }->{ $config_item };
+            }
+        }
+
+    }
+
     return $ill_config;
+
 }
 
 =head1 AUTHOR
