@@ -607,7 +607,8 @@ sub close {
     my $items = Koha::Items->search({ biblionumber => $request->biblio_id });
     my $all_deleted = 1;
     while ( my $item = $items->next ) {
-        if ($item->itype eq $ill_config->{ 'ill_itemtype' }) {
+        if ($item->itype eq $ill_config->{ 'ill_itemtype' }) { # Will consider the sigil specific itemtype for this request
+                                                               # if there is one, otherwise the general itemtype will be used
             # Change the itemtype to something that says e.g. "Closed ILL"
             $item->itype( $ill_closed_itemtype );
             # Set the item to "not for loan"
