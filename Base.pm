@@ -1722,7 +1722,8 @@ sub create {
         $request->orderid(        $params->{other}->{orderid} );
         $request->borrowernumber( $params->{other}->{borrowernumber} );
         $request->biblio_id(      $other->{biblio_id} );
-        $request->branchcode(     $ill_config->{ 'ill_branch' } );
+        $request->branchcode(     $ill_config->{ 'ill_branch' } ); # We do not know which sigil we should use, so we use the
+                                                                   # default ill_branch, not a sigil specific one.
         $request->status(         'IN_UTEL' );
         $request->placed(         DateTime->now);
         $request->medium(         $params->{other}->{medium} );
