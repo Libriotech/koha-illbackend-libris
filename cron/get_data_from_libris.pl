@@ -373,6 +373,8 @@ REQUEST: foreach my $req ( @{ $data->{'ill_requests'} } ) {
         });
         say Dumper $backend_result; # FIXME Check for no errors
         say "Created new request with illrequest_id = " . $illrequest->illrequest_id if $verbose;
+        # Set the Libris sigil as an ILL attribute
+        insert_or_update_attribute( $illrequest, 'libris_sigil', $libris_sigil );
         # Add attributes
         insert_or_update_attributes($illrequest, $req);
         # Add a hold, but only for Inlån and for loans, not copies
