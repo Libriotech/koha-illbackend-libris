@@ -97,7 +97,10 @@ automatic ILL comments.
 items created by the ILL processes.
 
 =item * B<ill_notforloan> - A notforloan code that will be set on all
-items created by the ILL processes. (Default 0.)
+items created by the ILL processes. (Default 0.) THe status must exist in the
+NOT_LOAN authorized value category in Koha. Use  UpdateNotForLoanStatusOnCheckout
+and/or UpdateNotForLoanStatusOnCheckin to automatically update this status as
+part of the circulation process.
 
 =item * B<partner_code> - categorycode for a patron category that lending
 libraries are added to when data about them is fatched from Libris and they
